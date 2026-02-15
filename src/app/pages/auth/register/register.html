@@ -41,20 +41,15 @@
       </div>
     </div>
     <div class="mb-3">
-      <label for="username" class="form-label">Username</label>
-      <input
-        type="text"
-        class="form-control"
-        id="username"
-        formControlName="username"
-        required
-      />
-      <div
-        *ngIf="username.invalid && (username.dirty || username.touched)"
-        class="text-danger mt-2"
-      >
-        <div *ngIf="username.errors?.['required']">Username is required.</div>
-      </div>
+        <label for="username" class="form-label">Username</label>
+        <input type="text" class="form-control" id="username" formControlName="username" required />
+        @if(username.invalid && (username.dirty || username.touched)){
+        <div class="text-danger mt-2">
+            @if(username.errors?.['required']){
+            <div>Username is required.</div>
+            }
+        </div>
+        }
     </div>
     <div class="mb-3">
       <label for="password" class="form-label">Password</label>

@@ -1,6 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AuthService, RegisterRequest } from '../services/auth';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-register',
@@ -27,7 +29,12 @@ export class Register {
   }
 
   // do Dependency Injection for FormBuilder and create form group
-  constructor(private formBuilder: FormBuilder){
+  // DI for AuthService to call API integration functions
+  // Router DI to navigate user to login page after successful registration
+  constructor( private formBuilder: FormBuilder, 
+    private authService: AuthService,
+    private router: Router
+  ){
     // bind form controls to form group
     this.registerForm = this.formBuilder.group({
       // this key must match fields in the backend
@@ -41,6 +48,34 @@ export class Register {
   // function to handle Register form submission
   register(){
     // to log the form values for debugging the flow
-    console.log(this.registerForm.value);
+    console.log("Form Values: ", this.registerForm.value);
+
+    // use Defined Type for building payload to be sent to backend API
+    const registerRequest: RegisterRequest = {
+      // get input values from form controls(ReactiveForm approach)
+      // ?. is used to avoid error in case form control value is null or undefined
+      name: this.registerForm.get('name')?.value,
+      email: this.registerForm.get('email')?.value,
+      username: this.registerForm.get('username')?.value,
+      password: this.registerForm.get('password')?.value,
+    } 
+
+    // Todo- add client side validation for form inputs before calling API
+
+    // calling service- register function
+    // subscribe is used to get response from Observable returned by register function in service after API call
+    this.authService.register(registerRequest).subscribe({
+      // success case
+      next: (res: any) => { // use AuthResponse type instead of any
+        console.log("Register API response: ", res);
+        // navigate user to login page after successful registration
+        this.router.navigate(['login']);
+      },
+      // error case while calling API
+      error: (err: any) => {
+        console.log("Error from Register API: ", err);
+      }
+    })
+
   }
 }
