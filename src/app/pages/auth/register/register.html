@@ -1,0 +1,75 @@
+<div class="container">
+  <h2 class="text-center">Register Form</h2>
+  <form [formGroup]="registerForm" (ngSubmit)="register()">
+    <!-- section to show error msg from backend if form submission fails -->
+    <div *ngIf="errorNotification.show" class="text-danger mb-3">
+        {{ errorNotification.text }}
+    </div>
+    <div class="mb-3">
+      <label for="name" class="form-label">Name</label>
+      <input
+        type="text"
+        class="form-control"
+        id="name"
+        formControlName="name"
+        required
+      />
+      <div
+        *ngIf="name.invalid && (name.dirty || name.touched)"
+        class="text-danger mt-2"
+      >
+        <div *ngIf="name.errors?.['required']">Name is required.</div>
+      </div>
+    </div>
+    <div class="mb-3">
+      <label for="email" class="form-label">Email address</label>
+      <input
+        type="email"
+        class="form-control"
+        id="email"
+        formControlName="email"
+        required
+      />
+      <div
+        *ngIf="email.invalid && (email.dirty || email.touched)"
+        class="text-danger mt-2"
+      >
+        <div *ngIf="email.errors?.['required']">Email is required.</div>
+        <div *ngIf="email.errors?.['email']">
+          Please enter a valid email address.
+        </div>
+      </div>
+    </div>
+    <div class="mb-3">
+        <label for="username" class="form-label">Username</label>
+        <input type="text" class="form-control" id="username" formControlName="username" required />
+        @if(username.invalid && (username.dirty || username.touched)){
+        <div class="text-danger mt-2">
+            @if(username.errors?.['required']){
+            <div>Username is required.</div>
+            }
+        </div>
+        }
+    </div>
+    <div class="mb-3">
+      <label for="password" class="form-label">Password</label>
+      <input
+        type="password"
+        class="form-control"
+        id="password"
+        formControlName="password"
+        required
+      />
+      <div
+        *ngIf="password.invalid && (password.dirty || password.touched)"
+        class="text-danger mt-2"
+      >
+        <div *ngIf="password.errors?.['required']">Password is required.</div>
+        <div *ngIf="password.errors?.['minlength']">
+          Password must be at least 5 characters long.
+        </div>
+      </div>
+    </div>
+    <button type="submit" class="btn btn-primary">Submit</button>
+  </form>
+</div>
