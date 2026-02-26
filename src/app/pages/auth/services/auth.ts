@@ -18,6 +18,11 @@ export class AuthService {
   register(registerRequest: RegisterRequest): Observable<AuthResponse>{
     return this.http.post<AuthResponse>(`${this.BASE_URL}/api/v1/auth/register`, registerRequest);
   }
+
+  // Login Api integration
+  login(loginRequest: LoginRequest): Observable<AuthResponse>{
+    return this.http.post<AuthResponse>(`${this.BASE_URL}/api/v1/auth/login`, loginRequest);
+  }
 }
 
 // Type of payload to be sent to register API-backend
@@ -28,6 +33,11 @@ export type RegisterRequest = {
   name: string,
   email: string,
   username: string,
+  password: string,
+}
+
+export type LoginRequest = {
+  email: string,
   password: string,
 }
 
