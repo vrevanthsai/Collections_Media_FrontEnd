@@ -73,12 +73,14 @@ export class Login {
           console.log('Login API response: ', res);
           // set True of isLoggedIn signal when user logged IN successfully
           this.authService.setLoggedIn(true);
-          // navigate user to login page after successful registration
-          this.router.navigate(['']); // path '' = home page
+          // set user name in signal variable to show in navbar after login
+          this.authService.setName(res.name);
+          // navigate user to home page after successful login
+          this.router.navigate(['home']); // path 'home' = home page
         },
         // error case while calling API
         error: (err: any) => {
-          console.log('Error from Register API: ', err);
+          console.log('Error from Login API: ', err);
           // Reset/empty all form input fields if an error occurs while login
           this.loginForm.reset();
           this.errorNotification = {
