@@ -1,27 +1,77 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Injectable, signal, WritableSignal } from '@angular/core';
+import { Observable, tap } from 'rxjs';
 
 // This service file will handle all backend auth APIs integration logic
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
-
   // Todo- create and import base URL from .env file
-  public readonly BASE_URL = "http://localhost:8080";
+  public readonly BASE_URL = 'http://localhost:8080';
+  // Signal- used for State management - to know current state of User(loggedIN or loggedOut)
+  // if signal value changed then it reflects all over application
+  private loggedIn = signal<boolean>(this.isAuthenticated()); // initial value is from function call
+
 
   // DI for HttpClient for API integrations
-  constructor(private http: HttpClient){}
+  constructor(private http: HttpClient) {}
 
   // Register Api integration
-  register(registerRequest: RegisterRequest): Observable<AuthResponse>{
-    return this.http.post<AuthResponse>(`${this.BASE_URL}/api/v1/auth/register`, registerRequest);
+  register(registerRequest: RegisterRequest): Observable<AuthResponse> {
+    // TODO - add error handling logic to all Api functions
+    return this.http.post<AuthResponse>(
+      `${this.BASE_URL}/api/v1/auth/register`,
+      registerRequest,
+    );
   }
 
   // Login Api integration
-  login(loginRequest: LoginRequest): Observable<AuthResponse>{
-    return this.http.post<AuthResponse>(`${this.BASE_URL}/api/v1/auth/login`, loginRequest);
+  login(loginRequest: LoginRequest): Observable<AuthResponse> {
+    return (
+      this.http
+        .post<AuthResponse>(`${this.BASE_URL}/api/v1/auth/login`, loginRequest)
+        // pipe(tap()) is used to perform side effects (like logging, modifying data, etc.) on the observable stream without affecting the actual data being emitted. In this case, it can be used to log the response or handle any additional logic after receiving the response from the register API,
+        //  without modifying the AuthResponse object that is returned to the caller of the register method.
+        // it intercepts the response from API before sending it to the component
+        .pipe(
+          tap((response) => {
+            if (response && response.accessToken) {
+              // TODO - encrypt the tokens and info further before storing them in Browser sessions
+              sessionStorage.setItem('accessToken', response.accessToken); // key-value
+              sessionStorage.setItem('refreshToken', response.refreshToken);
+              sessionStorage.setItem('name', response.name);
+              sessionStorage.setItem('email', response.email);
+              sessionStorage.setItem('username', response.username);
+            }
+          }),
+        )
+    );
+  }
+
+  // check user logged-in or not- used in navbar component for conditional rendering of login/logout button and to show user name
+  // this function is useful to set True to User-State when user comes after 1st loggedIN then no logIn is needed for User to enter
+  isAuthenticated(): boolean{
+    // !! returns TRUE when it has a value or FALSE
+    return !!sessionStorage.getItem('accessToken');
+  }
+
+  // Logout Feature - clears all stored user tokens and info from sessions which means user logged out
+  logout(): void{
+    sessionStorage.removeItem('accessToken');
+    sessionStorage.removeItem('refreshToken');
+    sessionStorage.removeItem('name');
+    sessionStorage.removeItem('email');
+    sessionStorage.removeItem('username');
+  }
+
+  // Setter/ Getter Methods of Signal-variable
+  setLoggedIn(value: boolean){
+    this.loggedIn.set(value);
+  }
+
+  getLoggedIn() : WritableSignal<boolean>{
+    return this.loggedIn;
   }
 }
 
