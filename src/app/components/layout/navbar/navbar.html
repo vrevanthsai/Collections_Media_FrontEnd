@@ -2,19 +2,14 @@
 <nav class="navbar navbar-expand-lg bg-body-tertiary">
   <div class="container-fluid">
     <a class="navbar-brand" routerLink="/">Collection Media App</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown"
+      aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarNavDropdown">
       <ul class="navbar-nav">
         <li class="nav-item">
           <a class="nav-link active" aria-current="page" routerLink="/">Home</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" routerLink="/register">Register</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" routerLink="/login">Login</a>
         </li>
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -24,6 +19,17 @@
             <li><a class="dropdown-item" routerLink="#">Show All Collections</a></li>
             <li><a class="dropdown-item" routerLink="/add-collection">Add Collection</a></li>
           </ul>
+        </li>
+        <li *ngIf="!isLoggedIn()" class="nav-item">
+          <a class="nav-link" routerLink="/register">Register</a>
+        </li>
+        <li *ngIf="!isLoggedIn()" class="nav-item">
+          <a class="nav-link" routerLink="/login">Login</a>
+        </li>
+        <!-- For logged-IN User -->
+        <li *ngIf="isLoggedIn()"> <!-- True- then Profile/logout is visible or False- then they are invisible -->
+          <button class="btn btn-primary">{{name}}</button> <!-- Profile button- with user name-->
+          <button type="button" (click)="logout()" class="btn btn-outline-danger">Logout</button>
         </li>
       </ul>
     </div>
