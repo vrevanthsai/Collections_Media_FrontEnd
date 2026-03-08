@@ -18,7 +18,7 @@ export const routes: Routes = [
     { path:'login' , title:"Login Page", component: Login },
     { path:'register' , title:"Register Page", component: Register },
     // Collection Routes
-    { path:'add-collection' , title:"Add Collection Page", component: AddCollection ,
+    { path:'collections/add-collection' , title:"Add Collection Page", component: AddCollection ,
         canActivate: [authGuard]
     },
 ];

@@ -13,7 +13,7 @@ export class AuthService {
   // if signal value changed then it reflects all over application
   private loggedIn = signal<boolean>(this.isAuthenticated()); // initial value is from function call
   // get user info from sessionStorage which is stored after user logged-In(or login-service-method)
-  private name = signal<string | null>(''); 
+  private name = signal<string | null>(sessionStorage.getItem('name')); 
 
 
   // DI for HttpClient for API integrations
@@ -57,12 +57,8 @@ export class AuthService {
   setName(value: string | null){
     this.name.set(value);
   }
-  getName() : string | null{
-    if(this.name()){
-      return this.name();
-    } else {
-      return sessionStorage.getItem('name');
-    }   
+  getName() : WritableSignal<string | null>{
+    return this.name;
   }
 
   // check user logged-in or not- used in navbar component for conditional rendering of login/logout button and to show user name

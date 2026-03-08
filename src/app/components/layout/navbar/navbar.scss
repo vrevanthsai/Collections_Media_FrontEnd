@@ -20,3 +20,8 @@
     --bs-dropdown-min-width: 8rem;
     background: #2b3d3d !important;
 }
+
+.navbar-nav .nav-link.active {
+    color: #ed1010 !important;
+    font-weight: bold;
+}
