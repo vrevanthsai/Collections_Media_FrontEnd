@@ -12,6 +12,8 @@ export class AuthService {
   // Signal- used for State management - to know current state of User(loggedIN or loggedOut)
   // if signal value changed then it reflects all over application
   private loggedIn = signal<boolean>(this.isAuthenticated()); // initial value is from function call
+  // get user info from sessionStorage which is stored after user logged-In(or login-service-method)
+  private name = signal<string | null>(''); 
 
 
   // DI for HttpClient for API integrations
@@ -38,6 +40,8 @@ export class AuthService {
           tap((response) => {
             if (response && response.accessToken) {
               // TODO - encrypt the tokens and info further before storing them in Browser sessions
+              // TOTO- store this data in localStorage/cookies instead of sessionStorage 
+              // because sessionStorage is cleared when the page session ends, while localStorage persists even after the browser is closed. Cookies can also be used for storing data that needs to be sent to the server with each request, such as authentication tokens.
               sessionStorage.setItem('accessToken', response.accessToken); // key-value
               sessionStorage.setItem('refreshToken', response.refreshToken);
               sessionStorage.setItem('name', response.name);
@@ -47,6 +51,18 @@ export class AuthService {
           }),
         )
     );
+  }
+
+  // Getter/Setter for name signal variable
+  setName(value: string | null){
+    this.name.set(value);
+  }
+  getName() : string | null{
+    if(this.name()){
+      return this.name();
+    } else {
+      return sessionStorage.getItem('name');
+    }   
   }
 
   // check user logged-in or not- used in navbar component for conditional rendering of login/logout button and to show user name
