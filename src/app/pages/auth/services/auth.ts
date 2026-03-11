@@ -12,13 +12,18 @@ export class AuthService {
   public readonly BASE_URL = 'http://localhost:8080';
   // Signal- used for State management - to know current state of User(loggedIN or loggedOut)
   // if signal value changed then it reflects all over application
-  private loggedIn = signal<boolean>(this.isAuthenticated()); // initial value is from function call
+  private loggedIn = signal<boolean>(false);
   // get user info from sessionStorage which is stored after user logged-In(or login-service-method)
   private name = signal<string | null>(sessionStorage.getItem('name')); 
 
 
   // DI for HttpClient for API integrations
   constructor(private http: HttpClient) {}
+
+  ngOnInit(): void {
+    // when page loads then we check user is loggedIN or not and set the User-State accordingly
+    this.loggedIn.set(this.isAuthenticated());
+  }
 
   // Register Api integration
   register(registerRequest: RegisterRequest): Observable<AuthResponse> {
@@ -65,10 +70,10 @@ export class AuthService {
   // check user logged-in or not- used in navbar component for conditional rendering of login/logout button and to show user name
   // this function is useful to set True to User-State when user comes after 1st loggedIN then no logIn is needed for User to enter
   isAuthenticated(): boolean{
-    // !! returns TRUE when it has a value or FALSE
-    // return !!sessionStorage.getItem('accessToken');
-
     const token = sessionStorage.getItem('accessToken');
+    // we parallelly update loggedIn siganl of auth service - so that when ever auth-guard of app.route checks for user authentication then loggedIn siganl is also updated with correct state value -
+    // so that it will reflect all over(in navbar comp to show selected nav-links depending on user loggedIn state) application
+    this.loggedIn.set(!!token && !this.isTokenExpired(token));
     // token should not be null and Token is not expired then returns True or else False
     return token!= null && !this.isTokenExpired(token);
   }
