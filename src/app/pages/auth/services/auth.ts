@@ -66,7 +66,11 @@ export class AuthService {
   // this function is useful to set True to User-State when user comes after 1st loggedIN then no logIn is needed for User to enter
   isAuthenticated(): boolean{
     // !! returns TRUE when it has a value or FALSE
-    return !!sessionStorage.getItem('accessToken');
+    // return !!sessionStorage.getItem('accessToken');
+
+    const token = sessionStorage.getItem('accessToken');
+    // token should not be null and Token is not expired then returns True or else False
+    return token!= null && !this.isTokenExpired(token);
   }
 
   // Logout Feature - clears all stored user tokens and info from sessions which means user logged out
