@@ -112,7 +112,7 @@ export class AuthService {
       refreshToken: refToken
     }
     // Post Api call-args- Api-URL, payload
-    return this.http.post(`${this.BASE_URL}/api/v1/auth/refresh`, {refTokenObj}).pipe(
+    return this.http.post(`${this.BASE_URL}/api/v1/auth/refresh`, refTokenObj).pipe(
       // we get res.accessToken which is new AccessToken and we replace it with old token in sessionStorage
       // and refreshToken will not change
       tap((res: any) => sessionStorage.setItem('accessToken', res.accessToken)),
