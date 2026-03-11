@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, signal, WritableSignal } from '@angular/core';
-import { Observable, tap } from 'rxjs';
+import { jwtDecode } from 'jwt-decode';
+import { catchError, Observable, tap, throwError } from 'rxjs';
 
 // This service file will handle all backend auth APIs integration logic
 @Injectable({
@@ -85,6 +86,35 @@ export class AuthService {
   getLoggedIn() : WritableSignal<boolean>{
     return this.loggedIn;
   }
+
+  // This method checks whether provided token is valid/expired or not
+  isTokenExpired(token: string): boolean {
+    // jwtDecode(token) is used for decoding token and getting info from it
+    const decodedToken: any = jwtDecode(token);
+    // if token has expired time less then current-time then returns False(Token Not Expired) or else True(Token Expired)
+    return (decodedToken.exp * 1000) < Date.now();
+  }
+
+  // THis method Gets new Access Token(jwtToken) when available refreshToken is valid
+  // THis method returns async value- so we use Observable-Return-Type
+  refreshToken(): Observable<any>{
+    const refToken = sessionStorage.getItem('refreshToken');
+    const refTokenObj : RefreshTokenRequest = {
+      refreshToken: refToken
+    }
+    // Post Api call-args- Api-URL, payload
+    return this.http.post(`${this.BASE_URL}/api/v1/auth/refresh`, {refTokenObj}).pipe(
+      // we get res.accessToken which is new AccessToken and we replace it with old token in sessionStorage
+      // and refreshToken will not change
+      tap((res: any) => sessionStorage.setItem('accessToken', res.accessToken)),
+      catchError(err => {
+        // when we get error(like our provided RefreshToken is Expired) while getting new token then we logout user
+        this.logout();
+        // TODO- give better error handling and ask user to relogin after logout due to error
+        return throwError(() => err);
+      })
+    )
+  }
 }
 
 // Type of payload to be sent to register API-backend
@@ -110,4 +140,8 @@ export type AuthResponse = {
   name: string,
   email: string,
   username: string,
+}
+
+export type RefreshTokenRequest = {
+  refreshToken: string | null // string or null
 }
