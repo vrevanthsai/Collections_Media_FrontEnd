@@ -12,7 +12,7 @@
         <!-- True- then Home/Collections/Profile/logout is visible or False- then they are invisible and Intro/Register/Login is visible -->
         @if(isLoggedIn()){
           <li class="nav-item">
-            <a class="nav-link" routerLink="/home">Home</a>
+            <a class="nav-link" routerLink="/home" routerLinkActive="active">Home</a>
           </li>
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -20,7 +20,7 @@
             </a>
             <ul class="dropdown-menu">
               <li><a class="dropdown-item" routerLink="#">Show All Collections</a></li>
-              <li><a class="dropdown-item" routerLink="/add-collection">Add Collection</a></li>
+              <li><a class="dropdown-item" routerLink="collections/add-collection" routerLinkActive="active">Add Collection</a></li>
             </ul>
           </li>
           <!-- For logged-IN User -->
@@ -30,13 +30,13 @@
           </li>
         } @else {
           <li class="nav-item">
-            <a class="nav-link" routerLink="/">Intro</a>
+            <a class="nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Intro</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" routerLink="/register">Register</a>
+            <a class="nav-link" routerLink="/register" routerLinkActive="active">Register</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" routerLink="/login">Login</a>
+            <a class="nav-link" routerLink="/login" routerLinkActive="active">Login</a>
           </li>
         }
       </ul>

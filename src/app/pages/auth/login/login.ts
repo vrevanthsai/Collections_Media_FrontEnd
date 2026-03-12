@@ -8,7 +8,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { AuthService, LoginRequest } from '../services/auth';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-login',
@@ -39,6 +39,7 @@ export class Login {
     private formBuilder: FormBuilder,
     private authService: AuthService,
     private router: Router,
+    private route: ActivatedRoute,
   ) {
     // bind form controls to form group
     this.loginForm = this.formBuilder.group({
@@ -75,8 +76,9 @@ export class Login {
           this.authService.setLoggedIn(true);
           // set user name in signal variable to show in navbar after login
           this.authService.setName(res.name);
-          // navigate user to home page after successful login
-          this.router.navigate(['home']); // path 'home' = home page
+          // If login came from a blocked protected route, go back there after success.
+          const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+          this.router.navigateByUrl(returnUrl || '/home');
         },
         // error case while calling API
         error: (err: any) => {
