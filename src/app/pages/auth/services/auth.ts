@@ -53,6 +53,12 @@ export class AuthService {
               sessionStorage.setItem('name', response.name);
               sessionStorage.setItem('email', response.email);
               sessionStorage.setItem('username', response.username);
+
+              // Getting Roles info from extracting token
+              const decodedToken: any = jwtDecode(response.accessToken);
+              // console.log("decoded token: ", decodedToken);
+              // role is array/collection data from claims of jwt of backend and first item has Role data
+              sessionStorage.setItem('role', decodedToken.role[0].authority);
             }
           }),
         )
@@ -123,6 +129,18 @@ export class AuthService {
         return throwError(() => err);
       })
     )
+  }
+
+  // This method handles Role verifying and its logic
+  hasRole(role: string): boolean {
+    const token = sessionStorage.getItem('accessToken');
+    if(token){
+      const decodedToken: any = jwtDecode(token);
+      // returns True- if token has role-matching data or else False
+      return decodedToken?.role[0]?.authority.includes(role);
+    }
+
+    return false;
   }
 }
 

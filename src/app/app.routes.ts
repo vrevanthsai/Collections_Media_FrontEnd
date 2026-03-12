@@ -12,7 +12,7 @@ import { Intro } from './pages/common/intro/intro';
 export const routes: Routes = [
     { path:'', title:"Intro Page", component: Intro }, // '' means root path of the application
     { path:'home' , title:"Collection Media App", component: Home ,
-        canActivate: [authGuard]
+        canActivate: [authGuard] // canActivate- accepts True/False/UrlTree and an Observable/Promise of those
     },
     // Auth Routes
     { path:'login' , title:"Login Page", component: Login },
