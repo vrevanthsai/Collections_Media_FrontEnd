@@ -1,4 +1,80 @@
-<div>
-    <h1 class="text-center">Welcome to Manga Collection App</h1>
-    <a routerLink="/collections/add-collection" class="btn btn-primary">Add New Collection</a>
-</div>
+<section class="container py-4 py-md-5">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+      <p class="text-uppercase text-muted small mb-1">Dashboard</p>
+      <h1 class="text-center text-md-start mb-0">Welcome to Manga Collection App</h1>
+    </div>
+
+    <a routerLink="/collections/add-collection" pButton class="p-button-primary" label="Add New Collection">
+    </a>
+  </div>
+
+  @if (loading()) {
+  <div class="d-flex justify-content-center my-5">
+    <p-progressSpinner strokeWidth="4" fill="#EEEEEE" animationDuration=".5s"></p-progressSpinner>
+  </div>
+  } @else {
+  @if (collections.length > 0) {
+  <div class="row g-4">
+    <!-- Angular’s new control-flow loop syntax -->
+    <!-- track gives unique identifier for each item and ?? is the nullish coalescing operator- if id not there then uses name+index value -->
+    @for (collection of collections; track collection.collectionId ?? collection.name + $index) {
+    <div class="col-12 col-sm-6 col-xl-4">
+      <p-card class="h-100 collection-card shadow-sm border-0">
+        <ng-template pTemplate="header">
+          <div class="collection-image-wrapper">
+            <!-- img- here in Home page is optional- Todo - can be moved to its single collection page -->
+            <img [src]="collection.imageUrl || 'https://placehold.co/640x360?text=Manga+Collection'"
+              [alt]="collection.name" class="img-fluid collection-image" />
+          </div>
+        </ng-template>
+
+        <ng-template pTemplate="title">
+          <div class="d-flex justify-content-between align-items-start gap-3">
+            <span>{{ collection.name }}</span>
+            <p-tag [value]="collection.category" severity="contrast"></p-tag>
+          </div>
+        </ng-template>
+
+        <ng-template pTemplate="subtitle">
+          <div class="d-flex flex-wrap gap-2 mt-2">
+            <!-- It displays the collection progress as a colored tag, where the color depends on the progress status and severity - used for conditional stylings -->
+            Status: <p-tag [value]="collection.progress" [severity]="getProgressSeverity(collection.progress)"></p-tag>
+            Privacy: <p-tag [value]="collection.privacy" [severity]="getPrivacySeverity(collection.privacy)"></p-tag>
+          </div>
+        </ng-template>
+
+        <div class="d-flex flex-column gap-3">
+          <div class="small flex align-items-center gap-2">
+            <span class="fw-semibold">Rating: </span>
+            <!-- readonly=true -used because user shouldn't modify the rating on UI-display page,
+                  only update rating value in Update Collection page or IN its Dialog/PopUP Modal -->
+            <p-rating [ngModel]="collection.rating" [readonly]="true">
+            </p-rating>
+          </div>
+
+          <!-- <p class="mb-0 review-text">
+                {{ collection.review || 'No review added yet.' }}
+              </p>
+
+              <div class="small d-flex flex-column">
+                <span><span class="fw-semibold">Added:</span> {{ collection.addedDate }}</span>
+                <span><span class="fw-semibold">User ID:</span> {{ collection.userId }}</span>
+              </div> -->
+        </div>
+      </p-card>
+    </div>
+    }
+  </div>
+  } @else {
+  <p-card class="shadow-sm border-0 text-center empty-state-card">
+    <div class="py-4">
+      <h2 class="h4 mb-2">No collections available</h2>
+      <p class="text-muted mb-4">Start by adding your first manga collection.</p>
+      <a routerLink="/collections/add-collection" pButton class="p-button-outlined" label="Create Collection">
+      </a>
+    </div>
+  </p-card>
+  }
+  }
+</section>
