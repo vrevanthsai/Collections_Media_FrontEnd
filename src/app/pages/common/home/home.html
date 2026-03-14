@@ -31,8 +31,8 @@
 
         <ng-template pTemplate="title">
           <div class="d-flex justify-content-between align-items-start gap-3">
-            <span>{{ collection.name }}</span>
-            <p-tag [value]="collection.category" severity="contrast"></p-tag>
+            <span>{{ collection.name | titlecase}}</span>
+            <p-tag [value]="collection.category | titlecase" severity="contrast"></p-tag>
           </div>
         </ng-template>
 

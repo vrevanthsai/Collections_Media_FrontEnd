@@ -4,15 +4,17 @@ import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
 import { catchError, forkJoin, map, of } from 'rxjs';
-import { CollectionDto, CollectionsService } from '../../collections/services/collections-service';
+import { CollectionDto, CollectionsService } from '../../services/collections-service';
 import { RatingModule } from 'primeng/rating';
 import { FormsModule } from '@angular/forms';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { TitleCasePipe } from '@angular/common';
 
 @Component({
   selector: 'app-home',
   // standalone component for new >angV17- when you use a module then import them in their component files instead of app.module.ts
-  imports: [RouterLink, CardModule, ButtonModule, TagModule, RatingModule, FormsModule, ProgressSpinnerModule],
+  imports: [RouterLink, CardModule, ButtonModule, TagModule, RatingModule,
+     FormsModule, ProgressSpinnerModule, TitleCasePipe],
   templateUrl: './home.html',
   styleUrl: './home.scss',
 })
