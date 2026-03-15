@@ -10,6 +10,7 @@ import { providePrimeNG } from 'primeng/config';
 import Aura from '@primeuix/themes/aura';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { authInterceptor } from './interceptors/auth.interceptors';
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -23,6 +24,8 @@ export const appConfig: ApplicationConfig = {
         preset: Aura,
       },
     }),
+    // to Enable Animations for PrimeNg Components
+    provideAnimationsAsync(),
     // HttpClient config and Custom Interceptor config
     provideHttpClient(
       withInterceptors([authInterceptor]), // it takes multiple interceptors

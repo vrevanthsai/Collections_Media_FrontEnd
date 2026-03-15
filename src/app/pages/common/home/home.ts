@@ -8,13 +8,14 @@ import { CollectionDto, CollectionsService } from '../../services/collections-se
 import { RatingModule } from 'primeng/rating';
 import { FormsModule } from '@angular/forms';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { TitleCasePipe } from '@angular/common';
+import { TitleCasePipe, NgIf } from '@angular/common';
+import { AuthService } from '../../auth/services/auth';
 
 @Component({
   selector: 'app-home',
   // standalone component for new >angV17- when you use a module then import them in their component files instead of app.module.ts
   imports: [RouterLink, CardModule, ButtonModule, TagModule, RatingModule,
-     FormsModule, ProgressSpinnerModule, TitleCasePipe],
+    FormsModule, ProgressSpinnerModule, TitleCasePipe, NgIf],
   templateUrl: './home.html',
   styleUrl: './home.scss',
 })
@@ -22,6 +23,7 @@ export class Home implements OnInit, OnDestroy {
 
   // Collection Service DI
   collectionService = inject(CollectionsService);
+  authService = inject(AuthService);
   // var to store GET-All api res
   collections: CollectionDto[] = [];
   private readonly objectUrls: string[] = [];
@@ -122,6 +124,11 @@ export class Home implements OnInit, OnDestroy {
   // This function sets the color(severity) of the privacy tag/field based on its value
   getPrivacySeverity(privacy: string): 'success' | 'warn' {
     return privacy.toLowerCase() === 'public' ? 'success' : 'warn';
+  }
+
+  isAdmin(): boolean {
+    // if stored Role has ADMIN value then returns True or else False(USER)
+    return this.authService.hasRole('ADMIN');
   }
 
 }

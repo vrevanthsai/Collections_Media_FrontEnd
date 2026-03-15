@@ -50,6 +50,7 @@ export class AuthService {
               // because sessionStorage is cleared when the page session ends, while localStorage persists even after the browser is closed. Cookies can also be used for storing data that needs to be sent to the server with each request, such as authentication tokens.
               sessionStorage.setItem('accessToken', response.accessToken); // key-value
               sessionStorage.setItem('refreshToken', response.refreshToken);
+              sessionStorage.setItem('userId', JSON.stringify(response.userId)); // store userId-type number as string 
               sessionStorage.setItem('name', response.name);
               sessionStorage.setItem('email', response.email);
               sessionStorage.setItem('username', response.username);
@@ -164,6 +165,7 @@ export type LoginRequest = {
 export type AuthResponse = {
   accessToken: string,
   refreshToken: string,
+  userId: number,
   name: string,
   email: string,
   username: string,

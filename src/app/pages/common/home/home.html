@@ -5,7 +5,7 @@
       <h1 class="text-center text-md-start mb-0">Welcome to Manga Collection App</h1>
     </div>
 
-    <a routerLink="/collections/add-collection" pButton class="p-button-primary" label="Add New Collection">
+    <a routerLink="/collections/add-collection" *ngIf="isAdmin()" pButton class="p-button-primary" label="Add New Collection">
     </a>
   </div>
 

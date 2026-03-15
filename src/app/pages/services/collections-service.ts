@@ -26,12 +26,24 @@ export class CollectionsService {
     // response for image - we get from APi is in the form of BLob- so we specify it
     return this.http.get(imageUrl, { responseType: 'blob' });
   }
+
+  // Post-Api - /add-collection api to save new collection data into DB
+  addCollectionService(collectionDto: CollectionDto, file: File): Observable<CollectionDto>{
+    // we send both payload and file as seperate args to backend using FormData
+    const formData = new FormData();
+    // formData- both Keys - naming MUST be SAME as declared in Backend-Api-Method params and same types for Better data mapping
+    formData.append("collectionDto", JSON.stringify(collectionDto));
+    formData.append("file", file);
+
+    // Call Api
+    return this.http.post<CollectionDto>(`${this.BASE_URL}/api/v1/collection/add-collection`, formData); // now formData has both json and image-file
+  }
 }
 
 // TODO- Create seperate file for managing Types
 // Collection Response for all Collection-based APIs
 export type CollectionDto = {
-  collectionId?: number, // optionsal field
+  collectionId?: number, // optional field
   name: string,
   category: string,
   userId: string,
@@ -40,6 +52,6 @@ export type CollectionDto = {
   progress: string,
   privacy: string,
   addedDate: string,
-  imagename?: string, // optionsal field
-  imageUrl?: string, // optionsal field
+  imagename?: string, // optional field
+  imageUrl?: string, // optional field
 };
