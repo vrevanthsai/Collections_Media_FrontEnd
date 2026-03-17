@@ -1,6 +1,6 @@
-<div class="container">
-    <h2 class="text-center">Add Collection Form</h2>
-    <form [formGroup]="addCollectionForm" (ngSubmit)="addCollection()">
+<div class="container" style="padding: 10px;">
+    <h2 class="text-center" style="font-size: medium;">Update Collection Form</h2>
+    <form [formGroup]="updateCollectionForm" (ngSubmit)="updateCollection()">
         <!-- section to show error msg from backend if form submission fails -->
         <div *ngIf="errorNotification.show" class="text-danger mb-3">
             {{ errorNotification.text }}
@@ -68,9 +68,13 @@
          <div class="mb-3">
             <label for="image" class="form-label">Collection Image</label>
             <input type="file" class="form-control" id="image" formControlName="imagename"
-            (change)="onFileSelected($event)" required />
+            (change)="onFileSelected($event)" />
          </div>
 
-        <button type="submit" class="btn btn-primary mb-3">Add Collection</button>
+        <div class="mb-3">
+            <button type="submit" class="btn btn-primary" style="margin-right: 5px;">Update Collection</button>
+            <!-- Cancel button used for closing the Popup/Dialog if user not want to update collection -->
+            <button type="button" (click)="cancel()" class="btn btn-secondary">Cancel</button>
+        </div>
     </form>
 </div>

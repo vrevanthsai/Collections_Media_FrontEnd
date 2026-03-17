@@ -50,9 +50,16 @@ export class AuthService {
               // because sessionStorage is cleared when the page session ends, while localStorage persists even after the browser is closed. Cookies can also be used for storing data that needs to be sent to the server with each request, such as authentication tokens.
               sessionStorage.setItem('accessToken', response.accessToken); // key-value
               sessionStorage.setItem('refreshToken', response.refreshToken);
+              sessionStorage.setItem('userId', JSON.stringify(response.userId)); // store userId-type number as string 
               sessionStorage.setItem('name', response.name);
               sessionStorage.setItem('email', response.email);
               sessionStorage.setItem('username', response.username);
+
+              // Getting Roles info from extracting token
+              const decodedToken: any = jwtDecode(response.accessToken);
+              // console.log("decoded token: ", decodedToken);
+              // role is array/collection data from claims of jwt of backend and first item has Role data
+              sessionStorage.setItem('role', decodedToken.role[0].authority);
             }
           }),
         )
@@ -124,6 +131,18 @@ export class AuthService {
       })
     )
   }
+
+  // This method handles Role verifying and its logic
+  hasRole(role: string): boolean {
+    const token = sessionStorage.getItem('accessToken');
+    if(token){
+      const decodedToken: any = jwtDecode(token);
+      // returns True- if token has role-matching data or else False
+      return decodedToken?.role[0]?.authority.includes(role);
+    }
+
+    return false;
+  }
 }
 
 // Type of payload to be sent to register API-backend
@@ -146,6 +165,7 @@ export type LoginRequest = {
 export type AuthResponse = {
   accessToken: string,
   refreshToken: string,
+  userId: number,
   name: string,
   email: string,
   username: string,

@@ -1,0 +1,35 @@
+.collection-card {
+  overflow: hidden;
+  border-radius: 1rem;
+}
+
+.collection-image-wrapper {
+  aspect-ratio: 16 / 9;
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  overflow: hidden;
+}
+
+.collection-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.review-text {
+  // color: #495057;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  // -webkit-line-clamp: 3;
+  // line-clamp: 3;
+  overflow: hidden;
+  // min-height: 4.5rem;
+}
+
+.empty-state-card {
+  max-width: 40rem;
+  margin: 0 auto;
+}
+
+.margin-right-5p{
+  margin-right: 5px;
+}

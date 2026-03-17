@@ -1,0 +1,14 @@
+<div class="container" style="padding: 15px;">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <p class="text-uppercase text-muted small mb-1">Delete Collection</p>
+            <h1 class="text-center text-md-start mb-0">Are you sure you want to delete this collection
+                <strong>{{data.collection.name}}</strong>? The data will be deleted permanently!</h1>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-center gap-3">
+        <button pButton class="p-button-danger" label="Yes, Delete" (click)="deleteCollection()"></button>
+        <button pButton class="p-button-secondary" label="No, Cancel" (click)="cancelDelete()"></button>
+    </div>
+</div>
