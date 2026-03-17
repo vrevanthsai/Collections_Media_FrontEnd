@@ -54,6 +54,12 @@ export class CollectionsService {
     return this.http.put<CollectionDto>(`${this.BASE_URL}/api/v1/collection/update/${collectionId}`, formData);
   }
 
+  // Delete-Api - /delete/{collectionId} api to delete specified collection data from DB
+  deleteCollectionService(collectionId: number): Observable<string>{
+    return this.http.delete(`${this.BASE_URL}/api/v1/collection/delete/${collectionId}`,{
+      responseType: "text" // here we get deleted string msg as response from delete-api
+    });
+  }
 }
 
 // TODO- Create seperate file for managing Types

@@ -123,13 +123,18 @@ export class AddCollection {
         .subscribe({
           next: (res) => {
             console.log('response = ', res);
+            this.errorNotification = {
+              show: true,
+              type: 'success',
+              text: 'Collection Added Successfully! Please check latest data in Home page!',
+            };
             // reset form after successfull submission
             this.addCollectionForm.reset();
           },
           error: (err) => {
             console.log('error = ', err);
             // navigate to same page if error occurs like to reset page
-            this.router.navigate(['add-collection']);
+            this.router.navigate(['/collections/add-collection']);
             this.errorNotification = {
               show: true,
               type: 'error',

@@ -67,6 +67,7 @@
         <div *ngIf="isAdmin()" class="pt-2">
           <!-- collection - is for-loop item of all-collections array -->
           <button type="submit" (click)="updateCollection(collection)" class="btn btn-primary margin-right-5p">Update</button>
+          <button type="submit" (click)="deleteCollection(collection)" class="btn btn-danger">Delete</button>
         </div>
       </p-card>
     </div>

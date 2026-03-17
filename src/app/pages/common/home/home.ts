@@ -12,6 +12,7 @@ import { TitleCasePipe, CommonModule } from '@angular/common';
 import { AuthService } from '../../auth/services/auth';
 import { MatDialog } from "@angular/material/dialog";
 import { UpdateCollection } from '../../collections/update-collection/update-collection';
+import { DeleteCollection } from '../../collections/delete-collection/delete-collection';
 
 @Component({
   selector: 'app-home',
@@ -154,9 +155,30 @@ export class Home implements OnInit, OnDestroy {
         }
       },
       error: (err) => {
-        console.log("err from Dialog = ", err);
+        console.log("err from update Dialog = ", err);
       }
-    })
+    });
   }
 
+  deleteCollection(collection: CollectionDto){
+    console.log("delete collection: ", collection);
+
+    // Pass data from Home-comp(Parent) to Delelte-comp(Child) while displaying content in DialogModel
+    const dialogRef = this.matDialog.open(DeleteCollection, {
+      data: { collection: collection } // key/value of data object to be shared
+    });
+
+    // When Dialog closes- when user completes his form submission then
+    //  we get/pass boolean result which we use for re-calling GET-All api for showing remaining collection data in cards after deletion
+    dialogRef.afterClosed().subscribe({
+      next: (res: boolean) => {
+        if(res){
+          this.getAllCollections(); // re-call get-api or refreshing home comp
+        }
+      },
+      error: (err) => {
+        console.log("err from delete Dialog = ", err);
+      }
+    });
+  }
 }
