@@ -38,6 +38,22 @@ export class CollectionsService {
     // Call Api
     return this.http.post<CollectionDto>(`${this.BASE_URL}/api/v1/collection/add-collection`, formData); // now formData has both json and image-file
   }
+
+  // Update-Api - /update/collectionId api to update required data into DB
+  updateCollectionService(collectionId: number ,collectionDto: CollectionDto, file?: File | null): Observable<CollectionDto>{
+    // we send both payload and file as seperate args to backend using FormData
+    const formData = new FormData();
+    // formData- both Keys - naming MUST be SAME as declared in Backend-Api-Method params and same types for Better data mapping
+    formData.append("collectionDtoObj", JSON.stringify(collectionDto)); // collectionDtoObj- naming must match backend update-api method arg naming
+    // Here - if new file is given then we send that to DB or we take null which means old image-file is there
+    if(file != null){
+      formData.append("file", file);
+    }
+
+    // Call Update Api
+    return this.http.put<CollectionDto>(`${this.BASE_URL}/api/v1/collection/update/${collectionId}`, formData);
+  }
+
 }
 
 // TODO- Create seperate file for managing Types
