@@ -89,8 +89,6 @@ export class AddCollection {
       privacy: this.privacy,
       // Non-User-input fields with their initial values
       imagename: [null, Validators.required], // TODO- make this field optional from Frontend logic
-      // addedDate: ['', Validators.required],
-      // userId: ['', Validators.required],
     });
   }
 

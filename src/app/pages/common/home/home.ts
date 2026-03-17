@@ -8,14 +8,16 @@ import { CollectionDto, CollectionsService } from '../../services/collections-se
 import { RatingModule } from 'primeng/rating';
 import { FormsModule } from '@angular/forms';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { TitleCasePipe, NgIf } from '@angular/common';
+import { TitleCasePipe, CommonModule } from '@angular/common';
 import { AuthService } from '../../auth/services/auth';
+import { MatDialog } from "@angular/material/dialog";
+import { UpdateCollection } from '../../collections/update-collection/update-collection';
 
 @Component({
   selector: 'app-home',
   // standalone component for new >angV17- when you use a module then import them in their component files instead of app.module.ts
   imports: [RouterLink, CardModule, ButtonModule, TagModule, RatingModule,
-    FormsModule, ProgressSpinnerModule, TitleCasePipe, NgIf],
+    FormsModule, ProgressSpinnerModule, TitleCasePipe, CommonModule],
   templateUrl: './home.html',
   styleUrl: './home.scss',
 })
@@ -24,6 +26,9 @@ export class Home implements OnInit, OnDestroy {
   // Collection Service DI
   collectionService = inject(CollectionsService);
   authService = inject(AuthService);
+  // Angular-Material- MatDialog DI - it is used for sending data from one comp to another comp while using dialog Module to displat - 2nd comp which has 1st comp data
+  matDialog = inject(MatDialog);
+
   // var to store GET-All api res
   collections: CollectionDto[] = [];
   private readonly objectUrls: string[] = [];
@@ -129,6 +134,29 @@ export class Home implements OnInit, OnDestroy {
   isAdmin(): boolean {
     // if stored Role has ADMIN value then returns True or else False(USER)
     return this.authService.hasRole('ADMIN');
+  }
+
+  // Update and Delete Buttons Methods - only enabled for Admin-based Roles
+  updateCollection(collection: CollectionDto){
+    console.log("update collection: ", collection);
+
+    // THis Ref opens DialogModule of Angular-Material when user clicks Update button which contains Update form with shared collection data
+    const dialogRef = this.matDialog.open(UpdateCollection, {
+      data: { collection: collection } // key/value of data object to be shared
+    });
+
+    // When Dialog closes- when user completes his form submission then
+    //  we get/pass boolean result which we use for re-calling GET-All api for showing updated Data of that collection in cards
+    dialogRef.afterClosed().subscribe({
+      next: (res: boolean) => {
+        if(res){
+          this.getAllCollections(); // re-call get-api or refreshing home comp
+        }
+      },
+      error: (err) => {
+        console.log("err from Dialog = ", err);
+      }
+    })
   }
 
 }
