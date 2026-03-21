@@ -27,9 +27,9 @@ export class AddCollection {
   // remaining 3 fields(imagename, addedDate, userId) are not added from User-input, that will be added by this file logic
   name = new FormControl<string>('', [Validators.required]);
   category = new FormControl<string | null>(null, [Validators.required]);
-  rating = new FormControl<number>(0, [
+  rating = new FormControl<number>(1, [
     Validators.required,
-    Validators.min(0),
+    Validators.min(1),
     Validators.max(5),
   ]);
   review = new FormControl<string>('', [Validators.required]);

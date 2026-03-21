@@ -25,12 +25,15 @@
         </div>
         <!-- Collection Rating -->
         <div class="mb-3">
-            <label for="rating" class="form-label">Rating from 0 to 5</label>
-            <!-- Here Rating will be btw 0 to 5 and oninput → If user types more then 5, it automatically changes to 5. -->
+            <label for="rating" class="form-label">Rating from 1 to 5</label>
+            <!-- Here Rating will be btw 1 to 5 and oninput → If user types more then 5, it automatically changes to 5. -->
             <input type="number" class="form-control" id="rating" formControlName="rating" 
-              min="0" max="5" oninput="this.value = this.value > 5 ? 5 : this.value" required />
+              min="1" max="5" oninput="this.value = this.value > 5 ? 5 : this.value" required />
             <div *ngIf="rating.invalid && (rating.dirty || rating.touched)" class="text-danger mt-2">
                 <div *ngIf="rating.errors?.['required']">rating is required.</div>
+                <div *ngIf="rating.errors?.['min']" class="text-danger">
+                    Rating cannot be less than 1
+                </div>
                 <div *ngIf="rating.errors?.['max']" class="text-danger">
                     Rating cannot be greater than 5
                 </div>

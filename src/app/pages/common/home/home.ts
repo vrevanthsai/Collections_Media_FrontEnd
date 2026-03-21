@@ -37,7 +37,9 @@ export class Home implements OnInit, OnDestroy {
 
   // Here we get all collections data when page initially loads once
   ngOnInit(): void {
-    this.getAllCollections();
+    if(this.authService.isAuthenticated()){
+      this.getAllCollections();
+    }
   }
 
   // this lifecycle hook is used for cleanup of created oject URLs to prevent memory leaks when the component is destroyed or navigated away from.

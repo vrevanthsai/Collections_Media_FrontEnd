@@ -98,9 +98,9 @@ export class UpdateCollection {
       this.titleCasePipe.transform(collection.category) ?? null,
       [Validators.required],
     );
-    this.rating = new FormControl<number>(collection.rating ?? 0, [
+    this.rating = new FormControl<number>(collection.rating ?? 1, [
       Validators.required,
-      Validators.min(0),
+      Validators.min(1),
       Validators.max(5),
     ]);
     this.review = new FormControl<string>(collection.review ?? '', [
