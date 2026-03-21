@@ -51,9 +51,6 @@ export class Login {
 
   // function to handle Login form submission
   login() {
-    // to log the form values for debugging the flow
-    console.log('Form Values: ', this.loginForm.value);
-
     // client side validation for form inputs before calling API
     // .valid- gives True - if all required validations of each input of form is correct or else False
     if (this.loginForm.valid) {
