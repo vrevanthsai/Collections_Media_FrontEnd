@@ -5,6 +5,7 @@ import { Register } from './pages/auth/register/register';
 import { AddCollection } from './pages/collections/add-collection/add-collection';
 import { authGuard } from './components/layout/guards/auth-guard';
 import { Intro } from './pages/common/intro/intro';
+import { ForgotPassword } from './pages/auth/forgot-password/forgot-password';
 
 // This file defines the routes for the application. Each route maps a URL path to a component that should be displayed 
 // when the user navigates to that path. The routes are defined as an array of objects,
@@ -17,6 +18,7 @@ export const routes: Routes = [
     // Auth Routes
     { path:'login' , title:"Login Page", component: Login },
     { path:'register' , title:"Register Page", component: Register },
+    { path:'forgot-password' , title:"Forgot Password Page", component: ForgotPassword },
     // Collection Routes
     { path:'collections/add-collection' , title:"Add Collection Page", component: AddCollection ,
         canActivate: [authGuard]
