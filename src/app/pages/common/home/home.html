@@ -5,7 +5,7 @@
       <h1 class="text-center text-md-start mb-0">Welcome to Manga Collection App</h1>
     </div>
 
-    <a routerLink="/collections/add-collection" *ngIf="isAdmin()" pButton class="p-button-primary"
+    <a routerLink="/collections/add-collection" pButton class="p-button-primary"
       label="Add New Collection">
     </a>
   </div>
@@ -63,8 +63,8 @@
                 <span><span class="fw-semibold">User ID:</span> {{ collection.userId }}</span>
               </div> -->
         </div>
-        <!-- Update and Delete Buttons - only enabled for Admin-based Roles -->
-        <div *ngIf="isAdmin()" class="pt-2">
+        <!-- Update and Delete Buttons -->
+        <div class="pt-2">
           <!-- collection - is for-loop item of all-collections array -->
           <button type="submit" (click)="updateCollection(collection)" class="btn btn-primary margin-right-5p">Update</button>
           <button type="submit" (click)="deleteCollection(collection)" class="btn btn-danger">Delete</button>

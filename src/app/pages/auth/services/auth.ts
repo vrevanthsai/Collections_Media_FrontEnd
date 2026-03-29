@@ -92,6 +92,7 @@ export class AuthService {
     sessionStorage.removeItem('name');
     sessionStorage.removeItem('email');
     sessionStorage.removeItem('username');
+    sessionStorage.removeItem('userId');
   }
 
   // Setter/ Getter Methods of Signal-variable

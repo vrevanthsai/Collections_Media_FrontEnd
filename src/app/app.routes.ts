@@ -6,6 +6,7 @@ import { AddCollection } from './pages/collections/add-collection/add-collection
 import { authGuard } from './components/layout/guards/auth-guard';
 import { Intro } from './pages/common/intro/intro';
 import { ForgotPassword } from './pages/auth/forgot-password/forgot-password';
+import { adminGuard } from './components/layout/guards/admin-guard';
 
 // This file defines the routes for the application. Each route maps a URL path to a component that should be displayed 
 // when the user navigates to that path. The routes are defined as an array of objects,
@@ -22,5 +23,9 @@ export const routes: Routes = [
     // Collection Routes
     { path:'collections/add-collection' , title:"Add Collection Page", component: AddCollection ,
         canActivate: [authGuard]
+    },
+    // Admin-Routes- User Mangaement routes
+    { path:'admin/user-management' , title:"User Management Page", component: Intro , // Todo- create its comp
+        canActivate: [authGuard, adminGuard]
     },
 ];
