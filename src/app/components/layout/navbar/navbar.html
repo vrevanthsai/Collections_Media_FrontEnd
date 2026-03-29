@@ -14,8 +14,7 @@
           <li class="nav-item">
             <a class="nav-link" routerLink="/home" routerLinkActive="active">Home</a>
           </li>
-          <!-- Only for Admins - this NavLinks are available -->
-          <li class="nav-item dropdown" *ngIf="isAdmin()">
+          <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">
               Collections
             </a>
@@ -23,6 +22,10 @@
               <li><a class="dropdown-item" routerLink="">Show All Collections</a></li>
               <li><a class="dropdown-item" routerLink="/collections/add-collection" routerLinkActive="active">Add Collection</a></li>
             </ul>
+          </li>
+          <!-- Only for Admins - this NavLinks are available -->
+          <li class="nav-item" *ngIf="isAdmin()">
+            <a class="nav-link" routerLink="/admin/user-management" routerLinkActive="active">User Management</a>
           </li>
           <!-- For logged-IN User -->
           <li>
