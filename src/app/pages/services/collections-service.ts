@@ -20,6 +20,13 @@ export class CollectionsService {
     return this.http.get<CollectionDto[]>(`${this.BASE_URL}/api/v1/collection/all`);
   }
 
+  // GET-ALL collections API based on UserId which we get data only which has that UserId in DB
+  getUserBasedCollections(): Observable<CollectionDto[]>{
+    // Get UserId value from Browser-Session where User Info is stored after loggedIn
+    let userId: string | null = sessionStorage.getItem('userId');
+    return this.http.get<CollectionDto[]>(`${this.BASE_URL}/api/v1/collection/userid/${userId}`)
+  }
+
   // GET-Collection Image API handler which returns the image as a Blob (binary data) and we will convert it to an object URL in the component for display
   // and automatically bearer token is added - so img loads
   getCollectionImage(imageUrl: string): Observable<Blob> {

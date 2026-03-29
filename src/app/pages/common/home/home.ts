@@ -38,7 +38,7 @@ export class Home implements OnInit, OnDestroy {
   // Here we get all collections data when page initially loads once
   ngOnInit(): void {
     if(this.authService.isAuthenticated()){
-      this.getAllCollections();
+      this.getUserBasedCollections();
     }
   }
 
@@ -48,10 +48,11 @@ export class Home implements OnInit, OnDestroy {
     this.objectUrls.forEach((url) => URL.revokeObjectURL(url));
   }
 
-  getAllCollections() {
+  getUserBasedCollections() {
     this.loading.set(true);
 
-    this.collectionService.getAllCollections().subscribe({
+    // this.collectionService.getAllCollections().subscribe({
+    this.collectionService.getUserBasedCollections().subscribe({
       next: (response) => {
         // console.log('response = ', response);
         // this.collections = response;
@@ -153,7 +154,7 @@ export class Home implements OnInit, OnDestroy {
     dialogRef.afterClosed().subscribe({
       next: (res: boolean) => {
         if(res){
-          this.getAllCollections(); // re-call get-api or refreshing home comp
+          this.getUserBasedCollections(); // re-call get-api or refreshing home comp
         }
       },
       error: (err) => {
@@ -175,7 +176,7 @@ export class Home implements OnInit, OnDestroy {
     dialogRef.afterClosed().subscribe({
       next: (res: boolean) => {
         if(res){
-          this.getAllCollections(); // re-call get-api or refreshing home comp
+          this.getUserBasedCollections(); // re-call get-api or refreshing home comp
         }
       },
       error: (err) => {
