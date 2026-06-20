@@ -27,6 +27,11 @@ export class CollectionsService {
     return this.http.get<CollectionDto[]>(`${this.BASE_URL}/api/v1/collection/userid/${userId}`)
   }
 
+  // GET- single collection API handler which returns the collection details of that collectionId
+  getCollectionById(collectionId: number): Observable<CollectionDto> {
+    return this.http.get<CollectionDto>(`${this.BASE_URL}/api/v1/collection/${collectionId}`);
+  }
+
   // GET-Collection Image API handler which returns the image as a Blob (binary data) and we will convert it to an object URL in the component for display
   // and automatically bearer token is added - so img loads
   getCollectionImage(imageUrl: string): Observable<Blob> {
