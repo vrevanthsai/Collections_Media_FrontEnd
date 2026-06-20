@@ -1,187 +1,266 @@
-import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { CommonModule, TitleCasePipe } from '@angular/common';
+import { Component, inject, OnInit, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
-import { TagModule } from 'primeng/tag';
-import { catchError, forkJoin, map, of } from 'rxjs';
-import { CollectionDto, CollectionsService } from '../../services/collections-service';
-import { RatingModule } from 'primeng/rating';
-import { FormsModule } from '@angular/forms';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { TitleCasePipe, CommonModule } from '@angular/common';
+import { RatingModule } from 'primeng/rating';
+import { TagModule } from 'primeng/tag';
 import { AuthService } from '../../auth/services/auth';
-import { MatDialog } from "@angular/material/dialog";
-import { UpdateCollection } from '../../collections/update-collection/update-collection';
-import { DeleteCollection } from '../../collections/delete-collection/delete-collection';
+import {
+  CollectionDto,
+  CollectionFilters,
+  CollectionsService,
+} from '../../services/collections-service';
 
 @Component({
   selector: 'app-home',
-  // standalone component for new >angV17- when you use a module then import them in their component files instead of app.module.ts
-  imports: [RouterLink, CardModule, ButtonModule, TagModule, RatingModule,
-    FormsModule, ProgressSpinnerModule, TitleCasePipe, CommonModule],
+  imports: [
+    RouterLink,
+    CardModule,
+    ButtonModule,
+    TagModule,
+    RatingModule,
+    FormsModule,
+    ProgressSpinnerModule,
+    TitleCasePipe,
+    CommonModule,
+  ],
   templateUrl: './home.html',
   styleUrl: './home.scss',
 })
-export class Home implements OnInit, OnDestroy {
+export class Home implements OnInit {
+  // Limits each Home page to six collection cards.
+  private readonly pageSize = 3;
+  private readonly favoritesStorageKey = 'favoriteCollectionIds';
+  private readonly router = inject(Router);
 
-  // Collection Service DI
   collectionService = inject(CollectionsService);
   authService = inject(AuthService);
-  // Angular-Material- MatDialog DI - it is used for sending data from one comp to another comp while using dialog Module to displat - 2nd comp which has 1st comp data
-  matDialog = inject(MatDialog);
 
-  // var to store GET-All api res
   collections: CollectionDto[] = [];
-  private readonly objectUrls: string[] = [];
-  loading = signal<boolean>(true);
+  originalCollections: CollectionDto[] = [];
+  loading = signal(true);
+  currentPage = 1;
 
-  // Here we get all collections data when page initially loads once
+  // Stores favorite IDs locally because the backend has no favorite API yet.
+  favoriteIds = new Set<number>();
+
+  selectedFilters: CollectionFilters = {
+    category: null,
+    progress: null,
+    privacy: null,
+  };
+
+  categories = [
+    { label: 'All', value: null },
+    { label: 'Anime', value: 'Anime' },
+    { label: 'Movie', value: 'Movie' },
+    { label: 'Manga', value: 'Manga' },
+    { label: 'Manhwa', value: 'Manhwa' },
+  ];
+
+  progressOptions = [
+    { label: 'All', value: null },
+    { label: 'Started', value: 'Started' },
+    { label: 'Completed', value: 'Completed' },
+    { label: 'Watching', value: 'Watching' },
+    { label: 'OnHold', value: 'OnHold' },
+  ];
+
+  privacyOptions = [
+    { label: 'All', value: null },
+    { label: 'Public', value: 'Public' },
+    { label: 'Private', value: 'Private' },
+    { label: 'Friend', value: 'Friend' },
+  ];
+
   ngOnInit(): void {
-    if(this.authService.isAuthenticated()){
+    this.loadFavorites();
+    if (this.authService.isAuthenticated()) {
       this.getUserBasedCollections();
     }
   }
 
-  // this lifecycle hook is used for cleanup of created oject URLs to prevent memory leaks when the component is destroyed or navigated away from.
-  // It revokes all objects URLs created for collection images to free up memory resources.
-  ngOnDestroy(): void {
-    this.objectUrls.forEach((url) => URL.revokeObjectURL(url));
+  // Calculates pagination from the latest collection array.
+  totalPages(): number {
+    return Math.max(1, Math.ceil(this.collections.length / this.pageSize));
   }
 
-  getUserBasedCollections() {
-    this.loading.set(true);
+  // Returns only the cards belonging to the active page.
+  paginatedCollections(): CollectionDto[] {
+    const startIndex = (this.currentPage - 1) * this.pageSize;
+    return this.collections.slice(startIndex, startIndex + this.pageSize);
+  }
 
-    // this.collectionService.getAllCollections().subscribe({
+  // Loads the signed-in user's collections for the Home page.
+  getUserBasedCollections(): void {
+    this.loading.set(true);
+    this.currentPage = 1;
+
     this.collectionService.getUserBasedCollections().subscribe({
       next: (response) => {
-        // console.log('response = ', response);
-        // this.collections = response;
-        // we are calling this function because - we need to get images with token access or else images won't load
-        this.loadProtectedImages(response);
+        this.collections = response;
+        this.originalCollections = response;
+        this.loading.set(false);
       },
-      error: (err) => {
-        console.log('error = ', err);
+      error: (error) => {
+        console.log('Collection load error = ', error);
+        this.collections = [];
+        this.originalCollections = [];
         this.loading.set(false);
       },
     });
   }
 
-  // This method loads protected(SpringSecurity) images for collections from backend and converts them into displayable URLs 
-  // and attaches them to the collection objects so Angular can display them.
-  private loadProtectedImages(collections: CollectionDto[]) {
-    if (collections.length === 0) {
-      this.collections = [];
-      this.loading.set(false);
-      return;
-    }
+  // Updates one filter and requests the matching collection list.
+  applyFilter(type: keyof CollectionFilters, value: string | null): void {
+    if (this.selectedFilters[type] === value) return;
 
-    // Prepares an array of Observables for fetching images for each collection that has an imageUrl. If a collection doesn't have an imageUrl, it simply returns the collection as is.
-    const collectionRequests = collections.map((collection) => {
-      if (!collection.imageUrl) {
-        return of(collection);
-      }
-
-      // Loops through each collection and prepares HTTP requests to fetch images.
-      return this.collectionService.getCollectionImage(collection.imageUrl).pipe(
-        // map()- An RxJS operator used to transform emitted data.
-        map((imageBlob) => {
-          // Converts the image Blob → temporary browser URL so it can be displayed in <img>.
-          const objectUrl = URL.createObjectURL(imageBlob);
-          this.objectUrls.push(objectUrl);
-
-          // Creates a new collection object and replaces imageUrl(from GET-All Api call) with the generated object URL.
-          return {
-            ...collection,
-            imageUrl: objectUrl,
-          };
-        }),
-        // If image loading fails, it logs the error and returns the original collection.
-        catchError((error) => {
-          console.log('image load error = ', error);
-          return of(collection);
-        })
-      );
-    });
-
-    // forkJoin- Combines multiple Observables and waits for all to complete or waits until all image requests finish and once all are done,
-    // Then it updates this.collections with collections that now contain displayable image URLs.
-    forkJoin(collectionRequests).subscribe((collectionsWithImages) => {
-      this.collections = collectionsWithImages;
-      this.loading.set(false);
-    });
+    this.selectedFilters = { ...this.selectedFilters, [type]: value };
+    this.applyLocalFiltersFallback();
   }
 
-  // This function sets the color(severity) of the progress tag/field based on its value
-  getProgressSeverity(progress: string): 'success' | 'info' | 'warn' | 'contrast' {
-    const normalizedProgress = progress.toLowerCase();
+  // Clears every filter and reloads the complete user list.
+  resetFilters(): void {
+    this.selectedFilters = { category: null, progress: null, privacy: null };
+    // If the original collection list is already loaded, we can restore it directly or we call User-based-Collections-Api to get the latest collection list and then restore it.
+    if(this.originalCollections.length > 0) {
+      this.collections = this.originalCollections;
+    } else {
+      this.getUserBasedCollections();
+    }
+  }
 
-    if (normalizedProgress.includes('completed')) {
-      return 'success';
+  hasActiveFilters(): boolean {
+    return !!(
+      this.selectedFilters.category ||
+      this.selectedFilters.progress ||
+      this.selectedFilters.privacy
+    );
+  }
+
+  changePage(page: number): void {
+    if (page >= 1 && page <= this.totalPages()) this.currentPage = page;
+  }
+
+  // Opens the details route when the user selects a collection card.
+  openCollection(collection: CollectionDto): void {
+    if (collection.collectionId == null) return;
+    this.router.navigate(['/collections', collection.collectionId]);
+  }
+
+  // Lets the template render the correct heart state for each card.
+  isFavorite(collection: CollectionDto): boolean {
+    return (
+      collection.collectionId != null &&
+      this.favoriteIds.has(collection.collectionId)
+    );
+  }
+
+  // Toggles the ID and persists favorites across browser refreshes.
+  toggleFavorite(collection: CollectionDto): void {
+    if (collection.collectionId == null) return;
+
+    const nextFavorites = new Set(this.favoriteIds);
+    if (nextFavorites.has(collection.collectionId)) {
+      nextFavorites.delete(collection.collectionId);
+    } else {
+      nextFavorites.add(collection.collectionId);
     }
 
-    if (normalizedProgress.includes('reading') || normalizedProgress.includes('watching')) {
-      return 'info';
-    }
+    this.favoriteIds = nextFavorites;
+    localStorage.setItem(
+      this.favoritesStorageKey,
+      JSON.stringify([...nextFavorites]),
+    );
+  }
 
-    if (normalizedProgress.includes('plan')) {
-      return 'warn';
-    }
+  // Uses the native share sheet, with clipboard copy as a fallback.
+  async shareCollection(collection: CollectionDto): Promise<void> {
+    if (collection.collectionId == null) return;
 
+    const url = `${window.location.origin}/collections/${collection.collectionId}`;
+    const shareData = {
+      title: collection.name,
+      text: `View ${collection.name}.`,
+      url,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(url);
+      }
+    } catch (error) {
+      if ((error as DOMException).name !== 'AbortError') {
+        console.log('Collection share error = ', error);
+      }
+    }
+  }
+
+  // Maps progress values to PrimeNG tag colors.
+  getProgressSeverity(
+    progress: string,
+  ): 'success' | 'info' | 'warn' | 'contrast' {
+    const value = progress.toLowerCase();
+    if (value.includes('completed')) return 'success';
+    if (value.includes('reading') || value.includes('watching')) return 'info';
+    if (value.includes('plan') || value.includes('hold')) return 'warn';
     return 'contrast';
   }
 
-  // This function sets the color(severity) of the privacy tag/field based on its value
-  getPrivacySeverity(privacy: string): 'success' | 'warn' {
-    return privacy.toLowerCase() === 'public' ? 'success' : 'warn';
+  // we use Filters locally/ClientSide-Filtering, as backend filter Api/endpoint is unavailable.
+  private applyLocalFiltersFallback(): void {
+    // If the original collection list is already loaded, we can filter it directly or we call User-based-Collections-Api to get the latest collection list and then filter it locally.
+    if (this.originalCollections.length > 0) {
+      this.collections = this.originalCollections.filter(
+        (collection) =>
+          (!this.selectedFilters.category ||
+            collection.category === this.selectedFilters.category) &&
+          (!this.selectedFilters.progress ||
+            collection.progress === this.selectedFilters.progress) &&
+          (!this.selectedFilters.privacy ||
+            collection.privacy === this.selectedFilters.privacy),
+      );
+    } else {
+      this.collectionService.getUserBasedCollections().subscribe({
+        next: (response) => {
+          this.collections = response.filter(
+            (collection) =>
+              (!this.selectedFilters.category ||
+                collection.category === this.selectedFilters.category) &&
+              (!this.selectedFilters.progress ||
+                collection.progress === this.selectedFilters.progress) &&
+              (!this.selectedFilters.privacy ||
+                collection.privacy === this.selectedFilters.privacy),
+          );
+          this.loading.set(false);
+        },
+        error: (error) => {
+          console.log('Fallback filter error = ', error);
+          this.collections = [];
+          this.loading.set(false);
+        },
+      });
+    }
   }
 
-  isAdmin(): boolean {
-    // if stored Role has ADMIN value then returns True or else False(USER)
-    return this.authService.hasRole('ADMIN');
-  }
-
-  // Update and Delete Buttons Methods - only enabled for Admin-based Roles
-  updateCollection(collection: CollectionDto){
-    console.log("update collection: ", collection);
-
-    // THis Ref opens DialogModule of Angular-Material when user clicks Update button which contains Update form with shared collection data
-    const dialogRef = this.matDialog.open(UpdateCollection, {
-      data: { collection: collection } // key/value of data object to be shared
-    });
-
-    // When Dialog closes- when user completes his form submission then
-    //  we get/pass boolean result which we use for re-calling GET-All api for showing updated Data of that collection in cards
-    dialogRef.afterClosed().subscribe({
-      next: (res: boolean) => {
-        if(res){
-          this.getUserBasedCollections(); // re-call get-api or refreshing home comp
-        }
-      },
-      error: (err) => {
-        console.log("err from update Dialog = ", err);
-      }
-    });
-  }
-
-  deleteCollection(collection: CollectionDto){
-    console.log("delete collection: ", collection);
-
-    // Pass data from Home-comp(Parent) to Delelte-comp(Child) while displaying content in DialogModel
-    const dialogRef = this.matDialog.open(DeleteCollection, {
-      data: { collection: collection } // key/value of data object to be shared
-    });
-
-    // When Dialog closes- when user completes his form submission then
-    //  we get/pass boolean result which we use for re-calling GET-All api for showing remaining collection data in cards after deletion
-    dialogRef.afterClosed().subscribe({
-      next: (res: boolean) => {
-        if(res){
-          this.getUserBasedCollections(); // re-call get-api or refreshing home comp
-        }
-      },
-      error: (err) => {
-        console.log("err from delete Dialog = ", err);
-      }
-    });
+  // Restores valid numeric favorite IDs from local storage.
+  private loadFavorites(): void {
+    try {
+      const storedIds = JSON.parse(
+        localStorage.getItem(this.favoritesStorageKey) ?? '[]',
+      );
+      this.favoriteIds = new Set(
+        Array.isArray(storedIds)
+          ? storedIds.filter((id): id is number => Number.isInteger(id))
+          : [],
+      );
+    } catch {
+      this.favoriteIds = new Set<number>();
+    }
   }
 }

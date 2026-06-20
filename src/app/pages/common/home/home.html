@@ -1,87 +1,202 @@
-<section class="container py-4 py-md-5">
-  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
-    <div>
-      <p class="text-uppercase text-muted small mb-1">Dashboard</p>
-      <h1 class="text-center text-md-start mb-0">Welcome to Manga Collection App</h1>
+﻿<section class="home-shell">
+  <div class="container py-4 py-lg-5">
+    <div class="hero-banner">
+      <div>
+        <p class="eyebrow mb-2">Collection Dashboard</p>
+        <h1 class="mb-2">Manage your manga library with smarter filters</h1>
+        <p class="hero-copy mb-0">
+          Browse every saved collection, narrow by status in one tap, and keep the layout smooth across desktop, tablet,
+          and mobile.
+        </p>
+      </div>
+
+      <div class="hero-actions">
+        <a routerLink="/collections/add-collection" pButton class="p-button-primary" label="Add New Collection"></a>
+      </div>
     </div>
 
-    <a routerLink="/collections/add-collection" pButton class="p-button-primary"
-      label="Add New Collection">
-    </a>
-  </div>
-
-  @if (loading()) {
-  <div class="d-flex justify-content-center my-5">
-    <p-progressSpinner strokeWidth="4" fill="#EEEEEE" animationDuration=".5s"></p-progressSpinner>
-  </div>
-  } @else {
-  @if (collections.length > 0) {
-  <div class="row g-4">
-    <!-- Angular’s new control-flow loop syntax -->
-    <!-- track gives unique identifier for each item and ?? is the nullish coalescing operator- if id not there then uses name+index value -->
-    @for (collection of collections; track collection.collectionId ?? collection.name + $index) {
-    <div class="col-12 col-sm-6 col-xl-4">
-      <p-card class="h-100 collection-card shadow-sm border-0">
-        <ng-template pTemplate="header">
-          <div class="collection-image-wrapper">
-            <!-- img- here in Home page is optional- Todo - can be moved to its single collection page -->
-            <img [src]="collection.imageUrl || 'https://placehold.co/640x360?text=Manga+Collection'"
-              [alt]="collection.name" class="img-fluid collection-image" />
-          </div>
-        </ng-template>
-
-        <ng-template pTemplate="title">
-          <div class="d-flex justify-content-between align-items-start gap-3">
-            <span>{{ collection.name | titlecase}}</span>
-            <p-tag [value]="collection.category | titlecase" severity="contrast"></p-tag>
-          </div>
-        </ng-template>
-
-        <ng-template pTemplate="subtitle">
-          <div class="d-flex flex-wrap gap-2 mt-2">
-            <!-- It displays the collection progress as a colored tag, where the color depends on the progress status and severity - used for conditional stylings -->
-            Status: <p-tag [value]="collection.progress" [severity]="getProgressSeverity(collection.progress)"></p-tag>
-            Privacy: <p-tag [value]="collection.privacy" [severity]="getPrivacySeverity(collection.privacy)"></p-tag>
-          </div>
-        </ng-template>
-
-        <div class="d-flex flex-column gap-3">
-          <div class="small flex align-items-center gap-2">
-            <span class="fw-semibold">Rating: </span>
-            <!-- readonly=true -used because user shouldn't modify the rating on UI-display page,
-                  only update rating value in Update Collection page or IN its Dialog/PopUP Modal -->
-            <p-rating [ngModel]="collection.rating" [readonly]="true">
-            </p-rating>
+    <div class="content-layout">
+      <!-- Filter Section -->
+      <aside class="filters-sidebar" aria-label="Collection filters">
+        <div class="filters-card">
+          <div class="filters-header">
+            <div>
+              <p class="filters-kicker mb-1">Refine results</p>
+              <h3 class="h5 mb-0">Choose Filters</h3>
+            </div>
+            <button type="button" class="btn btn-link p-0 reset-link" (click)="resetFilters()">
+              Reset all
+            </button>
           </div>
 
-          <!-- <p class="mb-0 review-text">
-                {{ collection.review || 'No review added yet.' }}
+          <div class="filter-group">
+            <h3>Filter by category</h3>
+            <div class="filter-options">
+              @for (option of categories; track option.label) {
+              <button type="button" class="filter-chip" [class.active]="selectedFilters.category === option.value"
+                (click)="applyFilter('category', option.value)">
+                {{ option.label }}
+              </button>
+              }
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <h3>Filter by progress</h3>
+            <div class="filter-options">
+              @for (option of progressOptions; track option.label) {
+              <button type="button" class="filter-chip" [class.active]="selectedFilters.progress === option.value"
+                (click)="applyFilter('progress', option.value)">
+                {{ option.label }}
+              </button>
+              }
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <h3>Filter by privacy</h3>
+            <div class="filter-options">
+              @for (option of privacyOptions; track option.label) {
+              <button type="button" class="filter-chip" [class.active]="selectedFilters.privacy === option.value"
+                (click)="applyFilter('privacy', option.value)">
+                {{ option.label }}
+              </button>
+              }
+            </div>
+          </div>
+
+          <button type="button" class="btn btn-dark w-100 reset-button" (click)="resetFilters()">
+            Reset Filters
+          </button>
+        </div>
+      </aside>
+
+      <!-- Main content area for collection results -->
+      <main class="collections-content">
+        <div class="results-panel">
+          @if (loading()) {
+          <div class="results-state">
+            <p-progressSpinner strokeWidth="4" fill="#EEEEEE" animationDuration=".5s"></p-progressSpinner>
+          </div>
+          } @else {
+          <div class="results-topbar">
+            <div>
+              <p class="results-count mb-1">{{ collections.length }} collections found</p>
+              <h2 class="h4 mb-0">Your collection library</h2>
+            </div>
+
+            <div class="results-actions">
+              @if (hasActiveFilters()) {
+              <div class="active-filters">
+                @if (selectedFilters.category) {
+                <p-tag [value]="'Category: ' + selectedFilters.category" severity="contrast"></p-tag>
+                }
+                @if (selectedFilters.progress) {
+                <p-tag [value]="'Progress: ' + selectedFilters.progress" severity="info"></p-tag>
+                }
+                @if (selectedFilters.privacy) {
+                <p-tag [value]="'Privacy: ' + selectedFilters.privacy" severity="warn"></p-tag>
+                }
+              </div>
+              }
+            </div>
+          </div>
+
+          @if (collections.length > 0) {
+          <div class="row g-4">
+            <!-- Angular's new control-flow loop syntax -->
+            <!-- track gives unique identifier for each item and ?? is the nullish coalescing operator- if id not there then uses name+index value -->
+            @for (collection of paginatedCollections(); track collection.collectionId ?? collection.name + $index) {
+            <div class="col-12 col-md-6 col-xxl-4">
+              <!-- The whole card opens its collection details page. -->
+              <article class="collection-card" role="link" tabindex="0" [attr.aria-label]="'View ' + collection.name"
+                (click)="openCollection(collection)" (keydown.enter)="openCollection(collection)">
+                <div class="card-accent" aria-hidden="true"></div>
+
+                <!-- Header keeps long collection names readable and visible. -->
+                <header class="collection-card-header">
+                  <p-tag [value]="collection.category | titlecase" severity="contrast"></p-tag>
+                  <h3 class="collection-name">{{ collection.name | titlecase }}</h3>
+                  <span class="view-hint">Open collection <i class="pi pi-arrow-up-right"></i></span>
+                </header>
+
+                <!-- Summary separates rating and status into scannable rows. -->
+                <div class="collection-summary">
+                  <div class="summary-item rating-summary">
+                    <span class="summary-icon"><i class="pi pi-star-fill"></i></span>
+                    <div>
+                      <span class="meta-label">Rating</span>
+                      <div class="rating-value">
+                        <p-rating [ngModel]="collection.rating" [readonly]="true"></p-rating>
+                        <strong>{{ collection.rating }}/5</strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="summary-item">
+                    <span class="summary-icon status-icon"><i class="pi pi-chart-line"></i></span>
+                    <div>
+                      <span class="meta-label">Status</span>
+                      <p-tag [value]="collection.progress"
+                        [severity]="getProgressSeverity(collection.progress)"></p-tag>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Action events stop here so buttons do not open the card. -->
+                <footer class="card-actions" (click)="$event.stopPropagation()"
+                  (keydown.enter)="$event.stopPropagation()">
+                  <button type="button" class="card-action favorite-btn" [class.active]="isFavorite(collection)"
+                    (click)="toggleFavorite(collection)">
+                    <i [class]="isFavorite(collection) ? 'pi pi-heart-fill' : 'pi pi-heart'"></i>
+                    {{ isFavorite(collection) ? 'Favorited' : 'Add to Favorite' }}
+                  </button>
+                  <button type="button" class="card-action share-btn" (click)="shareCollection(collection)">
+                    <i class="pi pi-share-alt"></i>
+                    Share
+                  </button>
+                </footer>
+              </article>
+            </div>
+            }
+          </div>
+
+          @if (totalPages() > 1) {
+          <!-- Pagination keeps the UI limited to 6 cards per page -->
+          <div class="pagination-bar">
+            <button type="button" class="btn btn-outline-secondary" [disabled]="currentPage === 1"
+              (click)="changePage(currentPage - 1)">
+              Previous
+            </button>
+            <span class="page-indicator">Page {{ currentPage }} of {{ totalPages() }}</span>
+            <button type="button" class="btn btn-outline-secondary" [disabled]="currentPage === totalPages()"
+              (click)="changePage(currentPage + 1)">
+              Next
+            </button>
+          </div>
+          }
+          } @else {
+          <p-card class="shadow-sm border-0 text-center empty-state-card">
+            <div class="py-4">
+              <h2 class="h4 mb-2">No collections available</h2>
+              <p class="text-muted mb-4">
+                {{ hasActiveFilters() ? 'No collections matched the selected filters.' : 'Start by adding your first
+                manga collection.' }}
               </p>
+              <div class="empty-state-actions">
+                @if (hasActiveFilters()) {
+                <button type="button" class="btn btn-dark" (click)="resetFilters()">Clear Filters</button>
+                }
+                <a routerLink="/collections/add-collection" pButton class="p-button-outlined"
+                  label="Create Collection"></a>
+              </div>
+            </div>
+          </p-card>
+          }
+          }
+        </div>
+      </main>
+    </div>
 
-              <div class="small d-flex flex-column">
-                <span><span class="fw-semibold">Added:</span> {{ collection.addedDate }}</span>
-                <span><span class="fw-semibold">User ID:</span> {{ collection.userId }}</span>
-              </div> -->
-        </div>
-        <!-- Update and Delete Buttons -->
-        <div class="pt-2">
-          <!-- collection - is for-loop item of all-collections array -->
-          <button type="submit" (click)="updateCollection(collection)" class="btn btn-primary margin-right-5p">Update</button>
-          <button type="submit" (click)="deleteCollection(collection)" class="btn btn-danger">Delete</button>
-        </div>
-      </p-card>
-    </div>
-    }
   </div>
-  } @else {
-  <p-card class="shadow-sm border-0 text-center empty-state-card">
-    <div class="py-4">
-      <h2 class="h4 mb-2">No collections available</h2>
-      <p class="text-muted mb-4">Start by adding your first manga collection.</p>
-      <a routerLink="/collections/add-collection" pButton class="p-button-outlined" label="Create Collection">
-      </a>
-    </div>
-  </p-card>
-  }
-  }
 </section>

@@ -84,3 +84,10 @@ export type CollectionDto = {
   imagename?: string, // optional field
   imageUrl?: string, // optional field
 };
+
+// Home page filter payload type for filter-api calls
+export type CollectionFilters = {
+  category?: string | null;
+  progress?: string | null;
+  privacy?: string | null;
+};
