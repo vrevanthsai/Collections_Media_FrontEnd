@@ -9,10 +9,11 @@ import {
 import { AuthService, RegisterRequest } from '../services/auth';
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { MultiSelectModule } from 'primeng/multiselect';
 
 @Component({
   selector: 'app-register',
-  imports: [ReactiveFormsModule, CommonModule, RouterLink],
+  imports: [ReactiveFormsModule, CommonModule, RouterLink, MultiSelectModule],
   templateUrl: './register.html',
   styleUrl: './register.scss',
 })
@@ -36,6 +37,8 @@ export class Register {
     text: '',
   };
 
+  defaultCategories: any[] = [];
+
   // do Dependency Injection for FormBuilder and create form group
   // DI for AuthService to call API integration functions
   // Router DI to navigate user to login page after successful registration
@@ -51,6 +54,43 @@ export class Register {
       email: this.email,
       username: this.username,
       password: this.password,
+      selectedCategories: [
+        [],
+        [Validators.required, this.minCategoryValidator(3)],
+      ],
+    });
+  }
+
+  ngOnInit(): void {
+    this.loadDefaultCategories();
+  }
+
+  // Custom Validator for MultiSelect to ensure at least 3 categories are selected
+  minCategoryValidator(min: number) {
+    return (control: any) => {
+      if (!control.value || control.value.length < min) {
+        return { minCategories: true };
+      }
+
+      return null;
+    };
+  }
+
+  loadDefaultCategories(): void {
+    this.authService.getDefaultCategories().subscribe({
+      next: (data) => {
+        this.defaultCategories = data;
+
+        // Select first 3 categories by default
+        this.registerForm.patchValue({
+          selectedCategories: data
+            .slice(0, 3)
+            .map((category) => category.categoryName),
+        });
+      },
+      error: (err) => {
+        console.error(err);
+      },
     });
   }
 
@@ -70,6 +110,7 @@ export class Register {
         email: this.registerForm.get('email')?.value,
         username: this.registerForm.get('username')?.value,
         password: this.registerForm.get('password')?.value,
+        selectedCategories: this.registerForm.value.selectedCategories,
       };
 
       // Todo- add client side validation for form inputs before calling API
@@ -96,7 +137,7 @@ export class Register {
           };
         },
       });
-    }else {
+    } else {
       this.errorNotification = {
         show: true,
         type: 'validation',

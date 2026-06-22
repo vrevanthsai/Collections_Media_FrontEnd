@@ -14,8 +14,7 @@ export class AuthService {
   // if signal value changed then it reflects all over application
   private loggedIn = signal<boolean>(false);
   // get user info from sessionStorage which is stored after user logged-In(or login-service-method)
-  private name = signal<string | null>(sessionStorage.getItem('name')); 
-
+  private name = signal<string | null>(sessionStorage.getItem('name'));
 
   // DI for HttpClient for API integrations
   constructor(private http: HttpClient) {}
@@ -34,6 +33,11 @@ export class AuthService {
     );
   }
 
+  // Get Default Categories from backend API
+  getDefaultCategories() {
+    return this.http.get<any[]>(`${this.BASE_URL}/api/categories/default`);
+  }
+
   // Login Api integration
   login(loginRequest: LoginRequest): Observable<AuthResponse> {
     return (
@@ -46,11 +50,11 @@ export class AuthService {
           tap((response) => {
             if (response && response.accessToken) {
               // TODO - encrypt the tokens and info further before storing them in Browser sessions
-              // TOTO- store this data in localStorage/cookies instead of sessionStorage 
+              // TOTO- store this data in localStorage/cookies instead of sessionStorage
               // because sessionStorage is cleared when the page session ends, while localStorage persists even after the browser is closed. Cookies can also be used for storing data that needs to be sent to the server with each request, such as authentication tokens.
               sessionStorage.setItem('accessToken', response.accessToken); // key-value
               sessionStorage.setItem('refreshToken', response.refreshToken);
-              sessionStorage.setItem('userId', JSON.stringify(response.userId)); // store userId-type number as string 
+              sessionStorage.setItem('userId', JSON.stringify(response.userId)); // store userId-type number as string
               sessionStorage.setItem('name', response.name);
               sessionStorage.setItem('email', response.email);
               sessionStorage.setItem('username', response.username);
@@ -67,26 +71,26 @@ export class AuthService {
   }
 
   // Getter/Setter for name signal variable
-  setName(value: string | null){
+  setName(value: string | null) {
     this.name.set(value);
   }
-  getName() : WritableSignal<string | null>{
+  getName(): WritableSignal<string | null> {
     return this.name;
   }
 
   // check user logged-in or not- used in navbar component for conditional rendering of login/logout button and to show user name
   // this function is useful to set True to User-State when user comes after 1st loggedIN then no logIn is needed for User to enter
-  isAuthenticated(): boolean{
+  isAuthenticated(): boolean {
     const token = sessionStorage.getItem('accessToken');
     // we parallelly update loggedIn siganl of auth service - so that when ever auth-guard of app.route checks for user authentication then loggedIn siganl is also updated with correct state value -
     // so that it will reflect all over(in navbar comp to show selected nav-links depending on user loggedIn state) application
     this.loggedIn.set(!!token && !this.isTokenExpired(token));
     // token should not be null and Token is not expired then returns True or else False
-    return token!= null && !this.isTokenExpired(token);
+    return token != null && !this.isTokenExpired(token);
   }
 
   // Logout Feature - clears all stored user tokens and info from sessions which means user logged out
-  logout(): void{
+  logout(): void {
     sessionStorage.removeItem('accessToken');
     sessionStorage.removeItem('refreshToken');
     sessionStorage.removeItem('name');
@@ -96,11 +100,11 @@ export class AuthService {
   }
 
   // Setter/ Getter Methods of Signal-variable
-  setLoggedIn(value: boolean){
+  setLoggedIn(value: boolean) {
     this.loggedIn.set(value);
   }
 
-  getLoggedIn() : WritableSignal<boolean>{
+  getLoggedIn(): WritableSignal<boolean> {
     return this.loggedIn;
   }
 
@@ -109,34 +113,38 @@ export class AuthService {
     // jwtDecode(token) is used for decoding token and getting info from it
     const decodedToken: any = jwtDecode(token);
     // if token has expired time less then current-time then returns False(Token Not Expired) or else True(Token Expired)
-    return (decodedToken.exp * 1000) < Date.now();
+    return decodedToken.exp * 1000 < Date.now();
   }
 
   // THis method Gets new Access Token(jwtToken) when available refreshToken is valid
   // THis method returns async value- so we use Observable-Return-Type
-  refreshToken(): Observable<any>{
+  refreshToken(): Observable<any> {
     const refToken = sessionStorage.getItem('refreshToken');
-    const refTokenObj : RefreshTokenRequest = {
-      refreshToken: refToken
-    }
+    const refTokenObj: RefreshTokenRequest = {
+      refreshToken: refToken,
+    };
     // Post Api call-args- Api-URL, payload
-    return this.http.post(`${this.BASE_URL}/api/v1/auth/refresh`, refTokenObj).pipe(
-      // we get res.accessToken which is new AccessToken and we replace it with old token in sessionStorage
-      // and refreshToken will not change
-      tap((res: any) => sessionStorage.setItem('accessToken', res.accessToken)),
-      catchError(err => {
-        // when we get error(like our provided RefreshToken is Expired) while getting new token then we logout user
-        this.logout();
-        // TODO- give better error handling and ask user to relogin after logout due to error
-        return throwError(() => err);
-      })
-    )
+    return this.http
+      .post(`${this.BASE_URL}/api/v1/auth/refresh`, refTokenObj)
+      .pipe(
+        // we get res.accessToken which is new AccessToken and we replace it with old token in sessionStorage
+        // and refreshToken will not change
+        tap((res: any) =>
+          sessionStorage.setItem('accessToken', res.accessToken),
+        ),
+        catchError((err) => {
+          // when we get error(like our provided RefreshToken is Expired) while getting new token then we logout user
+          this.logout();
+          // TODO- give better error handling and ask user to relogin after logout due to error
+          return throwError(() => err);
+        }),
+      );
   }
 
   // This method handles Role verifying and its logic
   hasRole(role: string): boolean {
     const token = sessionStorage.getItem('accessToken');
-    if(token){
+    if (token) {
       const decodedToken: any = jwtDecode(token);
       // returns True- if token has role-matching data or else False
       return decodedToken?.role[0]?.authority.includes(role);
@@ -151,27 +159,28 @@ export class AuthService {
 // these Types will be used in other files so
 // Todo- create separate file for types and import from there in all files to avoid redundancy and for better code management
 export type RegisterRequest = {
-  name: string,
-  email: string,
-  username: string,
-  password: string,
-}
+  name: string;
+  email: string;
+  username: string;
+  password: string;
+  selectedCategories: string[];
+};
 
 export type LoginRequest = {
-  email: string,
-  password: string,
-}
+  email: string;
+  password: string;
+};
 
 // Type of same auth response from both backend register/login APIs
 export type AuthResponse = {
-  accessToken: string,
-  refreshToken: string,
-  userId: number,
-  name: string,
-  email: string,
-  username: string,
-}
+  accessToken: string;
+  refreshToken: string;
+  userId: number;
+  name: string;
+  email: string;
+  username: string;
+};
 
 export type RefreshTokenRequest = {
-  refreshToken: string | null // string or null
-}
+  refreshToken: string | null; // string or null
+};
