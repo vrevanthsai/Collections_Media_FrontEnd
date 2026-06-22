@@ -1,0 +1,108 @@
+<section class="detail-shell">
+  <div class="container py-4 py-lg-5">
+    <a routerLink="/home" class="back-link">
+      <i class="pi pi-arrow-left"></i>
+      Back to collections
+    </a>
+
+    <!-- Show one clear state while data is loading, missing, or ready. -->
+    @if (loading()) {
+      <div class="detail-state">
+        <p-progressSpinner strokeWidth="4" animationDuration=".5s"></p-progressSpinner>
+      </div>
+    } @else if (errorMessage()) {
+      <div class="detail-state error-state">
+        <h1>Collection unavailable</h1>
+        <p>{{ errorMessage() }}</p>
+        <a routerLink="/home" pButton label="Return Home"></a>
+      </div>
+    } @else if (collection(); as item) {
+      <!-- The detail card places the cover beside all collection information. -->
+      <article class="detail-card">
+        <div class="cover-panel">
+          <img
+            [src]="item.imageUrl || 'https://placehold.co/900x1200?text=No+Cover'"
+            [alt]="item.name"
+            class="collection-cover" />
+        </div>
+
+        <div class="detail-content">
+          <div class="title-row">
+            <div>
+              <p class="eyebrow">Collection details</p>
+              <h1>{{ item.name | titlecase }}</h1>
+            </div>
+            <p-tag [value]="item.category | titlecase" severity="contrast"></p-tag>
+          </div>
+
+          <div class="status-row">
+            <div class="rating-block">
+              <span>Rating</span>
+              <p-rating [ngModel]="item.rating" [readonly]="true"></p-rating>
+            </div>
+            <p-tag [value]="item.progress" [severity]="getProgressSeverity(item.progress)"></p-tag>
+            <p-tag [value]="item.privacy" [severity]="getPrivacySeverity(item.privacy)"></p-tag>
+          </div>
+
+          <!-- Review remains readable even when no text was saved. -->
+          <section class="review-section">
+            <h2>Review</h2>
+            <p>{{ item.review || 'No review has been added yet.' }}</p>
+          </section>
+
+          <!-- Definition-list markup pairs every label with its stored value. -->
+          <dl class="metadata-grid">
+            <div>
+              <dt>Type</dt>
+              <dd>{{ item.category | titlecase }}</dd>
+            </div>
+            <div>
+              <dt>Status</dt>
+              <dd>{{ item.progress }}</dd>
+            </div>
+            <div>
+              <dt>Privacy</dt>
+              <dd>{{ item.privacy }}</dd>
+            </div>
+            <div>
+              <dt>Added date</dt>
+              <dd>{{ item.addedDate || 'Not available' }}</dd>
+            </div>
+            <div>
+              <dt>Collection ID</dt>
+              <dd>{{ item.collectionId }}</dd>
+            </div>
+            <div>
+              <dt>User ID</dt>
+              <dd>{{ item.userId }}</dd>
+            </div>
+            <div>
+              <dt>Image name</dt>
+              <dd>{{ item.imagename || 'Not available' }}</dd>
+            </div>
+          </dl>
+
+          <!-- Update and Delete reuse the existing dialog components. -->
+          <div class="detail-actions">
+            <button type="button" class="btn btn-primary" (click)="updateCollection()">
+              <i class="pi pi-pencil"></i>
+              Update
+            </button>
+            <button type="button" class="btn btn-danger" (click)="deleteCollection()">
+              <i class="pi pi-trash"></i>
+              Delete
+            </button>
+            <button type="button" class="btn btn-outline-dark" (click)="shareCollection()">
+              <i class="pi pi-share-alt"></i>
+              Share
+            </button>
+          </div>
+
+          @if (shareMessage()) {
+            <p class="share-message" aria-live="polite">{{ shareMessage() }}</p>
+          }
+        </div>
+      </article>
+    }
+  </div>
+</section>

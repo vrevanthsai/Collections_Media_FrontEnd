@@ -1,0 +1,190 @@
+.detail-shell {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(219, 234, 254, 0.85), transparent 30%),
+    linear-gradient(180deg, #f8fafc, #eef2ff);
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-bottom: 1.25rem;
+  color: #334155;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+// Two columns keep the cover and information balanced on desktop.
+.detail-card {
+  display: grid;
+  grid-template-columns: minmax(18rem, 0.8fr) minmax(0, 1.2fr);
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 1.75rem;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
+}
+
+.cover-panel {
+  min-height: 34rem;
+  background: linear-gradient(135deg, #dbeafe, #e2e8f0);
+}
+
+.collection-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.detail-content {
+  padding: clamp(1.5rem, 4vw, 3rem);
+}
+
+.title-row,
+.status-row,
+.detail-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+}
+
+.title-row {
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.title-row h1 {
+  margin: 0;
+  color: #0f172a;
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  line-height: 1.05;
+}
+
+.eyebrow {
+  margin-bottom: 0.5rem;
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.status-row {
+  margin-top: 1.5rem;
+}
+
+.rating-block {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-weight: 700;
+}
+
+.review-section {
+  margin-top: 2rem;
+  padding: 1.25rem;
+  border-radius: 1rem;
+  background: #f8fafc;
+}
+
+.review-section h2 {
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+}
+
+.review-section p {
+  margin: 0;
+  color: #475569;
+  line-height: 1.7;
+}
+
+// Metadata uses two columns until the mobile breakpoint stacks it.
+.metadata-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0 0;
+}
+
+.metadata-grid div {
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+}
+
+.metadata-grid dt {
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.metadata-grid dd {
+  margin: 0.35rem 0 0;
+  color: #0f172a;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.detail-actions {
+  margin-top: 2rem;
+}
+
+.detail-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+}
+
+.share-message {
+  margin: 0.85rem 0 0;
+  color: #475569;
+}
+
+.detail-state {
+  display: grid;
+  min-height: 24rem;
+  place-items: center;
+  text-align: center;
+}
+
+.error-state {
+  align-content: center;
+  gap: 0.75rem;
+}
+
+// Tablet layouts place the image above the details.
+@media (max-width: 991.98px) {
+  .detail-card {
+    grid-template-columns: 1fr;
+  }
+
+  .cover-panel {
+    min-height: auto;
+    max-height: 34rem;
+    aspect-ratio: 16 / 10;
+  }
+}
+
+// Mobile layouts stack metadata and make actions easy to tap.
+@media (max-width: 575.98px) {
+  .detail-card {
+    border-radius: 1.25rem;
+  }
+
+  .cover-panel {
+    aspect-ratio: 4 / 3;
+  }
+
+  .metadata-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-actions .btn {
+    width: 100%;
+  }
+}

@@ -3,6 +3,7 @@ import { Home } from './pages/common/home/home';
 import { Login } from './pages/auth/login/login';
 import { Register } from './pages/auth/register/register';
 import { AddCollection } from './pages/collections/add-collection/add-collection';
+import { CollectionDetail } from './pages/collections/collection-detail/collection-detail';
 import { authGuard } from './components/layout/guards/auth-guard';
 import { Intro } from './pages/common/intro/intro';
 import { ForgotPassword } from './pages/auth/forgot-password/forgot-password';
@@ -22,6 +23,10 @@ export const routes: Routes = [
     { path:'forgot-password' , title:"Forgot Password Page", component: ForgotPassword },
     // Collection Routes
     { path:'collections/add-collection' , title:"Add Collection Page", component: AddCollection ,
+        canActivate: [authGuard]
+    },
+    // Dynamic ID opens the selected collection's full details page.
+    { path:'collections/:id' , title:"Collection Details", component: CollectionDetail,
         canActivate: [authGuard]
     },
     // Admin-Routes- User Mangaement routes
