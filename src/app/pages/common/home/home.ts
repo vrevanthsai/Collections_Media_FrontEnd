@@ -13,6 +13,7 @@ import {
   CollectionFilters,
   CollectionsService,
 } from '../../services/collections-service';
+import { CategoryService } from '../../services/category-service';
 
 @Component({
   selector: 'app-home',
@@ -38,6 +39,7 @@ export class Home implements OnInit {
 
   collectionService = inject(CollectionsService);
   authService = inject(AuthService);
+  categoryService = inject(CategoryService);
 
   collections: CollectionDto[] = [];
   originalCollections: CollectionDto[] = [];
@@ -55,11 +57,10 @@ export class Home implements OnInit {
 
   categories = [
     { label: 'All', value: null },
-    { label: 'Anime', value: 'Anime' },
-    { label: 'Movie', value: 'Movie' },
-    { label: 'Manga', value: 'Manga' },
-    { label: 'Manhwa', value: 'Manhwa' },
   ];
+
+  // get user info from sessionStorage which is stored after user logged-In
+  userId = signal<string | null>(sessionStorage.getItem('userId'));
 
   progressOptions = [
     { label: 'All', value: null },
@@ -80,6 +81,28 @@ export class Home implements OnInit {
     this.loadFavorites();
     if (this.authService.isAuthenticated()) {
       this.getUserBasedCollections();
+    }
+    this.loadCategories();
+  }
+
+  loadCategories(): void {
+    let userId = parseInt(this.userId() || ''); // Convert to number, default to 0 if null
+
+    if (!isNaN(userId)) {
+      this.categoryService.getUserCategories(userId).subscribe({
+        next: (data) => {
+          let categoriesData = data.map((category) => ({
+            label: category.categoryName,
+            value: category.categoryId,
+          }));
+          this.categories = [...this.categories, ...categoriesData];
+        },
+        error: (err) => {
+          console.error(err);
+        },
+      });
+    } else {
+      console.error('Invalid userId: ', userId);
     }
   }
 

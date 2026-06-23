@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import {
   FormBuilder,
   FormControl,
@@ -14,6 +14,7 @@ import {
 } from '../../services/collections-service';
 import { SelectModule } from 'primeng/select';
 import { CommonModule } from '@angular/common';
+import { CategoryService } from '../../services/category-service';
 
 @Component({
   selector: 'app-add-collection',
@@ -49,13 +50,11 @@ export class AddCollection {
     text: '',
   };
 
-  // Collection Category-Type Default-Manual data
-  categories = [
-    { label: 'Anime', value: 'Anime' },
-    { label: 'Movie', value: 'Movie' },
-    { label: 'Manga', value: 'Manga' },
-    { label: 'Manhwa', value: 'Manhwa' },
-  ];
+  // Collection Category-Type dynamic data
+  categories: any[] = [];
+
+  // get user info from sessionStorage which is stored after user logged-In
+  userId = signal<string | null>(sessionStorage.getItem('userId'));
 
   // Collection Progress-Dropdown Fixed data
   progressData = [
@@ -77,6 +76,7 @@ export class AddCollection {
     private authService: AuthService,
     private router: Router,
     private collectionService: CollectionsService,
+    private categoryService: CategoryService,
   ) {
     // bind form controls to form group
     this.addCollectionForm = this.formBuilder.group({
@@ -90,6 +90,30 @@ export class AddCollection {
       // Non-User-input fields with their initial values
       imagename: [null, Validators.required], // TODO- make this field optional from Frontend logic
     });
+  }
+
+  ngOnInit(): void {
+    this.loadCategories();
+  }
+
+  loadCategories(): void {
+    let userId = parseInt(this.userId() || ''); // Convert to number, default to 0 if null
+
+    if (!isNaN(userId)) {
+      this.categoryService.getUserCategories(userId).subscribe({
+        next: (data) => {
+          this.categories = data.map((category) => ({
+            label: category.categoryName,
+            value: category.categoryId,
+          }));
+        },
+        error: (err) => {
+          console.error(err);
+        },
+      });
+    } else {
+      console.error('Invalid userId: ', userId);
+    }
   }
 
   // File/Image handling Methods

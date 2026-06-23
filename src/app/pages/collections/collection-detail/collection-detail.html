@@ -32,7 +32,7 @@
               <p class="eyebrow">Collection details</p>
               <h1>{{ item.name | titlecase }}</h1>
             </div>
-            <p-tag [value]="item.category | titlecase" severity="contrast"></p-tag>
+            <p-tag [value]="(item.categoryName ?? '') | titlecase" severity="contrast"></p-tag>
           </div>
 
           <div class="status-row">
@@ -54,7 +54,7 @@
           <dl class="metadata-grid">
             <div>
               <dt>Type</dt>
-              <dd>{{ item.category | titlecase }}</dd>
+              <dd>{{ item.categoryName | titlecase }}</dd>
             </div>
             <div>
               <dt>Status</dt>

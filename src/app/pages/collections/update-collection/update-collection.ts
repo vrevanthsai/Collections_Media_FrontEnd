@@ -1,4 +1,4 @@
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, signal } from '@angular/core';
 import {
   FormBuilder,
   FormControl,
@@ -15,6 +15,7 @@ import {
 import { SelectModule } from 'primeng/select';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { CommonModule, NgIf, TitleCasePipe } from '@angular/common';
+import { CategoryService } from '../../services/category-service';
 
 @Component({
   selector: 'app-update-collection',
@@ -52,13 +53,8 @@ export class UpdateCollection {
     text: '',
   };
 
-  // Collection Category-Type Default-Manual data
-  categories = [
-    { label: 'Anime', value: 'Anime' },
-    { label: 'Movie', value: 'Movie' },
-    { label: 'Manga', value: 'Manga' },
-    { label: 'Manhwa', value: 'Manhwa' },
-  ];
+  // Collection Category-Type dynamic data
+  categories: any[] = [];
 
   // Collection Progress-Dropdown Fixed data
   progressData = [
@@ -84,7 +80,8 @@ export class UpdateCollection {
     private authService: AuthService,
     private router: Router,
     private collectionService: CollectionsService,
-    private titleCasePipe: TitleCasePipe
+    private titleCasePipe: TitleCasePipe,
+    private categoryService: CategoryService,
   ) {
     // create local var to store incoming data
     const collection = this.data.collection;
@@ -95,7 +92,7 @@ export class UpdateCollection {
     ]);
     this.category = new FormControl<string | null>(
       // Convert Category-value from Parent-comp from backend to Capital-Title case- so category-dropdown can auto-selct the value
-      this.titleCasePipe.transform(collection.category) ?? null,
+      collection.category ?? null,
       [Validators.required],
     );
     this.rating = new FormControl<number>(collection.rating ?? 1, [
@@ -131,6 +128,30 @@ export class UpdateCollection {
     this.addedDate = collection.addedDate ?? '';
     this.collectionId = collection.collectionId!; // !- this must not be null value
     this.imagename = collection.imageUrl ?? '';
+  }
+
+  ngOnInit(): void {
+    this.loadCategories();
+  }
+
+  loadCategories(): void {
+    let userId = parseInt(this.userId || ''); // Convert to number, default to 0 if null
+
+    if (!isNaN(userId)) {
+      this.categoryService.getUserCategories(userId).subscribe({
+        next: (data) => {
+          this.categories = data.map((category) => ({
+            label: category.categoryName,
+            value: category.categoryId,
+          }));
+        },
+        error: (err) => {
+          console.error(err);
+        },
+      });
+    } else {
+      console.error('Invalid userId: ', userId);
+    }
   }
 
   // File/Image handling Methods

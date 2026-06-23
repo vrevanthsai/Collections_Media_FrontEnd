@@ -114,8 +114,8 @@
                 <div class="card-accent" aria-hidden="true"></div>
 
                 <!-- Header keeps long collection names readable and visible. -->
-                <header class="collection-card-header">
-                  <p-tag [value]="collection.category | titlecase" severity="contrast"></p-tag>
+                  <header class="collection-card-header">
+                  <p-tag [value]="(collection.categoryName ?? '') | titlecase" severity="contrast"></p-tag>
                   <h3 class="collection-name">{{ collection.name | titlecase }}</h3>
                   <span class="view-hint">Open collection <i class="pi pi-arrow-up-right"></i></span>
                 </header>

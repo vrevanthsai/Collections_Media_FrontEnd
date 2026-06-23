@@ -80,6 +80,7 @@ export type CollectionDto = {
   collectionId?: number, // optional field
   name: string,
   category: string,
+  categoryName?: string, // added for better display in UI
   userId: string,
   rating: number,
   review: string,
