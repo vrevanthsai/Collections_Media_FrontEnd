@@ -32,6 +32,17 @@ export class CategoryService {
       categoryRequest,
     );
   }
+
+  // Put-Api - /update-category api to update existing category data into DB
+  updateCategoryService(
+    categoryId: number,
+    categoryRequest: CategoryRequest,
+  ): Observable<CategoryResponse> {
+    return this.http.put<CategoryResponse>(
+      `${this.BASE_URL}/api/categories/update-category/${categoryId}`,
+      categoryRequest,
+    );
+  }
 }
 
 // Type used for Api request object/Json which is send to backend for adding new category api

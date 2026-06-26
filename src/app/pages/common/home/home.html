@@ -106,7 +106,7 @@
           <div class="row g-4">
             <!-- Angular's new control-flow loop syntax -->
             <!-- track gives unique identifier for each item and ?? is the nullish coalescing operator- if id not there then uses name+index value -->
-            @for (collection of paginatedCollections(); track collection.collectionId ?? collection.name + $index) {
+            @for (collection of paginatedCollections(); track collection.collectionId ?? collection.name + $index; let i = $index) {
             <div class="col-12 col-md-6 col-xxl-4">
               <!-- The whole card opens its collection details page. -->
               <article class="collection-card" role="link" tabindex="0" [attr.aria-label]="'View ' + collection.name"
@@ -116,7 +116,7 @@
                 <!-- Header keeps long collection names readable and visible. -->
                   <header class="collection-card-header">
                   <p-tag [value]="(collection.categoryName ?? '') | titlecase" severity="contrast"></p-tag>
-                  <h3 class="collection-name">{{ collection.name | titlecase }}</h3>
+                  <h3 class="collection-name">{{ i + 1 }}. {{ collection.name | titlecase }}</h3>
                   <span class="view-hint">Open collection <i class="pi pi-arrow-up-right"></i></span>
                 </header>
 
