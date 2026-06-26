@@ -76,6 +76,7 @@ export class Home implements OnInit {
     { label: 'Private', value: 'Private' },
     { label: 'Friend', value: 'Friend' },
   ];
+  selectedCategoryLabel: string | null = null;
 
   ngOnInit(): void {
     this.loadFavorites();

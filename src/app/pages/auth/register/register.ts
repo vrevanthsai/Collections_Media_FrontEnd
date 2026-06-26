@@ -10,6 +10,7 @@ import { AuthService, RegisterRequest } from '../services/auth';
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MultiSelectModule } from 'primeng/multiselect';
+import { CategoryService } from '../../services/category-service';
 
 @Component({
   selector: 'app-register',
@@ -46,6 +47,7 @@ export class Register {
     private formBuilder: FormBuilder,
     private authService: AuthService,
     private router: Router,
+    private categoryService: CategoryService,
   ) {
     // bind form controls to form group
     this.registerForm = this.formBuilder.group({
@@ -77,7 +79,7 @@ export class Register {
   }
 
   loadDefaultCategories(): void {
-    this.authService.getDefaultCategories().subscribe({
+    this.categoryService.getDefaultCategories().subscribe({
       next: (data) => {
         this.defaultCategories = data;
 

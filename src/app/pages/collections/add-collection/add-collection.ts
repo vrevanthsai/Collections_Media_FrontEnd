@@ -15,10 +15,12 @@ import {
 import { SelectModule } from 'primeng/select';
 import { CommonModule } from '@angular/common';
 import { CategoryService } from '../../services/category-service';
+import { TabsModule } from 'primeng/tabs';
+import { AddCategory } from '../../categories/add-category/add-category';
 
 @Component({
   selector: 'app-add-collection',
-  imports: [ReactiveFormsModule, CommonModule, SelectModule],
+  imports: [ReactiveFormsModule, CommonModule, SelectModule, TabsModule, AddCategory],
   templateUrl: './add-collection.html',
   styleUrl: './add-collection.scss',
 })

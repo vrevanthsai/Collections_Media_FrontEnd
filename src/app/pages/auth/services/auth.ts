@@ -33,11 +33,6 @@ export class AuthService {
     );
   }
 
-  // Get Default Categories from backend API
-  getDefaultCategories() {
-    return this.http.get<any[]>(`${this.BASE_URL}/api/categories/default`);
-  }
-
   // Login Api integration
   login(loginRequest: LoginRequest): Observable<AuthResponse> {
     return (

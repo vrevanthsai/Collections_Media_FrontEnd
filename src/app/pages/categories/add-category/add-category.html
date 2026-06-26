@@ -1,0 +1,18 @@
+<div class="container">
+    <h2 class="text-center">Add Category Form</h2>
+    <form [formGroup]="addCategoryForm" (ngSubmit)="addCategory()">
+        <!-- section to show error msg from backend if form submission fails -->
+        <div *ngIf="errorNotification.show" class="text-danger mb-3">
+            {{ errorNotification.text }}
+        </div>
+        <!-- Category Name -->
+        <div class="mb-3">
+            <label for="categoryName" class="form-label">Category Name</label>
+            <input type="text" class="form-control" id="categoryName" formControlName="categoryName" required />
+            <div *ngIf="categoryName.invalid && (categoryName.dirty || categoryName.touched)" class="text-danger mt-2">
+                <div *ngIf="categoryName.errors?.['required']">Category name is required.</div>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary mb-3">Add Category</button>
+    </form>
+</div>

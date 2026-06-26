@@ -34,7 +34,7 @@
             <div class="filter-options">
               @for (option of categories; track option.label) {
               <button type="button" class="filter-chip" [class.active]="selectedFilters.category === option.value"
-                (click)="applyFilter('category', option.value)">
+                (click)="applyFilter('category', option.value); selectedCategoryLabel = option.label">
                 {{ option.label }}
               </button>
               }
@@ -89,7 +89,7 @@
               @if (hasActiveFilters()) {
               <div class="active-filters">
                 @if (selectedFilters.category) {
-                <p-tag [value]="'Category: ' + selectedFilters.category" severity="contrast"></p-tag>
+                <p-tag [value]="'Category: ' + selectedCategoryLabel" severity="contrast"></p-tag>
                 }
                 @if (selectedFilters.progress) {
                 <p-tag [value]="'Progress: ' + selectedFilters.progress" severity="info"></p-tag>
