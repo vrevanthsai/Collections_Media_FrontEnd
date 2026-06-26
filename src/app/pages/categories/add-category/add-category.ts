@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import {
   FormControl,
   FormGroup,
@@ -9,6 +9,7 @@ import {
 } from '@angular/forms';
 import { AuthService } from '../../auth/services/auth';
 import {
+  CategoryDeleteResponse,
   CategoryRequest,
   CategoryResponse,
   CategoryService,
@@ -18,14 +19,26 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { InputTextModule } from 'primeng/inputtext';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
+import { MatDialog } from '@angular/material/dialog';
+import { DeleteCategory } from '../delete-category/delete-category';
 
 @Component({
   selector: 'app-add-category',
-  imports: [ReactiveFormsModule, CommonModule, ProgressSpinnerModule, FormsModule, InputTextModule, TableModule, ButtonModule],
+  imports: [
+    ReactiveFormsModule,
+    CommonModule,
+    ProgressSpinnerModule,
+    FormsModule,
+    InputTextModule,
+    TableModule,
+    ButtonModule,
+  ],
   templateUrl: './add-category.html',
   styleUrl: './add-category.scss',
 })
 export class AddCategory {
+  private readonly matDialog = inject(MatDialog);
+
   categoryName = new FormControl<string>('', [Validators.required]);
 
   addCategoryForm: FormGroup;
@@ -59,7 +72,7 @@ export class AddCategory {
 
   loadCategories(): void {
     let userId = parseInt(this.userId() || ''); // Convert to number, default to 0 if null
-    
+
     if (!isNaN(userId)) {
       this.loading.set(true);
       this.categoryService.getUserCategories(userId).subscribe({
@@ -138,7 +151,7 @@ export class AddCategory {
   // Update category method
   updateCategory(categoryId: number, newCategoryName: string) {
     this.editingCategoryId.set(null);
-    if(this.authService.isAuthenticated() && newCategoryName.trim() !== '') {
+    if (this.authService.isAuthenticated() && newCategoryName.trim() !== '') {
       const userIdStr = sessionStorage.getItem('userId');
       const userId = userIdStr ? parseInt(userIdStr, 10) : 0;
       const categoryRequest: CategoryRequest = {
@@ -146,25 +159,27 @@ export class AddCategory {
         categoryName: newCategoryName,
       };
 
-      this.categoryService.updateCategoryService(categoryId, categoryRequest).subscribe({
-        next: (response) => {
-          console.log('Category updated successfully:', response);
-          this.loadCategories(); // Reload the categories list after successful update
-          this.errorNotification = {
-            show: true,
-            type: 'success',
-            text: 'Category Updated Successfully! Please check the Category List below to see the updated category.',
-          };
-        },
-        error: (err) => {
-          console.error('Error updating category:', err);
-          this.errorNotification = {
-            show: true,
-            type: 'error',
-            text: 'Failed to update category. Please try again.',
-          };
-        },
-      });
+      this.categoryService
+        .updateCategoryService(categoryId, categoryRequest)
+        .subscribe({
+          next: (response) => {
+            console.log('Category updated successfully:', response);
+            this.loadCategories(); // Reload the categories list after successful update
+            this.errorNotification = {
+              show: true,
+              type: 'success',
+              text: 'Category Updated Successfully! Please check the Category List below to see the updated category.',
+            };
+          },
+          error: (err) => {
+            console.error('Error updating category:', err);
+            this.errorNotification = {
+              show: true,
+              type: 'error',
+              text: 'Failed to update category. Please try again.',
+            };
+          },
+        });
     }
   }
 
@@ -177,5 +192,35 @@ export class AddCategory {
     return this.editingCategoryId() === categoryId;
   }
 
-  deleteCategory(categoryId: number) {}
+  // Delete category method- Opens the delete confirmation popup and returns Add-category after deletion.
+  deleteCategory(category: CategoryResponse) {
+    if (!category.categoryId) {
+      console.error('Invalid categoryId: ', category.categoryId);
+      return;
+    }
+
+    this.matDialog
+      .open(DeleteCategory, { data: { category } })
+      .afterClosed()
+      .subscribe({
+        next: (deleted: CategoryDeleteResponse) => {
+          // if category does not have any linked collection then only it will be deleted successfully and return success=true, else it will return success=false with a error-msg
+          if (deleted?.success){
+            this.loadCategories(); // Reload the categories list after successful deletion
+            this.errorNotification = {
+              show: true,
+              type: 'success',
+              text: deleted.message,
+            };
+          } else if (deleted?.success === false) {
+            this.errorNotification = {
+              show: true,
+              type: 'error',
+              text: deleted.message,
+            };
+          }
+        },
+        error: (error) => console.log('Delete dialog error = ', error),
+      });
+  }
 }

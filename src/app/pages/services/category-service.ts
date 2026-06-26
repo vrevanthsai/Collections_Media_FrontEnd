@@ -43,6 +43,13 @@ export class CategoryService {
       categoryRequest,
     );
   }
+
+  // Delete-Api - /delete-category api to delete existing category from DB
+  deleteCategoryService(categoryId: number): Observable<CategoryDeleteResponse> {
+    return this.http.delete<CategoryDeleteResponse>(
+      `${this.BASE_URL}/api/categories/delete-category/${categoryId}`,
+    );
+  }
 }
 
 // Type used for Api request object/Json which is send to backend for adding new category api
@@ -54,4 +61,9 @@ export type CategoryRequest = {
 export type CategoryResponse = {
   categoryId: number;
   categoryName: string;
+};
+
+export type CategoryDeleteResponse = {
+  success: boolean,
+  message: string,
 }
