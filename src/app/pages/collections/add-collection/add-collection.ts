@@ -164,7 +164,7 @@ export class AddCollection {
             this.errorNotification = {
               show: true,
               type: 'error',
-              text: 'Adding Collection failed, please try again!',
+              text: err?.error?.message || 'Adding Collection failed, please try again!',
             };
           },
         });

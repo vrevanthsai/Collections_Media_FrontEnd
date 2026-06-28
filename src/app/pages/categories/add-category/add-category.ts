@@ -120,7 +120,7 @@ export class AddCategory {
           this.errorNotification = {
             show: true,
             type: 'error',
-            text: 'Failed to add category. Please try again.',
+            text: err?.error?.message || 'Failed to add category. Please try again.',
           };
         },
       });
