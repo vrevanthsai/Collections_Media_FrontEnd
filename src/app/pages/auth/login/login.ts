@@ -7,7 +7,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { AuthService, LoginRequest } from '../services/auth';
+import { AuthResponse, AuthService, LoginRequest } from '../services/auth';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 @Component({
@@ -66,13 +66,13 @@ export class Login {
       // subscribe is used to get response from Observable returned by login function in service after API call
       this.authService.login(loginRequest).subscribe({
         // success case
-        next: (res: any) => {
+        next: (res: AuthResponse) => {
           // use AuthResponse type instead of any
           console.log('Login API response: ', res);
           // set True of isLoggedIn signal when user logged IN successfully
           this.authService.setLoggedIn(true);
           // set user name in signal variable to show in navbar after login
-          this.authService.setName(res.name);
+          this.authService.setName(res?.data?.name);
           // If login came from a blocked protected route, go back there after success.
           const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
           this.router.navigateByUrl(returnUrl || '/home');
@@ -85,7 +85,7 @@ export class Login {
           this.errorNotification = {
             show: true,
             type: 'error',
-            text: 'Login failed, please try again!',
+            text: err?.error?.message || 'Login failed, please try again!',
           };
         },
       });

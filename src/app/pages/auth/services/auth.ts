@@ -43,19 +43,19 @@ export class AuthService {
         // it intercepts the response from API before sending it to the component
         .pipe(
           tap((response) => {
-            if (response && response.accessToken) {
+            if (response && response?.data?.accessToken) {
               // TODO - encrypt the tokens and info further before storing them in Browser sessions
               // TOTO- store this data in localStorage/cookies instead of sessionStorage
               // because sessionStorage is cleared when the page session ends, while localStorage persists even after the browser is closed. Cookies can also be used for storing data that needs to be sent to the server with each request, such as authentication tokens.
-              sessionStorage.setItem('accessToken', response.accessToken); // key-value
-              sessionStorage.setItem('refreshToken', response.refreshToken);
-              sessionStorage.setItem('userId', JSON.stringify(response.userId)); // store userId-type number as string
-              sessionStorage.setItem('name', response.name);
-              sessionStorage.setItem('email', response.email);
-              sessionStorage.setItem('username', response.username);
+              sessionStorage.setItem('accessToken', response.data.accessToken); // key-value
+              sessionStorage.setItem('refreshToken', response.data.refreshToken);
+              sessionStorage.setItem('userId', JSON.stringify(response.data.userId)); // store userId-type number as string
+              sessionStorage.setItem('name', response.data.name);
+              sessionStorage.setItem('email', response.data.email);
+              sessionStorage.setItem('username', response.data.username);
 
               // Getting Roles info from extracting token
-              const decodedToken: any = jwtDecode(response.accessToken);
+              const decodedToken: any = jwtDecode(response.data.accessToken);
               // console.log("decoded token: ", decodedToken);
               // role is array/collection data from claims of jwt of backend and first item has Role data
               sessionStorage.setItem('role', decodedToken.role[0].authority);
@@ -168,12 +168,18 @@ export type LoginRequest = {
 
 // Type of same auth response from both backend register/login APIs
 export type AuthResponse = {
-  accessToken: string;
-  refreshToken: string;
-  userId: number;
-  name: string;
-  email: string;
-  username: string;
+  success: boolean;
+  message: string;
+  data: {
+    success: boolean;
+    message: string;
+    accessToken: string;
+    refreshToken: string;
+    userId: number;
+    name: string;
+    email: string;
+    username: string;
+  };
 };
 
 export type RefreshTokenRequest = {

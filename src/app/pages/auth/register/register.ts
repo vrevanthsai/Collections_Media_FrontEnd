@@ -6,7 +6,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { AuthService, RegisterRequest } from '../services/auth';
+import { AuthResponse, AuthService, RegisterRequest } from '../services/auth';
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MultiSelectModule } from 'primeng/multiselect';
@@ -99,7 +99,7 @@ export class Register {
   // function to handle Register form submission
   register() {
     // to log the form values for debugging the flow
-    console.log('Form Values: ', this.registerForm.value);
+    // console.log('Form Values: ', this.registerForm.value);
 
     // client side validation for form inputs before calling API
     // .valid- gives True - if all required validations of each input of form is correct or else False
@@ -121,7 +121,7 @@ export class Register {
       // subscribe is used to get response from Observable returned by register function in service after API call
       this.authService.register(registerRequest).subscribe({
         // success case
-        next: (res: any) => {
+        next: (res: AuthResponse) => {
           // use AuthResponse type instead of any
           console.log('Register API response: ', res);
           // navigate user to login page after successful registration
@@ -135,7 +135,7 @@ export class Register {
           this.errorNotification = {
             show: true,
             type: 'error',
-            text: 'Registration failed, please try again!',
+            text: err?.error?.message || 'Registration failed, please try again!',
           };
         },
       });
