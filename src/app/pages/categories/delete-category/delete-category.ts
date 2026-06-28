@@ -23,11 +23,13 @@ export class DeleteCategory {
   ) {}
 
   deleteCategory() {
+    // Get userId from sessionStorage to use in API calls
+    const userId = parseInt(sessionStorage.getItem('userId') || '0', 10);
     // proceed further only if user is authenticated
     if (this.authService.isAuthenticated()) {
       // Call Delete-Category-Api
       this.categoryService
-        .deleteCategoryService(this.data.category.categoryId!) // ! - it will not have null value
+        .deleteCategoryService(userId, this.data.category.categoryId!) // ! - it will not have null value
         .subscribe({
           next: (res) => {
             this.deleteResponse = res;

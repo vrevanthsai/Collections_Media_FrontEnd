@@ -6,6 +6,7 @@ import { Observable } from 'rxjs';
   providedIn: 'root',
 })
 export class CategoryService {
+  // Note- every Api needs userId from their service-methods-params to access any Api of categories properly 
   // Todo- create and import base URL from .env file
   public readonly BASE_URL = 'http://localhost:8080';
 
@@ -14,12 +15,12 @@ export class CategoryService {
 
   // Get Default Categories from backend API
   getDefaultCategories() {
-    return this.http.get<any[]>(`${this.BASE_URL}/api/categories/default`);
+    return this.http.get<any[]>(`${this.BASE_URL}/api/v1/auth/get-default-categories`);
   }
 
   getUserCategories(userId: number) {
     return this.http.get<any[]>(
-      `${this.BASE_URL}/api/categories/user/${userId}`,
+      `${this.BASE_URL}/api/v1/user/${userId}/categories/get-user-categories`,
     );
   }
 
@@ -28,7 +29,7 @@ export class CategoryService {
     categoryRequest: CategoryRequest,
   ): Observable<CategoryResponse> {
     return this.http.post<CategoryResponse>(
-      `${this.BASE_URL}/api/categories/add-category`,
+      `${this.BASE_URL}/api/v1/user/${categoryRequest.userId}/categories/add-category`,
       categoryRequest,
     );
   }
@@ -39,15 +40,15 @@ export class CategoryService {
     categoryRequest: CategoryRequest,
   ): Observable<CategoryResponse> {
     return this.http.put<CategoryResponse>(
-      `${this.BASE_URL}/api/categories/update-category/${categoryId}`,
+      `${this.BASE_URL}/api/v1/user/${categoryRequest.userId}/categories/update-category/${categoryId}`,
       categoryRequest,
     );
   }
 
   // Delete-Api - /delete-category api to delete existing category from DB
-  deleteCategoryService(categoryId: number): Observable<CategoryDeleteResponse> {
+  deleteCategoryService(userId: number, categoryId: number): Observable<CategoryDeleteResponse> {
     return this.http.delete<CategoryDeleteResponse>(
-      `${this.BASE_URL}/api/categories/delete-category/${categoryId}`,
+      `${this.BASE_URL}/api/v1/user/${userId}/categories/delete-category/${categoryId}`,
     );
   }
 }

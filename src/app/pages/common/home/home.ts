@@ -122,8 +122,9 @@ export class Home implements OnInit {
   getUserBasedCollections(): void {
     this.loading.set(true);
     this.currentPage = 1;
+    const userId = parseInt(this.userId() || '0', 10);
 
-    this.collectionService.getUserBasedCollections().subscribe({
+    this.collectionService.getUserBasedCollections(userId).subscribe({
       next: (response) => {
         this.collections = response;
         this.originalCollections = response;
@@ -250,7 +251,8 @@ export class Home implements OnInit {
             collection.privacy === this.selectedFilters.privacy),
       );
     } else {
-      this.collectionService.getUserBasedCollections().subscribe({
+      const userId = parseInt(this.userId() || '0', 10);
+      this.collectionService.getUserBasedCollections(userId).subscribe({
         next: (response) => {
           this.collections = response.filter(
             (collection) =>

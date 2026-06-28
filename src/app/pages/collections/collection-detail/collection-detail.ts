@@ -129,8 +129,9 @@ export class CollectionDetail implements OnInit, OnDestroy {
     this.loading.set(true);
     this.errorMessage.set('');
     this.revokeObjectUrl();
+    const userId = parseInt(sessionStorage.getItem('userId') || '0', 10);
 
-    this.collectionsService.getCollectionById(this.collectionId).subscribe({
+    this.collectionsService.getCollectionById(userId, this.collectionId).subscribe({
       next: (collection) => {
         if (!collection) {
           this.errorMessage.set('Collection not found or you do not have access to it.');
