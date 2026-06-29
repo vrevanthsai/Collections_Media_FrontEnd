@@ -2,6 +2,7 @@ import { Component, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../../pages/auth/services/auth';
 import { CommonModule } from '@angular/common';
+import { MessageService } from 'primeng/api';
 
 @Component({
   selector: 'app-navbar',
@@ -10,25 +11,35 @@ import { CommonModule } from '@angular/common';
   styleUrl: './navbar.scss',
 })
 export class Navbar {
-
   // signal var user for knowing User state
   isLoggedIn = signal<boolean>(false);
   // get user info from sessionStorage which is stored after user logged-In(or login-service-method)
   name = signal<string | null>(sessionStorage.getItem('name'));
 
   //  DI to use authService in a component file and Router DI for navigation
-  constructor(private authService: AuthService, private router: Router){}
+  constructor(
+    private authService: AuthService,
+    private router: Router,
+    private messageService: MessageService
+  ) {}
 
   // This block runs at first-before all other lines in this component and only runs once when page loads
-  ngOnInit():void {
+  ngOnInit(): void {
     this.isLoggedIn = this.authService.getLoggedIn();
     this.name = this.authService.getName();
   }
 
   // Logout feature
-  logout(){
+  logout() {
     this.authService.logout();
     this.authService.setLoggedIn(false);
+    // Show Toast notification for successful registration
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Logout Successful!',
+      detail: 'Please come back again!',
+      life: 4000, // auto-dismiss after 3s
+    });
     this.router.navigate(['']); // when user loggedOUt then direct navigated to '' path- Intro page
   }
 
@@ -36,5 +47,4 @@ export class Navbar {
     // if stored Role has ADMIN value then returns True or else False(USER)
     return this.authService.hasRole('ADMIN');
   }
-
 }

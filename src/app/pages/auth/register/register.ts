@@ -11,6 +11,7 @@ import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { CategoryService } from '../../services/category-service';
+import { MessageService } from 'primeng/api';
 
 @Component({
   selector: 'app-register',
@@ -48,6 +49,7 @@ export class Register {
     private authService: AuthService,
     private router: Router,
     private categoryService: CategoryService,
+    private messageService: MessageService
   ) {
     // bind form controls to form group
     this.registerForm = this.formBuilder.group({
@@ -124,6 +126,13 @@ export class Register {
         next: (res: AuthResponse) => {
           // use AuthResponse type instead of any
           console.log('Register API response: ', res);
+          // Show Toast notification for successful registration
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Registered Successful, pls Login!',
+            detail: 'Welcome new User!',
+            life: 4000, // auto-dismiss after 3s
+          });
           // navigate user to login page after successful registration
           this.router.navigate(['login']);
         },

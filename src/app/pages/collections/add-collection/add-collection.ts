@@ -17,6 +17,7 @@ import { CommonModule } from '@angular/common';
 import { CategoryService } from '../../services/category-service';
 import { TabsModule } from 'primeng/tabs';
 import { AddCategory } from '../../categories/add-category/add-category';
+import { MessageService } from 'primeng/api';
 
 @Component({
   selector: 'app-add-collection',
@@ -79,6 +80,7 @@ export class AddCollection {
     private router: Router,
     private collectionService: CollectionsService,
     private categoryService: CategoryService,
+    private messageService: MessageService
   ) {
     // bind form controls to form group
     this.addCollectionForm = this.formBuilder.group({
@@ -154,8 +156,17 @@ export class AddCollection {
               type: 'success',
               text: 'Collection Added Successfully! Please check latest data in Home page!',
             };
+            // Show Toast notification for successful collection creation
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Collection created successfully!!',
+              // detail: 'Check Home page for all Collections',
+              life: 8000, // auto-dismiss after 3s
+            });
             // reset form after successfull submission
             this.addCollectionForm.reset();
+            // redirect to Home page
+            this.router.navigate(['/home']);
           },
           error: (err) => {
             console.log('error = ', err);

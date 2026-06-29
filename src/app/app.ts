@@ -1,9 +1,10 @@
 import { Component } from '@angular/core';
 import { Layout } from './components/layout/layout/layout';
+import { ToastModule } from 'primeng/toast';
 
 @Component({
   selector: 'app-root',
-  imports: [Layout],
+  imports: [Layout, ToastModule],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
