@@ -71,6 +71,15 @@ export class CollectionDetail implements OnInit, OnDestroy {
     });
   }
 
+  // send image url if present or send default img url
+  getImageUrl(imageUrl : string | null | undefined){
+    if(imageUrl === "" || imageUrl === null || imageUrl === undefined){
+      return 'https://placehold.co/900x1200?text=No+Cover';
+    } else {
+      return imageUrl;
+    }
+  }
+
   // Opens the delete confirmation and returns Home after deletion.
   deleteCollection(): void {
     const collection = this.collection();

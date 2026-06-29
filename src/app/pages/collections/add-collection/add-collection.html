@@ -77,9 +77,9 @@
                     </div>
                     <!-- Collection Image- TODO- Make image field optional on both frontend and backend -->
                     <div class="mb-3">
-                        <label for="image" class="form-label">Collection Image</label>
+                        <label for="image" class="form-label">Collection Image- Optional</label>
                         <input type="file" class="form-control" id="image" formControlName="imagename"
-                            (change)="onFileSelected($event)" required />
+                            (change)="onFileSelected($event)"/>
                     </div>
 
                     <button type="submit" class="btn btn-primary mb-3">Add Collection</button>

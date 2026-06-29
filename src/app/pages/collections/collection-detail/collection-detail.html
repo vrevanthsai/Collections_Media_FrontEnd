@@ -21,7 +21,7 @@
       <article class="detail-card">
         <div class="cover-panel">
           <img
-            [src]="item.imageUrl || 'https://placehold.co/900x1200?text=No+Cover'"
+            [src]= "getImageUrl(item?.imageUrl)"
             [alt]="item.name"
             class="collection-cover" />
         </div>

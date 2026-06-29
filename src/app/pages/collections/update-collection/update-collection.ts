@@ -201,7 +201,7 @@ export class UpdateCollection {
             this.errorNotification = {
               show: true,
               type: 'error',
-              text: 'Updating Collection failed, please try again!',
+              text: err?.error?.message || 'Updating Collection failed, please try again!',
             };
           },
           // Completed case- this case runs only once when success case is done and no errors are there

@@ -92,7 +92,7 @@ export class AddCollection {
       progress: this.progress,
       privacy: this.privacy,
       // Non-User-input fields with their initial values
-      imagename: [null, Validators.required], // TODO- make this field optional from Frontend logic
+      imagename: [null ], // TODO- make this field optional from Frontend logic
     });
   }
 
@@ -146,8 +146,8 @@ export class AddCollection {
 
       // Call Api service handler
       this.collectionService
-        .addCollectionService(collectionDto, this.selectedFile!)
-        // !- means that this value will not be NULL but will have some value
+        .addCollectionService(collectionDto, this.selectedFile)
+        // selectedFile is needed/not null then use- !- means that this value will not be NULL but will have some value
         .subscribe({
           next: (res) => {
             console.log('response = ', res);

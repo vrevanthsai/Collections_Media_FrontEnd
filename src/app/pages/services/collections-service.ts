@@ -39,12 +39,14 @@ export class CollectionsService {
   }
 
   // Post-Api - /add-collection api to save new collection data into DB
-  addCollectionService(collectionDto: CollectionDto, file: File): Observable<CollectionDto>{
+  addCollectionService(collectionDto: CollectionDto, file: File | null): Observable<CollectionDto>{
     // we send both payload and file as seperate args to backend using FormData
     const formData = new FormData();
     // formData- both Keys - naming MUST be SAME as declared in Backend-Api-Method params and same types for Better data mapping
     formData.append("collectionDto", JSON.stringify(collectionDto));
-    formData.append("file", file);
+    if( file !== null){
+      formData.append("file", file);
+    }
 
     // Call Api
     return this.http.post<CollectionDto>(`${this.BASE_URL}/api/v1/user/${collectionDto.userId}/collection/add-collection`, formData); // now formData has both json and image-file
