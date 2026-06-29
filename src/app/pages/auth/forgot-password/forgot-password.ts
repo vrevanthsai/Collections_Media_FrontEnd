@@ -125,7 +125,8 @@ export class ForgotPassword {
             this.errorNotification = {
               show: true,
               type: 'error',
-              text: 'Verifying Email failed, please try again!',
+              // converting err.error(string value) to JSON and then access message property from it
+              text: JSON.parse(err?.error)?.message || 'Verifying Email failed, please try again!',
             };
           },
         });
@@ -142,6 +143,11 @@ export class ForgotPassword {
           next: (res) => {
             this.isLoading = false;
             console.log('res of VerifyOtp= ', res);
+            this.errorNotification = {
+              show: true,
+              type: 'success',
+              text: res || 'OTP Verified Successfully! Please enter your new password below.',
+            };
             // Make State value change
             this.state2 = false;
             this.state3 = true; // now 3rd form will be visible and 2nd,1st forms will not be visible
@@ -152,7 +158,7 @@ export class ForgotPassword {
             this.errorNotification = {
               show: true,
               type: 'error',
-              text: 'Verifying OTP failed, please try again!',
+              text: JSON.parse(err?.error)?.message ||'Verifying OTP failed, please try again!',
             };
           },
         });
