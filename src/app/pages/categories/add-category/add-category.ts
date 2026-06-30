@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, input, output, signal } from '@angular/core';
 import {
   FormControl,
   FormGroup,
@@ -7,6 +7,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
+import { Observable, of } from 'rxjs';
 import { AuthService } from '../../auth/services/auth';
 import {
   CategoryDeleteResponse,
@@ -55,6 +56,12 @@ export class AddCategory {
   loading = signal(false);
   editingCategoryId = signal<number | null>(null);
   newCategoryName = '';
+  actionTriggered = output<boolean>(); 
+  categoriesData = input<Observable<CategoryResponse[]> | null>(null);
+  // this below var is connected to p-table and it takes async data when api call is done and updates it in p-table
+  categoriesDataObservable = computed<Observable<CategoryResponse[]>>(
+    () => this.categoriesData() ?? of(this.categories),
+  );
 
   constructor(
     private authService: AuthService,
@@ -66,30 +73,10 @@ export class AddCategory {
     });
   }
 
-  ngOnInit(): void {
-    this.loadCategories();
-  }
-
-  loadCategories(): void {
-    let userId = parseInt(this.userId() || ''); // Convert to number, default to 0 if null
-
-    if (!isNaN(userId)) {
-      this.loading.set(true);
-      this.categoryService.getUserCategories(userId).subscribe({
-        next: (data) => {
-          if (data && data.length > 0) {
-            this.categories = data;
-          }
-          this.loading.set(false);
-        },
-        error: (err) => {
-          console.error(err);
-          this.loading.set(false);
-        },
-      });
-    } else {
-      console.error('Invalid userId: ', userId);
-    }
+  // this method calls the loadCategories() method in parent comp/add-collection and reload the categories array when ever any add/update/delete opeations is done
+  notifyParent(value : boolean) {
+    // Emit the event with optional data
+    this.actionTriggered.emit(value); 
   }
 
   addCategory() {
@@ -110,10 +97,10 @@ export class AddCategory {
             type: 'success',
             text: 'Category Added Successfully! Please check the Category List below to see the newly added category.',
           };
-          // reload the categories list after successful addition of new category
-          this.loadCategories();
           // reset form after successfull submission
           this.addCategoryForm.reset();
+          // reload the categories list by calling api method from parent comp after successful addition of new category
+          this.notifyParent(true);
         },
         error: (err) => {
           console.error('Error adding category:', err);
@@ -164,12 +151,13 @@ export class AddCategory {
         .subscribe({
           next: (response) => {
             console.log('Category updated successfully:', response);
-            this.loadCategories(); // Reload the categories list after successful update
             this.errorNotification = {
               show: true,
               type: 'success',
               text: 'Category Updated Successfully! Please check the Category List below to see the updated category.',
             };
+            // Reload the categories list from parent comp after successful update
+            this.notifyParent(true);
           },
           error: (err) => {
             console.error('Error updating category:', err);
@@ -206,7 +194,8 @@ export class AddCategory {
         next: (deleted: CategoryDeleteResponse) => {
           // if category does not have any linked collection then only it will be deleted successfully and return success=true, else it will return success=false with a error-msg
           if (deleted?.success){
-            this.loadCategories(); // Reload the categories list after successful deletion
+            // Reload the categories list after successful deletion
+            this.notifyParent(true);
             this.errorNotification = {
               show: true,
               type: 'success',

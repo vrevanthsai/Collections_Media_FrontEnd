@@ -14,10 +14,11 @@ import {
 } from '../../services/collections-service';
 import { SelectModule } from 'primeng/select';
 import { CommonModule } from '@angular/common';
-import { CategoryService } from '../../services/category-service';
+import { CategoryService, CategoryResponse } from '../../services/category-service';
 import { TabsModule } from 'primeng/tabs';
 import { AddCategory } from '../../categories/add-category/add-category';
 import { MessageService } from 'primeng/api';
+import { BehaviorSubject } from 'rxjs';
 
 @Component({
   selector: 'app-add-collection',
@@ -55,6 +56,8 @@ export class AddCollection {
 
   // Collection Category-Type dynamic data
   categories: any[] = [];
+  // this syntax format is used for sending async data safely from parent to child comp whenever new list is available after CRUD
+  categoriesData$ = new BehaviorSubject<CategoryResponse[]>([]);
 
   // get user info from sessionStorage which is stored after user logged-In
   userId = signal<string | null>(sessionStorage.getItem('userId'));
@@ -106,6 +109,8 @@ export class AddCollection {
     if (!isNaN(userId)) {
       this.categoryService.getUserCategories(userId).subscribe({
         next: (data) => {
+          // var to send async data to child comp safely
+          this.categoriesData$.next(data);
           this.categories = data.map((category) => ({
             label: category.categoryName,
             value: category.categoryId,
@@ -117,6 +122,13 @@ export class AddCollection {
       });
     } else {
       console.error('Invalid userId: ', userId);
+    }
+  }
+
+  // To recall and load latest categories list data whenever any CRUD is done in child comp/add-category and send latest list data
+  parentMethod(value: boolean) {
+    if(value){
+      this.loadCategories();
     }
   }
 

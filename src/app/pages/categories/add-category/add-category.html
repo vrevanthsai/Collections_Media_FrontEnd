@@ -27,7 +27,8 @@
             <p-progressSpinner strokeWidth="4" fill="#EEEEEE" animationDuration=".5s"></p-progressSpinner>
         </div>
         } @else {
-        <p-table [value]="categories" responsiveLayout="scroll"
+            <!-- async pipe used for safely retrieving async data from parent or to wait until async data is complete -->
+        <p-table [value]="(categoriesDataObservable() | async) || []" responsiveLayout="scroll"
             class="p-datatable-striped" [tableStyle]="{'min-width':'50rem'}">
 
             <ng-template pTemplate="header">

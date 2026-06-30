@@ -90,7 +90,8 @@
         <p-tabpanel value="1">
             <div>
                 <!-- Add Category Form and Category List -->
-                <app-add-category></app-add-category>
+                 <!-- parentMethod() is for recalling loadCategories() from child comp and categoriesData is sending list to child comp instead of using 2 seperate api call method in 2 comps/panels -->
+                <app-add-category (actionTriggered)="parentMethod($event)" [categoriesData]="categoriesData$"></app-add-category>
             </div>
         </p-tabpanel>
     </p-tabpanels>
