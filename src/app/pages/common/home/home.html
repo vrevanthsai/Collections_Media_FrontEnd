@@ -32,11 +32,17 @@
           <div class="filter-group">
             <h3>Filter by category</h3>
             <div class="filter-options">
+              @if (categoriesLoader()) {
+              <div class="results-state">
+                <p-progressSpinner strokeWidth="4" fill="#EEEEEE" animationDuration=".5s"></p-progressSpinner>
+              </div>
+              } @else {
               @for (option of categories; track option.label) {
               <button type="button" class="filter-chip" [class.active]="selectedFilters.category === option.value"
                 (click)="applyFilter('category', option.value); selectedCategoryLabel = option.label">
                 {{ option.label }}
               </button>
+              }
               }
             </div>
           </div>

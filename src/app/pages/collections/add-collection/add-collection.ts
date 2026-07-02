@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import {
   FormBuilder,
   FormControl,
@@ -19,6 +19,7 @@ import { TabsModule } from 'primeng/tabs';
 import { AddCategory } from '../../categories/add-category/add-category';
 import { MessageService } from 'primeng/api';
 import { BehaviorSubject } from 'rxjs';
+import { CookieService } from '../../../interceptors/cookie.service';
 
 @Component({
   selector: 'app-add-collection',
@@ -27,6 +28,7 @@ import { BehaviorSubject } from 'rxjs';
   styleUrl: './add-collection.scss',
 })
 export class AddCollection {
+  private cookieService = inject(CookieService);
   // define form inputs
   // this all(6) are json/payload fields and they will be binded with their input-fields
   // remaining 3 fields(imagename, addedDate, userId) are not added from User-input, that will be added by this file logic
@@ -59,8 +61,8 @@ export class AddCollection {
   // this syntax format is used for sending async data safely from parent to child comp whenever new list is available after CRUD
   categoriesData$ = new BehaviorSubject<CategoryResponse[]>([]);
 
-  // get user info from sessionStorage which is stored after user logged-In
-  userId = signal<string | null>(sessionStorage.getItem('userId'));
+  // get user info from cookie which is stored after user logged-In
+  userId = signal<string | null>(this.cookieService.getCookie('userId'));
 
   // Collection Progress-Dropdown Fixed data
   progressData = [
@@ -147,7 +149,7 @@ export class AddCollection {
       const collectionDto: CollectionDto = {
         name: this.addCollectionForm.get('name')?.value,
         category: this.addCollectionForm.get('category')?.value,
-        userId: sessionStorage.getItem('userId') || '',
+        userId: this.cookieService.getCookie('userId') || '',
         rating: this.addCollectionForm.get('rating')?.value,
         review: this.addCollectionForm.get('review')?.value,
         progress: this.addCollectionForm.get('progress')?.value,

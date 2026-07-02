@@ -1,8 +1,9 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../../pages/auth/services/auth';
 import { CommonModule } from '@angular/common';
 import { MessageService } from 'primeng/api';
+import { CookieService } from '../../../interceptors/cookie.service';
 
 @Component({
   selector: 'app-navbar',
@@ -11,10 +12,11 @@ import { MessageService } from 'primeng/api';
   styleUrl: './navbar.scss',
 })
 export class Navbar {
+  private cookieService = inject(CookieService);
   // signal var user for knowing User state
   isLoggedIn = signal<boolean>(false);
-  // get user info from sessionStorage which is stored after user logged-In(or login-service-method)
-  name = signal<string | null>(sessionStorage.getItem('name'));
+  // get user info from cookie which is stored after user logged-In(or login-service-method)
+  name = signal<string | null>(this.cookieService.getCookie('name'));
 
   //  DI to use authService in a component file and Router DI for navigation
   constructor(

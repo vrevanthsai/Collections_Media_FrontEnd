@@ -1,8 +1,9 @@
-import { Component, Inject } from '@angular/core';
+import { Component, inject, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { AuthService } from '../../auth/services/auth';
 import { ButtonModule } from 'primeng/button';
 import { CategoryDeleteResponse, CategoryResponse, CategoryService } from '../../services/category-service';
+import { CookieService } from '../../../interceptors/cookie.service';
 
 @Component({
   selector: 'app-delete-category',
@@ -12,6 +13,7 @@ import { CategoryDeleteResponse, CategoryResponse, CategoryService } from '../..
 })
 export class DeleteCategory {
   deleteResponse : CategoryDeleteResponse | null = null;
+  private cookieService = inject(CookieService);
 
   constructor(
     // Getting Data from DialogREf of AddCategoryComponent
@@ -23,8 +25,8 @@ export class DeleteCategory {
   ) {}
 
   deleteCategory() {
-    // Get userId from sessionStorage to use in API calls
-    const userId = parseInt(sessionStorage.getItem('userId') || '0', 10);
+    // Get userId from cookie to use in API calls
+    const userId = parseInt(this.cookieService.getCookie('userId') || '0', 10);
     // proceed further only if user is authenticated
     if (this.authService.isAuthenticated()) {
       // Call Delete-Category-Api

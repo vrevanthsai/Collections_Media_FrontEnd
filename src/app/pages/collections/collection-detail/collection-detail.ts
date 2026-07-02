@@ -10,6 +10,7 @@ import { TagModule } from 'primeng/tag';
 import { DeleteCollection } from '../delete-collection/delete-collection';
 import { UpdateCollection } from '../update-collection/update-collection';
 import { CollectionDto, CollectionsService } from '../../services/collections-service';
+import { CookieService } from '../../../interceptors/cookie.service';
 
 @Component({
   selector: 'app-collection-detail',
@@ -31,6 +32,7 @@ export class CollectionDetail implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly collectionsService = inject(CollectionsService);
   private readonly matDialog = inject(MatDialog);
+  private cookieService = inject(CookieService);
 
   // Signals keep loading, error, and collection states reactive in the template.
   collection = signal<CollectionDto | null>(null);
@@ -138,7 +140,7 @@ export class CollectionDetail implements OnInit, OnDestroy {
     this.loading.set(true);
     this.errorMessage.set('');
     this.revokeObjectUrl();
-    const userId = parseInt(sessionStorage.getItem('userId') || '0', 10);
+    const userId = parseInt(this.cookieService.getCookie('userId') || '0', 10);
 
     this.collectionsService.getCollectionById(userId, this.collectionId).subscribe({
       next: (collection) => {

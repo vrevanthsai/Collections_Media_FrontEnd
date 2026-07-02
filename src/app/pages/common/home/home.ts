@@ -14,6 +14,7 @@ import {
   CollectionsService,
 } from '../../services/collections-service';
 import { CategoryService } from '../../services/category-service';
+import { CookieService } from '../../../interceptors/cookie.service';
 
 @Component({
   selector: 'app-home',
@@ -36,6 +37,7 @@ export class Home implements OnInit {
   private readonly pageSize = 3;
   private readonly favoritesStorageKey = 'favoriteCollectionIds';
   private readonly router = inject(Router);
+  private cookieService = inject(CookieService);
 
   collectionService = inject(CollectionsService);
   authService = inject(AuthService);
@@ -44,6 +46,7 @@ export class Home implements OnInit {
   collections: CollectionDto[] = [];
   originalCollections: CollectionDto[] = [];
   loading = signal(true);
+  categoriesLoader = signal(false);
   currentPage = 1;
 
   // Stores favorite IDs locally because the backend has no favorite API yet.
@@ -59,8 +62,8 @@ export class Home implements OnInit {
     { label: 'All', value: null },
   ];
 
-  // get user info from sessionStorage which is stored after user logged-In
-  userId = signal<string | null>(sessionStorage.getItem('userId'));
+  // get user info from cookie which is stored after user logged-In
+  userId = signal<string | null>(this.cookieService.getCookie('userId'));
 
   progressOptions = [
     { label: 'All', value: null },
@@ -87,6 +90,7 @@ export class Home implements OnInit {
   }
 
   loadCategories(): void {
+    this.categoriesLoader.set(true);
     let userId = parseInt(this.userId() || ''); // Convert to number, default to 0 if null
 
     if (!isNaN(userId)) {
@@ -97,13 +101,16 @@ export class Home implements OnInit {
             value: category.categoryId,
           }));
           this.categories = [...this.categories, ...categoriesData];
+          this.categoriesLoader.set(false);
         },
         error: (err) => {
           console.error(err);
+          this.categoriesLoader.set(false);
         },
       });
     } else {
       console.error('Invalid userId: ', userId);
+      this.categoriesLoader.set(false);
     }
   }
 

@@ -3,6 +3,7 @@ import { CanActivateFn, Router } from '@angular/router';
 import { AuthService } from '../../../pages/auth/services/auth';
 import { catchError, map, of } from 'rxjs';
 import { MessageService } from 'primeng/api';
+import { CookieService } from '../../../interceptors/cookie.service';
 
 // THis file is for route guarding- to protect routes from unauthorized access and only allow logged-IN users to access certain routes like /collections, /add-collection etc. and if user tries to access those routes without login then it will redirect to /login page
 export const authGuard: CanActivateFn = (route, state) => {
@@ -10,13 +11,14 @@ export const authGuard: CanActivateFn = (route, state) => {
   const authService = inject(AuthService); 
   const router = inject(Router);
   const messageService = inject(MessageService);
+  const cookieService = inject(CookieService);
 
-  // SessionStorage has AccessToken - then returns True or else False
+  // cookie has AccessToken - then returns True or else False
   if(authService.isAuthenticated()){
     return true;
   }
 
-  const refreshToken = sessionStorage.getItem('refreshToken');
+  const refreshToken = cookieService.getCookie('refreshToken');
   authService.setLoggedIn(false);
 
   // No refresh token means we cannot recover the session, so send the user to login.

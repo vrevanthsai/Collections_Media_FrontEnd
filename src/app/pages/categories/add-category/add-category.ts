@@ -22,6 +22,7 @@ import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { MatDialog } from '@angular/material/dialog';
 import { DeleteCategory } from '../delete-category/delete-category';
+import { CookieService } from '../../../interceptors/cookie.service';
 
 @Component({
   selector: 'app-add-category',
@@ -39,6 +40,7 @@ import { DeleteCategory } from '../delete-category/delete-category';
 })
 export class AddCategory {
   private readonly matDialog = inject(MatDialog);
+  private cookieService = inject(CookieService);
 
   categoryName = new FormControl<string>('', [Validators.required]);
 
@@ -51,8 +53,8 @@ export class AddCategory {
   };
 
   categories: CategoryResponse[] = [];
-  // get user info from sessionStorage which is stored after user logged-In
-  userId = signal<string | null>(sessionStorage.getItem('userId'));
+  // get user info from cookie which is stored after user logged-In
+  userId = signal<string | null>(this.cookieService.getCookie('userId'));
   loading = signal(false);
   editingCategoryId = signal<number | null>(null);
   newCategoryName = '';
@@ -82,7 +84,7 @@ export class AddCategory {
   addCategory() {
     // proceed further only if user is authenticated and addCategoryForm has no validation errors
     if (this.authService.isAuthenticated() && this.addCategoryForm.valid) {
-      const userIdStr = sessionStorage.getItem('userId');
+      const userIdStr = this.cookieService.getCookie('userId');
       const userId = userIdStr ? parseInt(userIdStr, 10) : 0;
       const categoryRequest: CategoryRequest = {
         userId: userId,
@@ -139,7 +141,7 @@ export class AddCategory {
   updateCategory(categoryId: number, newCategoryName: string) {
     this.editingCategoryId.set(null);
     if (this.authService.isAuthenticated() && newCategoryName.trim() !== '') {
-      const userIdStr = sessionStorage.getItem('userId');
+      const userIdStr = this.cookieService.getCookie('userId');
       const userId = userIdStr ? parseInt(userIdStr, 10) : 0;
       const categoryRequest: CategoryRequest = {
         userId: userId,
