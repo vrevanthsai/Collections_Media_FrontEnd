@@ -32,11 +32,17 @@
           <div class="filter-group">
             <h3>Filter by category</h3>
             <div class="filter-options">
+              @if (categoriesLoader()) {
+              <div class="results-state">
+                <p-progressSpinner strokeWidth="4" fill="#EEEEEE" animationDuration=".5s"></p-progressSpinner>
+              </div>
+              } @else {
               @for (option of categories; track option.label) {
               <button type="button" class="filter-chip" [class.active]="selectedFilters.category === option.value"
-                (click)="applyFilter('category', option.value)">
+                (click)="applyFilter('category', option.value); selectedCategoryLabel = option.label">
                 {{ option.label }}
               </button>
+              }
               }
             </div>
           </div>
@@ -89,7 +95,7 @@
               @if (hasActiveFilters()) {
               <div class="active-filters">
                 @if (selectedFilters.category) {
-                <p-tag [value]="'Category: ' + selectedFilters.category" severity="contrast"></p-tag>
+                <p-tag [value]="'Category: ' + selectedCategoryLabel" severity="contrast"></p-tag>
                 }
                 @if (selectedFilters.progress) {
                 <p-tag [value]="'Progress: ' + selectedFilters.progress" severity="info"></p-tag>
@@ -106,7 +112,7 @@
           <div class="row g-4">
             <!-- Angular's new control-flow loop syntax -->
             <!-- track gives unique identifier for each item and ?? is the nullish coalescing operator- if id not there then uses name+index value -->
-            @for (collection of paginatedCollections(); track collection.collectionId ?? collection.name + $index) {
+            @for (collection of paginatedCollections(); track collection.collectionId ?? collection.name + $index; let i = $index) {
             <div class="col-12 col-md-6 col-xxl-4">
               <!-- The whole card opens its collection details page. -->
               <article class="collection-card" role="link" tabindex="0" [attr.aria-label]="'View ' + collection.name"
@@ -114,9 +120,9 @@
                 <div class="card-accent" aria-hidden="true"></div>
 
                 <!-- Header keeps long collection names readable and visible. -->
-                <header class="collection-card-header">
-                  <p-tag [value]="collection.category | titlecase" severity="contrast"></p-tag>
-                  <h3 class="collection-name">{{ collection.name | titlecase }}</h3>
+                  <header class="collection-card-header">
+                  <p-tag [value]="(collection.categoryName ?? '') | titlecase" severity="contrast"></p-tag>
+                  <h3 class="collection-name">{{ i + 1 }}. {{ collection.name | titlecase }}</h3>
                   <span class="view-hint">Open collection <i class="pi pi-arrow-up-right"></i></span>
                 </header>
 

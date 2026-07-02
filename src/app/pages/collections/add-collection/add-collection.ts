@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import {
   FormBuilder,
   FormControl,
@@ -14,14 +14,21 @@ import {
 } from '../../services/collections-service';
 import { SelectModule } from 'primeng/select';
 import { CommonModule } from '@angular/common';
+import { CategoryService, CategoryResponse } from '../../services/category-service';
+import { TabsModule } from 'primeng/tabs';
+import { AddCategory } from '../../categories/add-category/add-category';
+import { MessageService } from 'primeng/api';
+import { BehaviorSubject } from 'rxjs';
+import { CookieService } from '../../../interceptors/cookie.service';
 
 @Component({
   selector: 'app-add-collection',
-  imports: [ReactiveFormsModule, CommonModule, SelectModule],
+  imports: [ReactiveFormsModule, CommonModule, SelectModule, TabsModule, AddCategory],
   templateUrl: './add-collection.html',
   styleUrl: './add-collection.scss',
 })
 export class AddCollection {
+  private cookieService = inject(CookieService);
   // define form inputs
   // this all(6) are json/payload fields and they will be binded with their input-fields
   // remaining 3 fields(imagename, addedDate, userId) are not added from User-input, that will be added by this file logic
@@ -49,13 +56,13 @@ export class AddCollection {
     text: '',
   };
 
-  // Collection Category-Type Default-Manual data
-  categories = [
-    { label: 'Anime', value: 'Anime' },
-    { label: 'Movie', value: 'Movie' },
-    { label: 'Manga', value: 'Manga' },
-    { label: 'Manhwa', value: 'Manhwa' },
-  ];
+  // Collection Category-Type dynamic data
+  categories: any[] = [];
+  // this syntax format is used for sending async data safely from parent to child comp whenever new list is available after CRUD
+  categoriesData$ = new BehaviorSubject<CategoryResponse[]>([]);
+
+  // get user info from cookie which is stored after user logged-In
+  userId = signal<string | null>(this.cookieService.getCookie('userId'));
 
   // Collection Progress-Dropdown Fixed data
   progressData = [
@@ -77,6 +84,8 @@ export class AddCollection {
     private authService: AuthService,
     private router: Router,
     private collectionService: CollectionsService,
+    private categoryService: CategoryService,
+    private messageService: MessageService
   ) {
     // bind form controls to form group
     this.addCollectionForm = this.formBuilder.group({
@@ -88,8 +97,62 @@ export class AddCollection {
       progress: this.progress,
       privacy: this.privacy,
       // Non-User-input fields with their initial values
-      imagename: [null, Validators.required], // TODO- make this field optional from Frontend logic
+      imagename: [null ], // TODO- make this field optional from Frontend logic
     });
+  }
+
+  ngOnInit(): void {
+    this.checkCategories();
+  }
+
+  // checks if categories list data is there or not in localStorage
+  checkCategories(): void {
+    // Load categories data from localStorage- if exists or recall categories api
+    const localStorageCategories: any[] = JSON.parse(
+      localStorage.getItem('categories') || '[]',
+    );
+    if (localStorageCategories.length > 0) {
+      // var to send async data to child comp safely
+      this.categoriesData$.next(localStorageCategories);
+      let categoriesData = localStorageCategories.map((category) => ({
+        label: category.categoryName,
+        value: category.categoryId,
+      }));
+      this.categories = [...this.categories, ...categoriesData];
+    } else {
+      this.loadCategories();
+    }
+  }
+
+  loadCategories(): void {
+    let userId = parseInt(this.userId() || ''); // Convert to number, default to 0 if null
+
+    if (!isNaN(userId)) {
+      this.categoryService.getUserCategories(userId).subscribe({
+        next: (data) => {
+          // var to send async data to child comp safely
+          this.categoriesData$.next(data);
+          this.categories = data.map((category) => ({
+            label: category.categoryName,
+            value: category.categoryId,
+          }));
+          // store new categories list data whenever loadCategories() is recall from child for add,update,delete categories methods
+          localStorage.setItem('categories', JSON.stringify(data));
+        },
+        error: (err) => {
+          console.error(err);
+        },
+      });
+    } else {
+      console.error('Invalid userId: ', userId);
+    }
+  }
+
+  // To recall and load latest categories list data whenever any CRUD is done in child comp/add-category and send latest list data
+  parentMethod(value: boolean) {
+    if(value){
+      this.loadCategories();
+    }
   }
 
   // File/Image handling Methods
@@ -107,7 +170,7 @@ export class AddCollection {
       const collectionDto: CollectionDto = {
         name: this.addCollectionForm.get('name')?.value,
         category: this.addCollectionForm.get('category')?.value,
-        userId: sessionStorage.getItem('userId') || '',
+        userId: this.cookieService.getCookie('userId') || '',
         rating: this.addCollectionForm.get('rating')?.value,
         review: this.addCollectionForm.get('review')?.value,
         progress: this.addCollectionForm.get('progress')?.value,
@@ -118,8 +181,8 @@ export class AddCollection {
 
       // Call Api service handler
       this.collectionService
-        .addCollectionService(collectionDto, this.selectedFile!)
-        // !- means that this value will not be NULL but will have some value
+        .addCollectionService(collectionDto, this.selectedFile)
+        // selectedFile is needed/not null then use- !- means that this value will not be NULL but will have some value
         .subscribe({
           next: (res) => {
             console.log('response = ', res);
@@ -128,8 +191,17 @@ export class AddCollection {
               type: 'success',
               text: 'Collection Added Successfully! Please check latest data in Home page!',
             };
+            // Show Toast notification for successful collection creation
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Collection created successfully!!',
+              // detail: 'Check Home page for all Collections',
+              life: 8000, // auto-dismiss after 3s
+            });
             // reset form after successfull submission
             this.addCollectionForm.reset();
+            // redirect to Home page
+            this.router.navigate(['/home']);
           },
           error: (err) => {
             console.log('error = ', err);
@@ -138,7 +210,7 @@ export class AddCollection {
             this.errorNotification = {
               show: true,
               type: 'error',
-              text: 'Adding Collection failed, please try again!',
+              text: err?.error?.message || 'Adding Collection failed, please try again!',
             };
           },
         });

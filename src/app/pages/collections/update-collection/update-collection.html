@@ -51,20 +51,20 @@
         <div class="mb-3">
             <label class="form-label">Progress</label>
             <p-select [options]="progressData" optionLabel="label" optionValue="value" formControlName="progress"
-                placeholder="Select Category" class="w-100">
+                placeholder="Select Progress" class="w-100">
             </p-select>
             <div *ngIf="progress.invalid && (progress.dirty || progress.touched)" class="text-danger mt-2">
-                <div *ngIf="progress.errors?.['required']">Please select a category type.</div>
+                <div *ngIf="progress.errors?.['required']">Please select a progress type.</div>
             </div>
         </div>
         <!-- Collection Privacy -->
         <div class="mb-3">
             <label class="form-label">Privacy/Visibility of Collection</label>
             <p-select [options]="privacyData" optionLabel="label" optionValue="value" formControlName="privacy"
-                placeholder="Select Category" class="w-100">
+                placeholder="Select Privacy" class="w-100">
             </p-select>
             <div *ngIf="privacy.invalid && (privacy.dirty || privacy.touched)" class="text-danger mt-2">
-                <div *ngIf="privacy.errors?.['required']">Please select a category type.</div>
+                <div *ngIf="privacy.errors?.['required']">Please select a privacy type.</div>
             </div>
         </div>
         <!-- Collection Image- TODO- Make image field optional on both frontend and backend -->

@@ -5,6 +5,10 @@
         <div *ngIf="errorNotification.show" class="text-danger mb-3">
             {{ errorNotification.text }}
         </div>
+        <!-- Loader-->
+        <div *ngIf="isLoading" class="mb-4" style="margin-left: 150px;">
+            <mat-spinner [diameter]="40"></mat-spinner>
+        </div>
         <div class="mb-3">
             <label for="email" class="form-label">Email address</label>
             <input type="email" class="form-control" id="email" formControlName="email" required />

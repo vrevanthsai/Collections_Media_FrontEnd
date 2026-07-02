@@ -7,6 +7,7 @@ import { Observable } from 'rxjs';
   providedIn: 'root',
 })
 export class CollectionsService {
+ // Note- every Api needs userId from their service-methods-params to access any Api of categories properly 
   // Todo- create and import base URL from .env file
   public readonly BASE_URL = 'http://localhost:8080';
 
@@ -16,20 +17,18 @@ export class CollectionsService {
   // Every API function should contain both Request and Reponse Types with respect to Backend logic
 
   // GET-ALL collections API handler and we get data in the form of CollectionDto array
-  getAllCollections(): Observable<CollectionDto[]> {
-    return this.http.get<CollectionDto[]>(`${this.BASE_URL}/api/v1/collection/all`);
+  getAllCollections(userId: number): Observable<CollectionDto[]> {
+    return this.http.get<CollectionDto[]>(`${this.BASE_URL}/api/v1/user/${userId}/collection/all`);
   }
 
   // GET-ALL collections API based on UserId which we get data only which has that UserId in DB
-  getUserBasedCollections(): Observable<CollectionDto[]>{
-    // Get UserId value from Browser-Session where User Info is stored after loggedIn
-    let userId: string | null = sessionStorage.getItem('userId');
-    return this.http.get<CollectionDto[]>(`${this.BASE_URL}/api/v1/collection/userid/${userId}`)
+  getUserBasedCollections(userId: number): Observable<CollectionDto[]>{
+    return this.http.get<CollectionDto[]>(`${this.BASE_URL}/api/v1/user/${userId}/collection/get-user-collections`)
   }
 
   // GET- single collection API handler which returns the collection details of that collectionId
-  getCollectionById(collectionId: number): Observable<CollectionDto> {
-    return this.http.get<CollectionDto>(`${this.BASE_URL}/api/v1/collection/${collectionId}`);
+  getCollectionById(userId: number, collectionId: number): Observable<CollectionDto> {
+    return this.http.get<CollectionDto>(`${this.BASE_URL}/api/v1/user/${userId}/collection/${collectionId}`);
   }
 
   // GET-Collection Image API handler which returns the image as a Blob (binary data) and we will convert it to an object URL in the component for display
@@ -40,15 +39,17 @@ export class CollectionsService {
   }
 
   // Post-Api - /add-collection api to save new collection data into DB
-  addCollectionService(collectionDto: CollectionDto, file: File): Observable<CollectionDto>{
+  addCollectionService(collectionDto: CollectionDto, file: File | null): Observable<CollectionDto>{
     // we send both payload and file as seperate args to backend using FormData
     const formData = new FormData();
     // formData- both Keys - naming MUST be SAME as declared in Backend-Api-Method params and same types for Better data mapping
     formData.append("collectionDto", JSON.stringify(collectionDto));
-    formData.append("file", file);
+    if( file !== null){
+      formData.append("file", file);
+    }
 
     // Call Api
-    return this.http.post<CollectionDto>(`${this.BASE_URL}/api/v1/collection/add-collection`, formData); // now formData has both json and image-file
+    return this.http.post<CollectionDto>(`${this.BASE_URL}/api/v1/user/${collectionDto.userId}/collection/add-collection`, formData); // now formData has both json and image-file
   }
 
   // Update-Api - /update/collectionId api to update required data into DB
@@ -63,12 +64,12 @@ export class CollectionsService {
     }
 
     // Call Update Api
-    return this.http.put<CollectionDto>(`${this.BASE_URL}/api/v1/collection/update/${collectionId}`, formData);
+    return this.http.put<CollectionDto>(`${this.BASE_URL}/api/v1/user/${collectionDto.userId}/collection/update/${collectionId}`, formData);
   }
 
   // Delete-Api - /delete/{collectionId} api to delete specified collection data from DB
-  deleteCollectionService(collectionId: number): Observable<string>{
-    return this.http.delete(`${this.BASE_URL}/api/v1/collection/delete/${collectionId}`,{
+  deleteCollectionService(userId: number, collectionId: number): Observable<string>{
+    return this.http.delete(`${this.BASE_URL}/api/v1/user/${userId}/collection/delete/${collectionId}`,{
       responseType: "text" // here we get deleted string msg as response from delete-api
     });
   }
@@ -80,6 +81,7 @@ export type CollectionDto = {
   collectionId?: number, // optional field
   name: string,
   category: string,
+  categoryName?: string, // added for better display in UI
   userId: string,
   rating: number,
   review: string,

@@ -13,6 +13,8 @@ import {
   CollectionFilters,
   CollectionsService,
 } from '../../services/collections-service';
+import { CategoryService } from '../../services/category-service';
+import { CookieService } from '../../../interceptors/cookie.service';
 
 @Component({
   selector: 'app-home',
@@ -35,13 +37,16 @@ export class Home implements OnInit {
   private readonly pageSize = 3;
   private readonly favoritesStorageKey = 'favoriteCollectionIds';
   private readonly router = inject(Router);
+  private cookieService = inject(CookieService);
 
   collectionService = inject(CollectionsService);
   authService = inject(AuthService);
+  categoryService = inject(CategoryService);
 
   collections: CollectionDto[] = [];
   originalCollections: CollectionDto[] = [];
   loading = signal(true);
+  categoriesLoader = signal(false);
   currentPage = 1;
 
   // Stores favorite IDs locally because the backend has no favorite API yet.
@@ -53,13 +58,10 @@ export class Home implements OnInit {
     privacy: null,
   };
 
-  categories = [
-    { label: 'All', value: null },
-    { label: 'Anime', value: 'Anime' },
-    { label: 'Movie', value: 'Movie' },
-    { label: 'Manga', value: 'Manga' },
-    { label: 'Manhwa', value: 'Manhwa' },
-  ];
+  categories = [{ label: 'All', value: null }];
+
+  // get user info from cookie which is stored after user logged-In
+  userId = signal<string | null>(this.cookieService.getCookie('userId'));
 
   progressOptions = [
     { label: 'All', value: null },
@@ -75,11 +77,56 @@ export class Home implements OnInit {
     { label: 'Private', value: 'Private' },
     { label: 'Friend', value: 'Friend' },
   ];
+  selectedCategoryLabel: string | null = null;
 
   ngOnInit(): void {
     this.loadFavorites();
     if (this.authService.isAuthenticated()) {
       this.getUserBasedCollections();
+    }
+    this.checkCategories();
+  }
+
+  // checks if categories list data is there or not in localStorage
+  checkCategories(): void {
+    // Load categories data from localStorage- if exists or recall categories api
+    const localStorageCategories: any[] = JSON.parse(
+      localStorage.getItem('categories') || '[]',
+    );
+    if (localStorageCategories.length > 0) {
+      let categoriesData = localStorageCategories.map((category) => ({
+        label: category.categoryName,
+        value: category.categoryId,
+      }));
+      this.categories = [...this.categories, ...categoriesData];
+    } else {
+      this.loadCategories();
+    }
+  }
+
+  loadCategories(): void {
+    this.categoriesLoader.set(true);
+    let userId = parseInt(this.userId() || ''); // Convert to number, default to 0 if null
+
+    if (!isNaN(userId)) {
+      this.categoryService.getUserCategories(userId).subscribe({
+        next: (data) => {
+          let categoriesData = data.map((category) => ({
+            label: category.categoryName,
+            value: category.categoryId,
+          }));
+          localStorage.setItem('categories', JSON.stringify(data));
+          this.categories = [...this.categories, ...categoriesData];
+          this.categoriesLoader.set(false);
+        },
+        error: (err) => {
+          console.error(err);
+          this.categoriesLoader.set(false);
+        },
+      });
+    } else {
+      console.error('Invalid userId: ', userId);
+      this.categoriesLoader.set(false);
     }
   }
 
@@ -98,8 +145,9 @@ export class Home implements OnInit {
   getUserBasedCollections(): void {
     this.loading.set(true);
     this.currentPage = 1;
+    const userId = parseInt(this.userId() || '0', 10);
 
-    this.collectionService.getUserBasedCollections().subscribe({
+    this.collectionService.getUserBasedCollections(userId).subscribe({
       next: (response) => {
         this.collections = response;
         this.originalCollections = response;
@@ -116,6 +164,8 @@ export class Home implements OnInit {
 
   // Updates one filter and requests the matching collection list.
   applyFilter(type: keyof CollectionFilters, value: string | null): void {
+    // page is reset to 1 when a filter is applied, so that the user sees the first page of results.
+    this.currentPage = 1;
     if (this.selectedFilters[type] === value) return;
 
     this.selectedFilters = { ...this.selectedFilters, [type]: value };
@@ -126,8 +176,9 @@ export class Home implements OnInit {
   resetFilters(): void {
     this.selectedFilters = { category: null, progress: null, privacy: null };
     // If the original collection list is already loaded, we can restore it directly or we call User-based-Collections-Api to get the latest collection list and then restore it.
-    if(this.originalCollections.length > 0) {
+    if (this.originalCollections.length > 0) {
       this.collections = this.originalCollections;
+      this.currentPage = 1;
     } else {
       this.getUserBasedCollections();
     }
@@ -226,7 +277,8 @@ export class Home implements OnInit {
             collection.privacy === this.selectedFilters.privacy),
       );
     } else {
-      this.collectionService.getUserBasedCollections().subscribe({
+      const userId = parseInt(this.userId() || '0', 10);
+      this.collectionService.getUserBasedCollections(userId).subscribe({
         next: (response) => {
           this.collections = response.filter(
             (collection) =>

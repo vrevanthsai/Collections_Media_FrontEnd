@@ -8,12 +8,15 @@ import { authGuard } from './components/layout/guards/auth-guard';
 import { Intro } from './pages/common/intro/intro';
 import { ForgotPassword } from './pages/auth/forgot-password/forgot-password';
 import { adminGuard } from './components/layout/guards/admin-guard';
+import { redirectIfLoggedInGuard } from './components/layout/guards/redirect-if-logged-in.guard';
 
 // This file defines the routes for the application. Each route maps a URL path to a component that should be displayed 
 // when the user navigates to that path. The routes are defined as an array of objects,
 //  where each object has a 'path' and a 'component' property. The 'path' is the URL segment that will trigger the route, and the 'component' is the Angular component that will be rendered when the route is activated. In this example, the routes array is currently empty, meaning that there are no defined routes in the application yet.
 export const routes: Routes = [
-    { path:'', title:"Intro Page", component: Intro }, // '' means root path of the application
+    { path:'', title:"Intro Page", component: Intro, // '' means root path of the application
+        canActivate: [redirectIfLoggedInGuard] // redirectIfLoggedInGuard- if user already loggedIN then redirect to /home page
+     },
     { path:'home' , title:"Collection Media App", component: Home ,
         canActivate: [authGuard] // canActivate- accepts True/False/UrlTree and an Observable/Promise of those
     },

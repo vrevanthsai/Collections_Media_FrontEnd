@@ -10,6 +10,7 @@ import { TagModule } from 'primeng/tag';
 import { DeleteCollection } from '../delete-collection/delete-collection';
 import { UpdateCollection } from '../update-collection/update-collection';
 import { CollectionDto, CollectionsService } from '../../services/collections-service';
+import { CookieService } from '../../../interceptors/cookie.service';
 
 @Component({
   selector: 'app-collection-detail',
@@ -31,6 +32,7 @@ export class CollectionDetail implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly collectionsService = inject(CollectionsService);
   private readonly matDialog = inject(MatDialog);
+  private cookieService = inject(CookieService);
 
   // Signals keep loading, error, and collection states reactive in the template.
   collection = signal<CollectionDto | null>(null);
@@ -69,6 +71,15 @@ export class CollectionDetail implements OnInit, OnDestroy {
       },
       error: (error) => console.log('Update dialog error = ', error),
     });
+  }
+
+  // send image url if present or send default img url
+  getImageUrl(imageUrl : string | null | undefined){
+    if(imageUrl === "" || imageUrl === null || imageUrl === undefined){
+      return 'https://placehold.co/900x1200?text=No+Cover';
+    } else {
+      return imageUrl;
+    }
   }
 
   // Opens the delete confirmation and returns Home after deletion.
@@ -129,8 +140,9 @@ export class CollectionDetail implements OnInit, OnDestroy {
     this.loading.set(true);
     this.errorMessage.set('');
     this.revokeObjectUrl();
+    const userId = parseInt(this.cookieService.getCookie('userId') || '0', 10);
 
-    this.collectionsService.getCollectionById(this.collectionId).subscribe({
+    this.collectionsService.getCollectionById(userId, this.collectionId).subscribe({
       next: (collection) => {
         if (!collection) {
           this.errorMessage.set('Collection not found or you do not have access to it.');

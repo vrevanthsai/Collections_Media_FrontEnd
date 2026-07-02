@@ -24,8 +24,9 @@ export class DeleteCollection {
   deleteCollection() {
     // proceed further only if user is authenticated
     if (this.authService.isAuthenticated()) {
+      const userId = parseInt(this.data.collection.userId || '0', 10);
       // Call Delete-Collection-Api
-      this.collectionService.deleteCollectionService(this.data.collection.collectionId!) // ! - it will not have null value
+      this.collectionService.deleteCollectionService(userId, this.data.collection.collectionId!)
       .subscribe({
         next: (res) => {
           // TODO- show String response-msg in Toaster/Notification-PopUp format instead of console.logs
