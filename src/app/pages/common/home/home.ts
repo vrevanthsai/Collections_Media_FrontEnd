@@ -164,6 +164,8 @@ export class Home implements OnInit {
 
   // Updates one filter and requests the matching collection list.
   applyFilter(type: keyof CollectionFilters, value: string | null): void {
+    // page is reset to 1 when a filter is applied, so that the user sees the first page of results.
+    this.currentPage = 1;
     if (this.selectedFilters[type] === value) return;
 
     this.selectedFilters = { ...this.selectedFilters, [type]: value };
@@ -176,6 +178,7 @@ export class Home implements OnInit {
     // If the original collection list is already loaded, we can restore it directly or we call User-based-Collections-Api to get the latest collection list and then restore it.
     if (this.originalCollections.length > 0) {
       this.collections = this.originalCollections;
+      this.currentPage = 1;
     } else {
       this.getUserBasedCollections();
     }
