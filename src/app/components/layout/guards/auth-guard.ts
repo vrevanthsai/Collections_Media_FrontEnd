@@ -18,7 +18,7 @@ export const authGuard: CanActivateFn = (route, state) => {
     return true;
   }
 
-  const refreshToken = cookieService.getCookie('refreshToken');
+  const refreshToken = cookieService.getEncryptedCookie('refreshToken');
   authService.setLoggedIn(false);
 
   // No refresh token means we cannot recover the session, so send the user to login.

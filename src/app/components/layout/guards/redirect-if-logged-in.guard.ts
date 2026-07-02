@@ -8,7 +8,7 @@ export const redirectIfLoggedInGuard: CanActivateFn = () => {
   const router = inject(Router);
   const authService = inject(AuthService); 
 
-  const token = cookieService.getCookie('accessToken');
+  const token = cookieService.getEncryptedCookie('accessToken');
 
   if (token && authService.isAuthenticated()) {
     // user already logged in, redirect to /home

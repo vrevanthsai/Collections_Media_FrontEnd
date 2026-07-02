@@ -24,7 +24,7 @@ export function authInterceptor(req: HttpRequest<unknown>, next: HttpHandlerFn){
 
     // For Authenticated Users- for all other api-endpoints - we provide adding token to header logic
     if(authService.isAuthenticated()){
-        const token = cookieService.getCookie('accessToken');
+        const token = cookieService.getEncryptedCookie('accessToken');
         req = addToken(req,token!!); // !! - checks token is not null
     }
 
@@ -64,7 +64,7 @@ function handle401Error(req: HttpRequest<unknown>, next: HttpHandlerFn){
         // when we get new AccessToken then we add it to header and forward the req to next
         // switchMap() is used to switch from one Observable to another Observable and return the new Observable
         switchMap((token: string) => {
-            cookieService.setCookie('accessToken', token, 7); // token - is new AccessToken
+            cookieService.setEncryptedCookie('accessToken', token, 7); // token - is new AccessToken
             return next(addToken(req, token));
         }),
         // when we get error(like our provided RefreshToken is Expired) while getting new token then we logout user and navigate to login page

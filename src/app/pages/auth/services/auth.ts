@@ -47,8 +47,8 @@ export class AuthService {
           tap((response) => {
             if (response && response?.data?.accessToken) {
               // storing user-data in browser cookie instead of sessionSorage
-              this.cookieService.setCookie('accessToken', response.data.accessToken, 7); // key-value and 7 days expiry
-              this.cookieService.setCookie('refreshToken', response.data.refreshToken, 7);
+              this.cookieService.setEncryptedCookie('accessToken', response.data.accessToken, 7); // key-value and 7 days expiry
+              this.cookieService.setEncryptedCookie('refreshToken', response.data.refreshToken, 7);
               this.cookieService.setCookie('userId', JSON.stringify(response.data.userId), 7); // store userId-type number as string
               this.cookieService.setCookie('name', response.data.name, 7);
               this.cookieService.setCookie('email', response.data.email, 7);
@@ -77,7 +77,7 @@ export class AuthService {
   // check user logged-in or not- used in navbar component for conditional rendering of login/logout button and to show user name
   // this function is useful to set True to User-State when user comes after 1st loggedIN then no logIn is needed for User to enter
   isAuthenticated(): boolean {
-    const token = this.cookieService.getCookie('accessToken');
+    const token = this.cookieService.getEncryptedCookie('accessToken');
     // we parallelly update loggedIn siganl of auth service - so that when ever auth-guard of app.route checks for user authentication then loggedIn siganl is also updated with correct state value -
     // so that it will reflect all over(in navbar comp to show selected nav-links depending on user loggedIn state) application
     this.loggedIn.set(!!token && !this.isTokenExpired(token));
@@ -116,7 +116,7 @@ export class AuthService {
   // THis method Gets new Access Token(jwtToken) when available refreshToken is valid
   // THis method returns async value- so we use Observable-Return-Type
   refreshToken(): Observable<any> {
-    const refToken = this.cookieService.getCookie('refreshToken');
+    const refToken = this.cookieService.getEncryptedCookie('refreshToken');
     const refTokenObj: RefreshTokenRequest = {
       refreshToken: refToken,
     };
@@ -127,7 +127,7 @@ export class AuthService {
         // we get res.accessToken which is new AccessToken and we replace it with old token in cookie
         // and refreshToken will not change
         tap((res: any) =>
-          this.cookieService.setCookie('accessToken', res.accessToken, 7),
+          this.cookieService.setEncryptedCookie('accessToken', res.accessToken, 7),
         ),
         catchError((err) => {
           // when we get error(like our provided RefreshToken is Expired) while getting new token then we logout user
@@ -140,7 +140,7 @@ export class AuthService {
 
   // This method handles Role verifying and its logic
   hasRole(role: string): boolean {
-    const token = this.cookieService.getCookie('accessToken');
+    const token = this.cookieService.getEncryptedCookie('accessToken');
     if (token) {
       const decodedToken: any = jwtDecode(token);
       // returns True- if token has role-matching data or else False
