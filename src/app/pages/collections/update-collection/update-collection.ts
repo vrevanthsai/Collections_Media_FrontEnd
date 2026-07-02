@@ -131,7 +131,24 @@ export class UpdateCollection {
   }
 
   ngOnInit(): void {
-    this.loadCategories();
+    this.checkCategories();
+  }
+
+  // checks if categories list data is there or not in localStorage
+  checkCategories(): void {
+    // Load categories data from localStorage- if exists or recall categories api
+    const localStorageCategories: any[] = JSON.parse(
+      localStorage.getItem('categories') || '[]',
+    );
+    if (localStorageCategories.length > 0) {
+      let categoriesData = localStorageCategories.map((category) => ({
+        label: category.categoryName,
+        value: category.categoryId,
+      }));
+      this.categories = [...this.categories, ...categoriesData];
+    } else {
+      this.loadCategories();
+    }
   }
 
   loadCategories(): void {

@@ -94,6 +94,9 @@ export class AuthService {
     this.cookieService.deleteCookie('username');
     this.cookieService.deleteCookie('userId');
     this.cookieService.deleteCookie('role');
+    // Clear/remove categories-array data of user in localStorage
+    localStorage.removeItem('categories');
+    localStorage.removeItem('favoriteCollectionIds');
   }
 
   // Setter/ Getter Methods of Signal-variable

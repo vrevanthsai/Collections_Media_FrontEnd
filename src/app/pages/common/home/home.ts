@@ -58,9 +58,7 @@ export class Home implements OnInit {
     privacy: null,
   };
 
-  categories = [
-    { label: 'All', value: null },
-  ];
+  categories = [{ label: 'All', value: null }];
 
   // get user info from cookie which is stored after user logged-In
   userId = signal<string | null>(this.cookieService.getCookie('userId'));
@@ -86,7 +84,24 @@ export class Home implements OnInit {
     if (this.authService.isAuthenticated()) {
       this.getUserBasedCollections();
     }
-    this.loadCategories();
+    this.checkCategories();
+  }
+
+  // checks if categories list data is there or not in localStorage
+  checkCategories(): void {
+    // Load categories data from localStorage- if exists or recall categories api
+    const localStorageCategories: any[] = JSON.parse(
+      localStorage.getItem('categories') || '[]',
+    );
+    if (localStorageCategories.length > 0) {
+      let categoriesData = localStorageCategories.map((category) => ({
+        label: category.categoryName,
+        value: category.categoryId,
+      }));
+      this.categories = [...this.categories, ...categoriesData];
+    } else {
+      this.loadCategories();
+    }
   }
 
   loadCategories(): void {
@@ -100,6 +115,7 @@ export class Home implements OnInit {
             label: category.categoryName,
             value: category.categoryId,
           }));
+          localStorage.setItem('categories', JSON.stringify(data));
           this.categories = [...this.categories, ...categoriesData];
           this.categoriesLoader.set(false);
         },
@@ -158,7 +174,7 @@ export class Home implements OnInit {
   resetFilters(): void {
     this.selectedFilters = { category: null, progress: null, privacy: null };
     // If the original collection list is already loaded, we can restore it directly or we call User-based-Collections-Api to get the latest collection list and then restore it.
-    if(this.originalCollections.length > 0) {
+    if (this.originalCollections.length > 0) {
       this.collections = this.originalCollections;
     } else {
       this.getUserBasedCollections();
