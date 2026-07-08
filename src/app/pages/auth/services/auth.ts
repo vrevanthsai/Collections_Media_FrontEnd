@@ -16,7 +16,8 @@ export class AuthService {
   private loggedIn = signal<boolean>(false);
   private cookieService = inject(CookieService);
   // get user info from cookie which is stored after user logged-In(or login-service-method)
-  private name = signal<string | null>(this.cookieService.getCookie('name'));
+  private userDetails = JSON.parse(this.cookieService.getCookie('userDetails') || '{}');
+  private name = signal<string | null>(this.userDetails.name || null);
 
   // DI for HttpClient for API integrations
   constructor(private http: HttpClient) {}
@@ -50,9 +51,14 @@ export class AuthService {
               this.cookieService.setEncryptedCookie('accessToken', response.data.accessToken, 7); // key-value and 7 days expiry
               this.cookieService.setEncryptedCookie('refreshToken', response.data.refreshToken, 7);
               this.cookieService.setCookie('userId', JSON.stringify(response.data.userId), 7); // store userId-type number as string
-              this.cookieService.setCookie('name', response.data.name, 7);
-              this.cookieService.setCookie('email', response.data.email, 7);
-              this.cookieService.setCookie('username', response.data.username, 7);             
+              
+              let userDetails = {
+                name: response.data.name,
+                email: response.data.email,
+                username: response.data.username,
+                addedDate: response.data.addedDate,
+              };
+              this.cookieService.setCookie('userDetails', JSON.stringify(userDetails), 7);           
 
               // Getting Roles info from extracting token
               const decodedToken: any = jwtDecode(response.data.accessToken);
@@ -89,11 +95,9 @@ export class AuthService {
   logout(): void {
     this.cookieService.deleteCookie('accessToken');
     this.cookieService.deleteCookie('refreshToken');
-    this.cookieService.deleteCookie('name');
-    this.cookieService.deleteCookie('email');
-    this.cookieService.deleteCookie('username');
     this.cookieService.deleteCookie('userId');
     this.cookieService.deleteCookie('role');
+    this.cookieService.deleteCookie('userDetails');
     // Clear/remove categories-array data of user in localStorage
     localStorage.removeItem('categories');
     localStorage.removeItem('favoriteCollectionIds');
@@ -164,6 +168,7 @@ export type RegisterRequest = {
   username: string;
   password: string;
   selectedCategories: string[];
+  addedDate: string;
 };
 
 export type LoginRequest = {
@@ -184,6 +189,7 @@ export type AuthResponse = {
     name: string;
     email: string;
     username: string;
+    addedDate: string;
   };
 };
 

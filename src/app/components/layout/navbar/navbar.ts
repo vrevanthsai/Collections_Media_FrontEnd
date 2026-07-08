@@ -16,7 +16,8 @@ export class Navbar {
   // signal var user for knowing User state
   isLoggedIn = signal<boolean>(false);
   // get user info from cookie which is stored after user logged-In(or login-service-method)
-  name = signal<string | null>(this.cookieService.getCookie('name'));
+  private userDetails = JSON.parse(this.cookieService.getCookie('userDetails') || '{}');
+  name = signal<string | null>(this.userDetails.name || null);
 
   //  DI to use authService in a component file and Router DI for navigation
   constructor(
