@@ -1,0 +1,30 @@
+@use '../shared/shared-styles' as *;
+
+.setting-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid $border-subtle;
+  color: #fff;
+  font-weight: 500;
+
+  &:last-of-type {
+    border-bottom: none;
+  }
+}
+
+::ng-deep .p-select {
+  background: $bg-input;
+  border: 1px solid $border-subtle;
+  border-radius: 8px;
+  width: 100%;
+
+  .p-select-label {
+    color: #fff;
+  }
+}
+
+::ng-deep .p-toggleswitch.p-toggleswitch-checked .p-toggleswitch-slider {
+  background: $accent !important;
+}

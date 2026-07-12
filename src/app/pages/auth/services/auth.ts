@@ -181,8 +181,6 @@ export type AuthResponse = {
   success: boolean;
   message: string;
   data: {
-    success: boolean;
-    message: string;
     accessToken: string;
     refreshToken: string;
     userId: number;

@@ -1,0 +1,98 @@
+<p-toast></p-toast>
+
+<div class="row g-4">
+  <div class="col-12 col-lg-8">
+    <div class="panel-card">
+      <h2 class="panel-card__title">
+        <i class="pi pi-user"></i> Edit Profile
+      </h2>
+
+      <form [formGroup]="form" (ngSubmit)="onSave()" class="mt-4">
+        <div class="mb-4">
+          <label class="field-label">Email Address</label>
+          <input
+            pInputText
+            type="email"
+            formControlName="email"
+            class="w-100 field-input field-input--disabled"
+          />
+        </div>
+
+        <div class="mb-4">
+          <label class="field-label">Name</label>
+          <input
+            pInputText
+            type="text"
+            formControlName="name"
+            class="w-100 field-input"
+          />
+          <small
+            class="text-danger d-block mt-1"
+            *ngIf="form.get('name')?.invalid && form.get('name')?.touched"
+          >
+            Name is required.
+          </small>
+        </div>
+
+        <div class="mb-4">
+          <label class="field-label">User Name</label>
+          <input
+            pInputText
+            type="text"
+            formControlName="username"
+            class="w-100 field-input"
+          />
+          <small
+            class="text-danger d-block mt-1"
+            *ngIf="form.get('username')?.invalid && form.get('username')?.touched"
+          >
+            Username is required.
+          </small>
+        </div>
+
+        <div class="mb-4">
+          <label class="field-label">Joined</label>
+          <input
+            pInputText
+            type="text"
+            [value]="user().addedDate | date: 'MMM d, y'"
+            class="w-100 field-input field-input--readonly"
+            disabled
+          />
+        </div>
+
+        <a class="change-password-link mb-4 d-inline-flex align-items-center gap-2" routerLink="../change-password">
+          <i class="pi pi-key"></i> Change password
+        </a>
+
+        <button
+          pButton
+          type="submit"
+          label="Save"
+          class="w-100 save-btn"
+          [loading]="saving"
+        ></button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Avatar panel -->
+  <div class="col-12 col-lg-4">
+    <div class="panel-card avatar-panel d-flex flex-column align-items-center justify-content-center">
+      <div class="avatar-wrapper">
+        <img [src]="user().avatarUrl" alt="avatar" class="avatar-img" />
+        <label class="avatar-edit-btn" for="avatarUpload">
+          <i class="pi pi-pencil"></i>
+        </label>
+        <input
+          id="avatarUpload"
+          type="file"
+          accept="image/*"
+          class="d-none"
+          (change)="onAvatarSelected($event)"
+        />
+      </div>
+      <p class="text-muted small mt-3 mb-0">Click the pencil to change your photo</p>
+    </div>
+  </div>
+</div>

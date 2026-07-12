@@ -1,0 +1,34 @@
+@use '../shared/shared-styles' as *;
+
+.notif-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.notif-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid $border-subtle;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &__label {
+    font-weight: 600;
+    color: #fff;
+  }
+
+  &__desc {
+    font-size: 0.82rem;
+    color: $text-muted;
+    margin-top: 0.15rem;
+  }
+}
+
+::ng-deep .p-toggleswitch.p-toggleswitch-checked .p-toggleswitch-slider {
+  background: $accent !important;
+}
