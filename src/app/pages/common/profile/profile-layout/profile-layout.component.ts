@@ -91,14 +91,9 @@ export class ProfileLayoutComponent implements OnInit {
       this.profileService.sharedAvatarBlobData$.subscribe(
         (avatarBlob: Blob | undefined) => {
           if (avatarBlob) {
-            const reader = new FileReader();
-            reader.onload = () => {
-              this.user.update((u) => ({
-                ...u,
-                avatarUrl: reader.result as string,
-              }));
-            };
-            reader.readAsDataURL(avatarBlob);
+            this.resizeImage(avatarBlob, 256).then((resizedDataUrl) => {
+              this.user.update((u) => ({ ...u, avatarUrl: resizedDataUrl }));
+            });
           }
         },
       ),
@@ -109,6 +104,41 @@ export class ProfileLayoutComponent implements OnInit {
     // Unsubscribe/clear data from the sharedData$ in service file observable to prevent memory leaks in this component when user navigates to other pages and this component is destroyed
     this.subs.unsubscribe(); // unsubscribes all three at once
     this.profileService.clearProfileState(); // reset profile state on component destruction
+  }
+
+  private resizeImage(file: Blob, maxSize = 256): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const reader = new FileReader();
+
+      reader.onload = () => {
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let { width, height } = img;
+
+          // scale down proportionally so neither dimension exceeds maxSize
+          if (width > height && width > maxSize) {
+            height *= maxSize / width;
+            width = maxSize;
+          } else if (height > maxSize) {
+            width *= maxSize / height;
+            height = maxSize;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+
+          resolve(canvas.toDataURL('image/jpeg', 0.85)); // resized, compressed base64
+        };
+        img.onerror = reject;
+        img.src = reader.result as string;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
   }
 
   private buildNav(): void {
