@@ -19,7 +19,12 @@ import { MessageService } from 'primeng/api';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
-import { AppUser, ProfileService } from '../services/profile.service';
+import {
+  AppUser,
+  CookieUserDetails,
+  ProfileService,
+  UpdateUserRequest,
+} from '../services/profile.service';
 import { CookieService } from '../../../../interceptors/cookie.service';
 import { AuthResponse } from '../../../auth/services/auth';
 
@@ -39,11 +44,22 @@ import { AuthResponse } from '../../../auth/services/auth';
   providers: [MessageService],
 })
 export class ProfileInfoComponent implements OnInit {
-  // user = signal({});
-  user!: Signal<AppUser>;
   form!: FormGroup;
   saving = false;
   private cookieService = inject(CookieService);
+  userId = parseInt(this.cookieService.getCookie('userId') || '0', 10);
+  // get userDetails from Cookie if exists
+  private userDetails: CookieUserDetails = JSON.parse(
+    this.cookieService.getCookie('userDetails') || '{}',
+  );
+  user = signal<AppUser>({
+    name: this.userDetails?.name || '',
+    username: this.userDetails?.username || '',
+    email: this.userDetails?.email || '',
+    role: this.cookieService.getCookie('role') || 'USER',
+    addedDate: this.userDetails?.addedDate || '',
+    avatarUrl: 'https://api.dicebear.com/7.x/adventurer/svg?seed=rinku112',
+  });
 
   constructor(
     private fb: FormBuilder,
@@ -52,7 +68,6 @@ export class ProfileInfoComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.user = this.profileService?.currentUser;
     this.initializeForm();
     this.checkIfUserDetailsExist();
   }
@@ -73,20 +88,16 @@ export class ProfileInfoComponent implements OnInit {
   // and if Cookie does not have data then calls loadUserDetails() which calls /getuser Api from BE and restores data
   checkIfUserDetailsExist(): void {
     if (
-      this.profileService.currentUser().name !== '' &&
-      this.profileService.currentUser().name !== undefined &&
-      this.profileService.currentUser().name !== null
+      this.user().name === '' &&
+      this.user().name === undefined &&
+      this.user().name === null
     ) {
-      // this.user = signal(this.profileService.currentUser());
-      this.user = computed(() => this.profileService.currentUser());
-    } else {
       this.loadUserDetails();
     }
   }
 
   loadUserDetails(): void {
-    const userId = parseInt(this.cookieService.getCookie('userId') || '0', 10);
-    this.profileService.getUserById(userId).subscribe({
+    this.profileService.getUserById(this.userId).subscribe({
       next: (res: AuthResponse) => {
         let currentUser$: AppUser = {
           name: res?.data?.name,
@@ -98,14 +109,14 @@ export class ProfileInfoComponent implements OnInit {
             'https://api.dicebear.com/7.x/adventurer/svg?seed=rinku112',
         };
         this.user = signal(currentUser$);
-        
+
         // Update form values with fetched user details
         this.form.patchValue({
           email: res?.data?.email,
           name: res?.data?.name,
           username: res?.data?.username,
         });
-        
+
         // store userDetails in Cookie for future use
         let userDetails = {
           name: res.data.name,
@@ -118,7 +129,9 @@ export class ProfileInfoComponent implements OnInit {
           JSON.stringify(userDetails),
           7,
         );
-        this.profileService.reAssignUserDetails = true;
+
+        // Send the updated user details to other components via ProfileService
+        this.profileService.updateData(currentUser$);
       },
       error: (err: any) => {
         console.log('Error while fetching User Data baseed on UserId: ', err);
@@ -154,15 +167,46 @@ export class ProfileInfoComponent implements OnInit {
       return;
     }
 
+    // Build json/object data to send as Http request body to backend api
+    const updatedUserData: UpdateUserRequest = {
+      userId: this.userId,
+      email: this.form.get('email')?.value,
+      name: this.form.get('name')?.value,
+      username: this.form.get('username')?.value,
+    };
+
+    // saving- is a loading var which shows loading in Submit/Save button itself/within
     this.saving = true;
-    setTimeout(() => {
-      // this.auth.updateUser({ username: this.form.value.username });
-      this.saving = false;
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Profile updated',
-        detail: 'Your changes have been saved.',
-      });
-    }, 600);
+    this.profileService.updateUserById(this.userId, updatedUserData).subscribe({
+      next: (res: AuthResponse) => {
+        this.saving = false;
+        // show any Validation error msgs from backend
+        if (!res?.success) {
+          this.messageService.add({
+            severity: 'error',
+            summary: res?.message || 'Error while Updating User Data',
+            detail: 'Try again!',
+            life: 5000, // auto-dismiss after 3s
+          });
+        } else {
+          // ReLoad latest User details and store the updated userDetails value in cookie
+          this.loadUserDetails();
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Profile updated',
+            detail: 'Your changes have been saved.',
+          });
+        }
+      },
+      error: (err: any) => {
+        console.log('Error while Updating User Data: ', err);
+        this.messageService.add({
+          severity: 'error',
+          summary: err?.error?.message || 'Error while Updating User Data',
+          detail: 'Try again!',
+          life: 3000, // auto-dismiss after 3s
+        });
+      },
+    });
   }
 }
