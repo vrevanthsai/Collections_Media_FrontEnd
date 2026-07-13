@@ -57,6 +57,7 @@ export class AuthService {
                 email: response.data.email,
                 username: response.data.username,
                 addedDate: response.data.addedDate,
+                avatarName: response.data.imagename || '', // if user has uploaded profile-pic then it will be present or else empty string
               };
               this.cookieService.setCookie('userDetails', JSON.stringify(userDetails), 7);           
 
@@ -188,6 +189,7 @@ export type AuthResponse = {
     email: string;
     username: string;
     addedDate: string;
+    imagename?: string; // optional field - if user has uploaded profile-pic then it will be present or else not
   };
 };
 

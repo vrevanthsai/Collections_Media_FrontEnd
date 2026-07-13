@@ -17,6 +17,7 @@ import {
   ProfileService,
 } from '../services/profile.service';
 import { CookieService } from '../../../../interceptors/cookie.service';
+import { Subscription } from 'rxjs';
 
 interface NavItem {
   label: string;
@@ -39,11 +40,13 @@ export class ProfileLayoutComponent implements OnInit {
   private userDetails: CookieUserDetails = JSON.parse(
     this.cookieService.getCookie('userDetails') || '{}',
   );
-  user = signal({
+  user = signal<LayoutUserDetails>({
     username: this.userDetails?.username || '',
     role: this.cookieService.getCookie('role') || 'USER',
-    avatarUrl: 'https://api.dicebear.com/7.x/adventurer/svg?seed=rinku112',
+    avatarUrl: 'https://api.dicebear.com/7.x/adventurer/svg?seed=rinku112', // default avatar img
   });
+  // add all-3 subscription to a single subs var and unsubscribe it in ngOnDestroy() to prevent memory leaks when user navigates to other pages and this component is destroyed
+  private subs = new Subscription();
 
   constructor(
     private router: Router,
@@ -55,27 +58,57 @@ export class ProfileLayoutComponent implements OnInit {
 
     // Keep the active tab in sync if the URL changes some other way
     // (browser back/forward, direct link, redirect from the admin guard, etc.)
-    this.router.events
-      .pipe(
-        filter(
-          (event): event is NavigationEnd => event instanceof NavigationEnd,
-        ),
-      )
-      .subscribe(() => this.syncActiveTab());
+    // Keep the active tab in sync if the URL changes some other way
+    this.subs.add(
+      this.router.events
+        .pipe(
+          filter(
+            (event): event is NavigationEnd => event instanceof NavigationEnd,
+          ),
+        )
+        .subscribe(() => this.syncActiveTab()),
+    );
 
     this.syncActiveTab();
 
-    // Receive updated user details from ProfileService and update the user signal 
+    // Receive updated user details from ProfileService and update the user signal
     // and it will only trigger when the user details are updated in the ProfileInfoComponent
-    this.profileService.sharedData$.subscribe((updatedUser) => {
-      if (updatedUser) {
-        this.user.set({
-          username: updatedUser.username,
-          role: updatedUser.role,
-          avatarUrl: updatedUser.avatarUrl,
-        });
-      }
-    });
+    // Receive updated user details from ProfileService and update the user signal
+    this.subs.add(
+      this.profileService.sharedData$.subscribe((updatedUser) => {
+        if (updatedUser) {
+          this.user.set({
+            username: updatedUser.username,
+            role: updatedUser.role,
+            avatarUrl: updatedUser.avatarUrl,
+          });
+        }
+      }),
+    );
+
+    // Receive updated or real avatar URL if exists from ProfileService and update the user signal
+    this.subs.add(
+      this.profileService.sharedAvatarBlobData$.subscribe(
+        (avatarBlob: Blob | undefined) => {
+          if (avatarBlob) {
+            const reader = new FileReader();
+            reader.onload = () => {
+              this.user.update((u) => ({
+                ...u,
+                avatarUrl: reader.result as string,
+              }));
+            };
+            reader.readAsDataURL(avatarBlob);
+          }
+        },
+      ),
+    );
+  }
+
+  ngOnDestroy(): void {
+    // Unsubscribe/clear data from the sharedData$ in service file observable to prevent memory leaks in this component when user navigates to other pages and this component is destroyed
+    this.subs.unsubscribe(); // unsubscribes all three at once
+    this.profileService.clearProfileState(); // reset profile state on component destruction
   }
 
   private buildNav(): void {
@@ -104,3 +137,9 @@ export class ProfileLayoutComponent implements OnInit {
     }
   }
 }
+
+type LayoutUserDetails = {
+  username: string;
+  role: string;
+  avatarUrl: string | undefined;
+};

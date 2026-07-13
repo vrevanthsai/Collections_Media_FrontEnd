@@ -4,6 +4,7 @@ import { AuthService } from '../../../pages/auth/services/auth';
 import { CommonModule } from '@angular/common';
 import { MessageService } from 'primeng/api';
 import { CookieService } from '../../../interceptors/cookie.service';
+import { ProfileService } from '../../../pages/common/profile/services/profile.service';
 
 @Component({
   selector: 'app-navbar',
@@ -23,13 +24,22 @@ export class Navbar {
   constructor(
     private authService: AuthService,
     private router: Router,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private profileService: ProfileService,
   ) {}
 
   // This block runs at first-before all other lines in this component and only runs once when page loads
   ngOnInit(): void {
     this.isLoggedIn = this.authService.getLoggedIn();
     this.name = this.authService.getName();
+
+    // Receive updated user details from ProfileService and update the user signal 
+    // and it will only trigger when the user details are updated in the ProfileInfoComponent
+    this.profileService.sharedData$.subscribe((updatedUser) => {
+      if (updatedUser) {
+        this.name.set(updatedUser.name || null);
+      }
+    });
   }
 
   // Logout feature

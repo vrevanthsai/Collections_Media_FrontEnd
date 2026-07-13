@@ -58,8 +58,10 @@ export class ProfileInfoComponent implements OnInit {
     email: this.userDetails?.email || '',
     role: this.cookieService.getCookie('role') || 'USER',
     addedDate: this.userDetails?.addedDate || '',
-    avatarUrl: 'https://api.dicebear.com/7.x/adventurer/svg?seed=rinku112',
+    avatarUrl: '',
   });
+  // file/image form input
+  selectedFile: File | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -69,7 +71,46 @@ export class ProfileInfoComponent implements OnInit {
 
   ngOnInit(): void {
     this.initializeForm();
+    // if user has uploaded avatar image then get image-Data directly from this BE Api else use default avatar image
+    this.loadUserAvatarImage();
     this.checkIfUserDetailsExist();
+  }
+
+  // this single ImageApi call will be used in 2 comps at once- where avatar/imageBlob will be sent from this comp to service-var and that service-var will send that imageBlob data to ProfileLayoutComponent to show latest/available avattar image without seperately calling 2 API calls from these 2 comps
+  loadUserAvatarImage(): void {
+    this.userDetails = JSON.parse(
+      this.cookieService.getCookie('userDetails') || '{}',
+    );
+    if (
+      this.userDetails?.avatarName !== '' &&
+      this.userDetails?.avatarName !== undefined &&
+      this.userDetails?.avatarName !== null
+    ) {
+      this.profileService.getUserAvatarImage(this.userId).subscribe({
+        next: (imageBlob: Blob) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            this.user().avatarUrl = reader.result as string;
+          };
+          reader.readAsDataURL(imageBlob);
+          this.profileService.updateAvatarBlobData(imageBlob);
+        },
+        error: (err: any) => {
+          console.log('Error while fetching User Avatar Image: ', err);
+          this.messageService.add({
+            severity: 'error',
+            summary:
+              err?.error?.message || 'Error while fetching User Avatar Image',
+            detail: 'Try again!',
+            life: 3000, // auto-dismiss after 3s
+          });
+        },
+      });
+    } else {
+      // If no avatar image is uploaded, use a default avatar image
+      this.user().avatarUrl =
+        'https://api.dicebear.com/7.x/adventurer/svg?seed=rinku112';
+    }
   }
 
   // Initialize form with user data
@@ -105,8 +146,9 @@ export class ProfileInfoComponent implements OnInit {
           email: res?.data?.email,
           role: this.cookieService.getCookie('role') || 'USER',
           addedDate: res?.data?.addedDate,
-          avatarUrl:
-            'https://api.dicebear.com/7.x/adventurer/svg?seed=rinku112',
+          avatarUrl: res?.data?.imagename
+            ? '' // will be updated later/below in loadUserAvatarImage() method
+            : 'https://api.dicebear.com/7.x/adventurer/svg?seed=rinku112',
         };
         this.user = signal(currentUser$);
 
@@ -123,6 +165,7 @@ export class ProfileInfoComponent implements OnInit {
           email: res.data.email,
           username: res.data.username,
           addedDate: res.data.addedDate,
+          avatarName: res.data?.imagename || '',
         };
         this.cookieService.setCookie(
           'userDetails',
@@ -132,6 +175,8 @@ export class ProfileInfoComponent implements OnInit {
 
         // Send the updated user details to other components via ProfileService
         this.profileService.updateData(currentUser$);
+        // ReCall loadUserAvatarImage() to fetch the avatar image after updating user details
+        this.loadUserAvatarImage();
       },
       error: (err: any) => {
         console.log('Error while fetching User Data baseed on UserId: ', err);
@@ -158,6 +203,8 @@ export class ProfileInfoComponent implements OnInit {
       // this.profileService.updateAvatar({ avatarUrl: reader.result as string });
       this.user().avatarUrl = reader.result as string;
     };
+    // uploaded image data is stored in this var and only one file selection is allowed[0]
+    this.selectedFile = file;
     reader.readAsDataURL(file);
   }
 
@@ -177,36 +224,40 @@ export class ProfileInfoComponent implements OnInit {
 
     // saving- is a loading var which shows loading in Submit/Save button itself/within
     this.saving = true;
-    this.profileService.updateUserById(this.userId, updatedUserData).subscribe({
-      next: (res: AuthResponse) => {
-        this.saving = false;
-        // show any Validation error msgs from backend
-        if (!res?.success) {
+    this.profileService
+      .updateUserById(this.userId, updatedUserData, this.selectedFile)
+      .subscribe({
+        next: (res: AuthResponse) => {
+          this.saving = false;
+          // show any Validation error msgs from backend
+          if (!res?.success) {
+            // Validation error case - show error msg from backend
+            this.messageService.add({
+              severity: 'error',
+              summary: res?.message || 'Error while Updating User Data',
+              detail: 'Try again!',
+              life: 5000, // auto-dismiss after 3s
+            });
+          } else {
+            // Success case
+            // ReLoad latest User details and store the updated userDetails value in cookie
+            this.loadUserDetails();
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Profile updated',
+              detail: 'Your changes have been saved.',
+            });
+          }
+        },
+        error: (err: any) => {
+          console.log('Error while Updating User Data: ', err);
           this.messageService.add({
             severity: 'error',
-            summary: res?.message || 'Error while Updating User Data',
+            summary: err?.error?.message || 'Error while Updating User Data',
             detail: 'Try again!',
-            life: 5000, // auto-dismiss after 3s
+            life: 3000, // auto-dismiss after 3s
           });
-        } else {
-          // ReLoad latest User details and store the updated userDetails value in cookie
-          this.loadUserDetails();
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Profile updated',
-            detail: 'Your changes have been saved.',
-          });
-        }
-      },
-      error: (err: any) => {
-        console.log('Error while Updating User Data: ', err);
-        this.messageService.add({
-          severity: 'error',
-          summary: err?.error?.message || 'Error while Updating User Data',
-          detail: 'Try again!',
-          life: 3000, // auto-dismiss after 3s
-        });
-      },
-    });
+        },
+      });
   }
 }

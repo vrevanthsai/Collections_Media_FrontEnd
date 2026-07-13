@@ -12,9 +12,21 @@ export class ProfileService {
   // BehaviorSubject = has a "current value", new subscribers get it immediately
   private dataSubject = new BehaviorSubject<AppUser | null>(null);
   sharedData$ = this.dataSubject.asObservable(); // expose read-only stream
+  private avatarUrlSubject = new BehaviorSubject<Blob | undefined>(undefined);
+  sharedAvatarBlobData$ = this.avatarUrlSubject.asObservable(); // expose read-only stream for avatarUrl
 
   updateData(newValue: AppUser | null): void {
     this.dataSubject.next(newValue);
+  }
+
+  updateAvatarBlobData(newAvatarUrl: Blob | undefined): void {
+    this.avatarUrlSubject.next(newAvatarUrl);
+  }
+
+  /** Call this on logout so no stale user data leaks into the next session */
+  clearProfileState(): void {
+    this.dataSubject.next(null);
+    this.avatarUrlSubject.next(undefined);
   }
 
   constructor(
@@ -29,11 +41,23 @@ export class ProfileService {
   }
 
   //  UPDATE- User Api service method
-  updateUserById(userId: number, updatedUserData: UpdateUserRequest): Observable<AuthResponse> {
+  updateUserById(userId: number, updatedUserData: UpdateUserRequest, file: File | null): Observable<AuthResponse> {
+    // we send both payload and file as seperate args to backend using FormData
+    const formData = new FormData();
+    // formData- both Keys - naming MUST be SAME as declared in Backend-Api-Method params and same types for Better data mapping
+    formData.append("profileRequest", JSON.stringify(updatedUserData));
+    if( file !== null){
+      formData.append("file", file);
+    }
     return this.http.put<AuthResponse>(
       `${this.BASE_URL}/api/v1/user/${userId}/profile/update-user`,
-      updatedUserData
+      formData
     );
+  }
+
+  // Get User Avatar/Profile-pic image Api method
+  getUserAvatarImage(userId: number): Observable<Blob> {
+    return this.http.get(`${this.BASE_URL}/api/v1/user/${userId}/profile/get-user-image`, { responseType: 'blob' });
   }
 
   isAdmin(): boolean {
@@ -49,7 +73,7 @@ export interface AppUser {
   email: string;
   role: string;
   addedDate: string;
-  avatarUrl: string;
+  avatarUrl: string | undefined;
 }
 
 export interface CookieUserDetails {
@@ -57,6 +81,7 @@ export interface CookieUserDetails {
   username: string;
   email: string;
   addedDate: string;
+  avatarName: string; // or profile-pic/img name
 }
 
 export type UpdateUserRequest = {
