@@ -9,7 +9,36 @@
           <p-toggleswitch [(ngModel)]="darkMode"></p-toggleswitch>
         </div>
 
-        <button pButton type="button" label="Save Settings" class="w-100 save-btn mt-3" (click)="saveSettings()"></button>
+        <!-- Export All Collections feature- Will be Developed later here -->
+        <div>
+          <div class="setting-toggle-row">
+            <div class="col-10">
+              <span>Do you want to export your All Collections Data to excel or any other format?- Will be Developed Soon!! </span>
+            </div>
+            <div class="col-2">
+              <button pButton type="button" class="w-100 mt-3">Export</button>
+            </div>
+          </div>
+        </div>
+
+        <button pButton type="button" label="Save Settings" class="w-100 save-btn mt-3"
+          (click)="saveSettings()"></button>
+      </div>
+    </div>
+
+    <!-- Delete Account Panel -->
+    <div class="panel-card mt-3">
+      <h2 class="panel-card__title"><i class="pi pi-exclamation-triangle"></i> Delete</h2>
+
+      <div class="mt-4">
+        <div class="setting-toggle-row">
+          <div class="col-10">
+            <span>Do you want to delete your Account? </span>
+          </div>
+          <div class="col-2">
+            <button pButton type="button" label="Delete Account" class="w-100 mt-3" severity="danger"></button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
