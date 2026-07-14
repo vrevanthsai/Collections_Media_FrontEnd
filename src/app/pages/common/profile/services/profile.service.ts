@@ -65,6 +65,14 @@ export class ProfileService {
     return this.authService.hasRole('ADMIN');
   }
 
+  // Change Password Api service method
+  changePassword(userId: number, payload: ChangePasswordRequest): Observable<ChangePwdResponse> {
+    return this.http.put<ChangePwdResponse>(
+      `${this.BASE_URL}/api/v1/user/${userId}/profile/change-password`,
+      payload
+    );
+  }
+
 }
 
 export interface AppUser {
@@ -89,4 +97,15 @@ export type UpdateUserRequest = {
   email: string,
   name: string,
   username: string,
+}
+
+export type ChangePasswordRequest = {
+  oldPwd: string,
+  newPwd: string,
+}
+
+export type ChangePwdResponse = {
+  success: boolean;
+  message: string;
+  data: string;
 }

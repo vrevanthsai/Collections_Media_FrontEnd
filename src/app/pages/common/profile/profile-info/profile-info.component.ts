@@ -250,6 +250,7 @@ export class ProfileInfoComponent implements OnInit {
           }
         },
         error: (err: any) => {
+          this.saving = false;
           console.log('Error while Updating User Data: ', err);
           this.messageService.add({
             severity: 'error',
