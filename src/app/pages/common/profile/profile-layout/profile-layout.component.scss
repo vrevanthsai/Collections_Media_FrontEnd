@@ -7,8 +7,8 @@ $text-muted: #a6a3b3;
 
 .profile-shell {
   min-height: 100vh;
-  background: $bg-dark;
-  color: #fff;
+  // background: $bg-dark;
+  // color: #fff;
   font-family: 'Inter', 'Segoe UI', sans-serif;
 }
 
@@ -99,7 +99,7 @@ $text-muted: #a6a3b3;
 
 // ---- Content area ----
 .profile-content {
-  background: $bg-dark;
+  background: inherit !important;
 }
 
 // ---- Responsive tweaks ----

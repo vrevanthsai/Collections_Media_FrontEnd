@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { Layout } from './components/layout/layout/layout';
 import { ToastModule } from 'primeng/toast';
+import { ThemeService } from './pages/services/theme-service';
 
 @Component({
   selector: 'app-root',
@@ -10,4 +11,5 @@ import { ToastModule } from 'primeng/toast';
 })
 export class App {
   protected title = 'Collection_Media_Fend';
+  private themeService = inject(ThemeService);
 }

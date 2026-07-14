@@ -4,39 +4,12 @@
       <h2 class="panel-card__title"><i class="pi pi-cog"></i> Settings</h2>
 
       <div class="mt-4">
-        <div class="mb-4">
-          <label class="field-label">Language</label>
-          <p-select
-            [options]="languages"
-            [(ngModel)]="selectedLanguage"
-            optionLabel="label"
-            optionValue="value"
-            class="w-100 field-input"
-          ></p-select>
-        </div>
-
-        <div class="mb-4">
-          <label class="field-label">Playback Quality</label>
-          <p-select
-            [options]="playbackQualities"
-            [(ngModel)]="selectedQuality"
-            optionLabel="label"
-            optionValue="value"
-            class="w-100 field-input"
-          ></p-select>
-        </div>
-
-        <div class="setting-toggle-row">
-          <span>Autoplay Next Episode</span>
-          <p-toggleswitch [(ngModel)]="autoplayNext"></p-toggleswitch>
-        </div>
-
         <div class="setting-toggle-row">
           <span>Dark Mode</span>
           <p-toggleswitch [(ngModel)]="darkMode"></p-toggleswitch>
         </div>
 
-        <button pButton type="button" label="Save Settings" class="w-100 save-btn mt-3"></button>
+        <button pButton type="button" label="Save Settings" class="w-100 save-btn mt-3" (click)="saveSettings()"></button>
       </div>
     </div>
   </div>

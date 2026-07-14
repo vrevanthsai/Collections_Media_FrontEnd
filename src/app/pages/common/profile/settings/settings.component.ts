@@ -1,9 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SelectModule } from 'primeng/select';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { ButtonModule } from 'primeng/button';
+import { ThemeService } from '../../../services/theme-service';
 
 @Component({
   selector: 'app-settings',
@@ -13,20 +14,15 @@ import { ButtonModule } from 'primeng/button';
   styleUrls: ['./settings.component.scss']
 })
 export class SettingsComponent {
-  languages = [
-    { label: 'English', value: 'en' },
-    { label: 'Hindi', value: 'hi' },
-    { label: 'Japanese', value: 'ja' }
-  ];
-  selectedLanguage = 'en';
-
-  playbackQualities = [
-    { label: 'Auto', value: 'auto' },
-    { label: '1080p', value: '1080p' },
-    { label: '720p', value: '720p' }
-  ];
-  selectedQuality = 'auto';
-
-  autoplayNext = true;
+  themeService = inject(ThemeService);
   darkMode = true;
+
+  ngOnInit() {
+    this.darkMode = this.themeService.isDarkMode();
+  }
+
+  saveSettings(){
+    console.log("darkmode ", this.darkMode);
+    this.themeService.setTheme(this.darkMode);
+  }
 }

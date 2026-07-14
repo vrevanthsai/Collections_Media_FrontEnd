@@ -14,17 +14,6 @@
   }
 }
 
-::ng-deep .p-select {
-  background: $bg-input;
-  border: 1px solid $border-subtle;
-  border-radius: 8px;
-  width: 100%;
-
-  .p-select-label {
-    color: #fff;
-  }
-}
-
 ::ng-deep .p-toggleswitch.p-toggleswitch-checked .p-toggleswitch-slider {
   background: $accent !important;
 }

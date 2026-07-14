@@ -102,6 +102,7 @@ export class AuthService {
     // Clear/remove categories-array data of user in localStorage
     localStorage.removeItem('categories');
     localStorage.removeItem('favoriteCollectionIds');
+    localStorage.removeItem('darkMode');
   }
 
   // Setter/ Getter Methods of Signal-variable
