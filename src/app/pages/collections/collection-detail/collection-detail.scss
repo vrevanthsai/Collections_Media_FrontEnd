@@ -1,8 +1,8 @@
 .detail-shell {
   min-height: 100vh;
-  background:
-    radial-gradient(circle at top left, rgba(219, 234, 254, 0.85), transparent 30%),
-    linear-gradient(180deg, #f8fafc, #eef2ff);
+  // background:
+  //   radial-gradient(circle at top left, rgba(219, 234, 254, 0.85), transparent 30%),
+  //   linear-gradient(180deg, #f8fafc, #eef2ff);
 }
 
 .back-link {
@@ -10,7 +10,7 @@
   align-items: center;
   gap: 0.55rem;
   margin-bottom: 1.25rem;
-  color: #334155;
+  // color: #334155;
   font-weight: 700;
   text-decoration: none;
 }
@@ -82,6 +82,10 @@
   font-weight: 700;
 }
 
+.rating-block span{
+  color: #64748b;
+}
+
 .review-section {
   margin-top: 2rem;
   padding: 1.25rem;
@@ -92,6 +96,7 @@
 .review-section h2 {
   margin-bottom: 0.5rem;
   font-size: 1rem;
+  color: #64748b;
 }
 
 .review-section p {

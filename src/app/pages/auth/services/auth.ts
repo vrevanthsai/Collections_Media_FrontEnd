@@ -3,6 +3,7 @@ import { inject, Injectable, signal, WritableSignal } from '@angular/core';
 import { jwtDecode } from 'jwt-decode';
 import { catchError, Observable, tap, throwError } from 'rxjs';
 import { CookieService } from '../../../interceptors/cookie.service';
+import { ThemeService } from '../../services/theme-service';
 
 // This service file will handle all backend auth APIs integration logic
 @Injectable({
@@ -18,6 +19,7 @@ export class AuthService {
   // get user info from cookie which is stored after user logged-In(or login-service-method)
   private userDetails = JSON.parse(this.cookieService.getCookie('userDetails') || '{}');
   private name = signal<string | null>(this.userDetails.name || null);
+  themeService = inject(ThemeService);
 
   // DI for HttpClient for API integrations
   constructor(private http: HttpClient) {}
@@ -103,6 +105,8 @@ export class AuthService {
     localStorage.removeItem('categories');
     localStorage.removeItem('favoriteCollectionIds');
     localStorage.removeItem('darkMode');
+    // when logout revert theme back to dark
+    this.themeService.setTheme(true);
   }
 
   // Setter/ Getter Methods of Signal-variable

@@ -17,7 +17,7 @@
 
       <!-- Top navigation: PrimeNG Tabs used WITHOUT panels, driving the router -->
       <nav class="profile-nav">
-        <p-tabs [value]="activeTab" style="align-items: center;">
+        <p-tabs [value]="activeTab">
           <p-tablist>
             @for (item of navItems; track item.path) {
               <p-tab [value]="item.path" [routerLink]="item.path">

@@ -17,10 +17,6 @@
           <li class="nav-item">
             <a class="nav-link" routerLink="/collections/add-collection" routerLinkActive="active">Add Collection</a>
           </li>
-          <!-- Only for Admins - this NavLinks are available -->
-          <li class="nav-item" *ngIf="isAdmin()">
-            <a class="nav-link" routerLink="/admin/user-management" routerLinkActive="active">User Management</a>
-          </li>
           <!-- For logged-IN User -->
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">

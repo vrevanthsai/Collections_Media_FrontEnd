@@ -56,8 +56,4 @@ export class Navbar {
     this.router.navigate(['']); // when user loggedOUt then direct navigated to '' path- Intro page
   }
 
-  isAdmin(): boolean {
-    // if stored Role has ADMIN value then returns True or else False(USER)
-    return this.authService.hasRole('ADMIN');
-  }
 }

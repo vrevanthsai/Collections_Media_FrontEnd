@@ -14,8 +14,9 @@ export class ThemeService {
   }
 
   private loadInitialTheme(): void {
-    const saved = localStorage.getItem(this.STORAGE_KEY) === 'true';
-    this.applyTheme(saved);
+    const saved = localStorage.getItem(this.STORAGE_KEY);
+    let theme = saved ? saved === 'true' : this.isDarkMode(); // first check darkMode value existis or not in LocalStorage
+    this.applyTheme(theme);
   }
 
   toggleTheme(): void {

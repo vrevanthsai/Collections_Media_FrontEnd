@@ -1,12 +1,19 @@
-@use '../shared/shared-styles' as *;
+@use "../shared/shared-styles" as *;
 
 .search-box {
   width: 100%;
   max-width: 260px;
+  position: relative;
 
   input {
     width: 100%;
   }
+}
+
+.search-box i {
+  position: absolute;
+  right: 20px;
+  top: 12px;
 }
 
 .role-tag {
