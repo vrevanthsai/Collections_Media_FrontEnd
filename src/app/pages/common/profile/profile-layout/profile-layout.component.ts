@@ -1,23 +1,13 @@
-import {
-  Component,
-  computed,
-  inject,
-  OnInit,
-  signal,
-  Signal,
-} from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { TabsModule } from 'primeng/tabs';
 import { AvatarModule } from 'primeng/avatar';
-import {
-  AppUser,
-  CookieUserDetails,
-  ProfileService,
-} from '../services/profile.service';
+import { CookieUserDetails, ProfileService } from '../services/profile.service';
 import { CookieService } from '../../../../interceptors/cookie.service';
 import { Subscription } from 'rxjs';
+import { MessageService } from 'primeng/api';
 
 interface NavItem {
   label: string;
@@ -47,10 +37,13 @@ export class ProfileLayoutComponent implements OnInit {
   });
   // add all-3 subscription to a single subs var and unsubscribe it in ngOnDestroy() to prevent memory leaks when user navigates to other pages and this component is destroyed
   private subs = new Subscription();
+  userId = parseInt(this.cookieService.getCookie('userId') || '0', 10);
+  allowImageLoad = true; // flag to control image loading
 
   constructor(
     private router: Router,
     private profileService: ProfileService,
+    private messageService: MessageService,
   ) {}
 
   ngOnInit(): void {
@@ -86,7 +79,7 @@ export class ProfileLayoutComponent implements OnInit {
       }),
     );
 
-    // Receive updated or real avatar URL if exists from ProfileService and update the user signal
+    // Receive updated avatar URL if exists from ProfileService and update the user signal
     this.subs.add(
       this.profileService.sharedAvatarBlobData$.subscribe(
         (avatarBlob: Blob | undefined) => {
@@ -94,16 +87,55 @@ export class ProfileLayoutComponent implements OnInit {
             this.resizeImage(avatarBlob, 256).then((resizedDataUrl) => {
               this.user.update((u) => ({ ...u, avatarUrl: resizedDataUrl }));
             });
+            this.allowImageLoad = false; // we already have the updated avatar, so no need to load it again from backend twice
           }
         },
       ),
     );
+
+    // Load user avatar image from backend if exists
+    if (this.allowImageLoad) {
+      this.loadUserAvatarImage();
+    }
   }
 
   ngOnDestroy(): void {
     // Unsubscribe/clear data from the sharedData$ in service file observable to prevent memory leaks in this component when user navigates to other pages and this component is destroyed
     this.subs.unsubscribe(); // unsubscribes all three at once
     this.profileService.clearProfileState(); // reset profile state on component destruction
+  }
+
+  loadUserAvatarImage(): void {
+    this.userDetails = JSON.parse(
+      this.cookieService.getCookie('userDetails') || '{}',
+    );
+    if (
+      this.userDetails?.avatarName !== '' &&
+      this.userDetails?.avatarName !== undefined &&
+      this.userDetails?.avatarName !== null
+    ) {
+      this.profileService.getUserAvatarImage(this.userId).subscribe({
+        next: (imageBlob: Blob) => {
+          this.resizeImage(imageBlob, 256).then((resizedDataUrl) => {
+            this.user.update((u) => ({ ...u, avatarUrl: resizedDataUrl }));
+          });
+        },
+        error: (err: any) => {
+          console.log('Error while fetching User Avatar Image: ', err);
+          this.messageService.add({
+            severity: 'error',
+            summary:
+              err?.error?.message || 'Error while fetching User Avatar Image',
+            detail: 'Try again!',
+            life: 3000, // auto-dismiss after 3s
+          });
+        },
+      });
+    } else {
+      // If no avatar image is uploaded, use a default avatar image
+      this.user().avatarUrl =
+        'https://api.dicebear.com/7.x/adventurer/svg?seed=rinku112';
+    }
   }
 
   private resizeImage(file: Blob, maxSize = 256): Promise<string> {
