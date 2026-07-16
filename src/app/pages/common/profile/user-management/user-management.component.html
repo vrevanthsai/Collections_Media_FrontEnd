@@ -8,8 +8,8 @@
     </span>
   </div>
 
-  <p-table [value]="filteredUsers" [loading]="isLoading" [paginator]="true" [rows]="5" responsiveLayout="stack" [breakpoint]="'768px'"
-    styleClass="p-datatable-sm users-table">
+  <p-table [value]="filteredUsers" [loading]="isLoading" [paginator]="true" [rows]="5" responsiveLayout="stack"
+    [breakpoint]="'768px'" styleClass="p-datatable-sm users-table">
     <ng-template pTemplate="header">
       <tr>
         <th>Username</th>
@@ -37,7 +37,7 @@
           <!-- Dont show Suspend Button for Admin Account -->
           @if(user.role !== "ADMIN"){
           <button pButton type="button" [label]="user.status === 'Active' ? 'Suspend' : 'Activate'"
-            class="p-button-sm btn-outline-accent" (click)="toggleStatus(user)"></button>
+            class="p-button-sm btn-outline-accent" (click)="suspendStatus(user)"></button>
           }
           <button pButton type="button" label="Delete" class="ms-2" severity="danger"></button>
         </td>
@@ -51,3 +51,19 @@
     </ng-template>
   </p-table>
 </div>
+
+<!-- Suspend User Dialog -->
+<p-dialog header="Suspend User" [modal]="true" [(visible)]="suspendDialogVisible" [style]="{ width: '25rem' }">
+  <div class="d-flex flex-column gap-3">
+    <span class="d-block mb-2">Are you sure you want to <strong>{{ susprndUserStatus ? 'activate' : 'suspend' }}</strong> this user?</span>
+    <div class="d-flex flex-column gap-1">
+      <label for="name" class="small fw-semibold">Please type <strong>{{ susprndUserStatus ? 'Activate-User' : 'Suspend-User' }}</strong> to confirm</label>
+      <input pInputText id="name" [(ngModel)]="suspendUserConfirmation" />
+      <div *ngIf="suspendErrorMessage !== ''" class="text-danger small mt-1">{{ suspendErrorMessage }}</div>
+    </div>
+    <div class="d-flex justify-content-end gap-2">
+      <button type="button" pButton severity="secondary" (click)="suspendDialogVisible = false">Cancel</button>
+      <button type="button" pButton (click)="suspendUserHandler()" label="Confirm" [loading]="suspendLoading"></button>
+    </div>
+  </div>
+</p-dialog>

@@ -87,6 +87,15 @@ export class ProfileService {
       `${this.BASE_URL}/api/v1/user/${userId}/admin/getAllUsers`,
     );
   }
+
+  // Suspend/Activate User Api service method
+  suspendOrActivateUser(userId: number, suspendedUserId: number, suspendValue: string): Observable<string> {
+    return this.http.put(
+      `${this.BASE_URL}/api/v1/user/${userId}/admin/suspend-user/${suspendedUserId}/${suspendValue}`,
+      null, // no body needed for this request
+      { responseType: 'text' } // expecting a plain text response
+    );
+  }
 }
 
 export interface AppUser {

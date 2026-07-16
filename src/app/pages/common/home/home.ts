@@ -15,6 +15,8 @@ import {
 } from '../../services/collections-service';
 import { CategoryService } from '../../services/category-service';
 import { CookieService } from '../../../interceptors/cookie.service';
+import { MessageService } from 'primeng/api';
+import { InputTextModule } from 'primeng/inputtext';
 
 @Component({
   selector: 'app-home',
@@ -28,6 +30,7 @@ import { CookieService } from '../../../interceptors/cookie.service';
     ProgressSpinnerModule,
     TitleCasePipe,
     CommonModule,
+    InputTextModule
   ],
   templateUrl: './home.html',
   styleUrl: './home.scss',
@@ -38,6 +41,7 @@ export class Home implements OnInit {
   private readonly favoritesStorageKey = 'favoriteCollectionIds';
   private readonly router = inject(Router);
   private cookieService = inject(CookieService);
+  messageService = inject(MessageService);
 
   collectionService = inject(CollectionsService);
   authService = inject(AuthService);
@@ -78,6 +82,10 @@ export class Home implements OnInit {
     { label: 'Friend', value: 'Friend' },
   ];
   selectedCategoryLabel: string | null = null;
+  suspendedUserStatus : boolean = false;
+  suspendUserConfirmation : string = "";
+  suspendLoading: boolean = false;
+  suspendErrorMessage: string = '';
 
   ngOnInit(): void {
     this.loadFavorites();
@@ -120,7 +128,14 @@ export class Home implements OnInit {
           this.categoriesLoader.set(false);
         },
         error: (err) => {
-          console.error(err);
+          console.error('Error loading categories data:', err);
+          this.messageService.add({
+            severity: 'error',
+            summary:
+              err?.error?.message || 'Error while fetching categories data',
+            detail: 'Try again!',
+            life: 3000, // auto-dismiss after 3s
+          });
           this.categoriesLoader.set(false);
         },
       });
@@ -155,9 +170,20 @@ export class Home implements OnInit {
       },
       error: (error) => {
         console.log('Collection load error = ', error);
+        this.messageService.add({
+          severity: 'error',
+          summary:
+            error?.error?.message || 'Error while fetching collections data',
+          detail: 'Try again!',
+          life: 3000, // auto-dismiss after 3s
+        });
         this.collections = [];
         this.originalCollections = [];
         this.loading.set(false);
+        // adding logic for Suspended User- to request Access/Activate his account to Admin
+        if(error?.error?.success === false && error?.error?.message === "Your account has been suspended. Please contact support."){
+          this.suspendedUserStatus = true;
+        }
       },
     });
   }
@@ -313,6 +339,46 @@ export class Home implements OnInit {
       );
     } catch {
       this.favoriteIds = new Set<number>();
+    }
+  }
+
+  // Method for Suspended User's to send activate request to Admin
+  activateAccount(): void {
+    if(this.suspendUserConfirmation.trim() === "I-am-sorry"){
+      if(this.userId !== null){
+        this.suspendLoading = true;
+        let userId: number = parseInt(this.userId() || '0', 10);
+        this.authService.activateAccountRequest(userId, this.suspendUserConfirmation)
+        .subscribe({
+          next: (res: string) => {
+            this.messageService.add({
+                severity: 'success',
+                summary: "Request Status",
+                detail: res || 'Request sent successfully!',
+                life: 3000, // auto-dismiss after 3s
+              });
+              this.suspendUserConfirmation = ''; // Reset confirmation input
+              this.suspendLoading = false; // Reset loading state
+              this.suspendErrorMessage = '';
+          },
+          error: (err) => {
+            console.log('Error while sending your request: ', err);
+              this.messageService.add({
+                severity: 'error',
+                summary:
+                  err?.error?.message || 'Error while sending your request',
+                detail: 'Try again!',
+                life: 3000, // auto-dismiss after 3s
+              });
+              this.suspendUserConfirmation = '';
+              this.suspendLoading = false; // Reset loading state
+              this.suspendErrorMessage = '';
+          }
+        })
+      }
+    } else {
+      this.suspendErrorMessage =
+        'Please type "I-am-sorry" to confirm.';
     }
   }
 }

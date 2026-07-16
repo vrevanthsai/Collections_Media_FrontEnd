@@ -141,6 +141,13 @@ export class AddCollection {
         },
         error: (err) => {
           console.error(err);
+          this.messageService.add({
+            severity: 'error',
+            summary:
+              err?.error?.message || 'Error while fetching categories data',
+            detail: 'Try again!',
+            life: 3000, // auto-dismiss after 3s
+          });
         },
       });
     } else {

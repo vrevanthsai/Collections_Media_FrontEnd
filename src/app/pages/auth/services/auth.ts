@@ -162,6 +162,15 @@ export class AuthService {
 
     return false;
   }
+
+  // Request to Activate Suspended User Account Api method
+  activateAccountRequest(userId: number, request: string){
+    return this.http.post(
+      `${this.BASE_URL}/api/v1/auth/requestAccountActivate/user/${userId}`,
+      request,
+      { responseType: 'text' } // expecting a plain text response
+    );
+  }
 }
 
 // Type of payload to be sent to register API-backend

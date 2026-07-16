@@ -166,7 +166,7 @@ export class AddCategory {
             this.errorNotification = {
               show: true,
               type: 'error',
-              text: 'Failed to update category. Please try again.',
+              text: err?.error?.message || 'Failed to update category. Please try again.',
             };
           },
         });
