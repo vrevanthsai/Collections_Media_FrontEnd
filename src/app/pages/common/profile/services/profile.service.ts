@@ -29,9 +29,7 @@ export class ProfileService {
     this.avatarUrlSubject.next(undefined);
   }
 
-  constructor(
-    private http: HttpClient,
-  ) {}
+  constructor(private http: HttpClient) {}
 
   //  GET- User Details Api by UserId
   getUserById(userId: number): Observable<AuthResponse> {
@@ -41,23 +39,30 @@ export class ProfileService {
   }
 
   //  UPDATE- User Api service method
-  updateUserById(userId: number, updatedUserData: UpdateUserRequest, file: File | null): Observable<AuthResponse> {
+  updateUserById(
+    userId: number,
+    updatedUserData: UpdateUserRequest,
+    file: File | null,
+  ): Observable<AuthResponse> {
     // we send both payload and file as seperate args to backend using FormData
     const formData = new FormData();
     // formData- both Keys - naming MUST be SAME as declared in Backend-Api-Method params and same types for Better data mapping
-    formData.append("profileRequest", JSON.stringify(updatedUserData));
-    if( file !== null){
-      formData.append("file", file);
+    formData.append('profileRequest', JSON.stringify(updatedUserData));
+    if (file !== null) {
+      formData.append('file', file);
     }
     return this.http.put<AuthResponse>(
       `${this.BASE_URL}/api/v1/user/${userId}/profile/update-user`,
-      formData
+      formData,
     );
   }
 
   // Get User Avatar/Profile-pic image Api method
   getUserAvatarImage(userId: number): Observable<Blob> {
-    return this.http.get(`${this.BASE_URL}/api/v1/user/${userId}/profile/get-user-image`, { responseType: 'blob' });
+    return this.http.get(
+      `${this.BASE_URL}/api/v1/user/${userId}/profile/get-user-image`,
+      { responseType: 'blob' },
+    );
   }
 
   isAdmin(): boolean {
@@ -66,13 +71,22 @@ export class ProfileService {
   }
 
   // Change Password Api service method
-  changePassword(userId: number, payload: ChangePasswordRequest): Observable<ChangePwdResponse> {
+  changePassword(
+    userId: number,
+    payload: ChangePasswordRequest,
+  ): Observable<ChangePwdResponse> {
     return this.http.put<ChangePwdResponse>(
       `${this.BASE_URL}/api/v1/user/${userId}/profile/change-password`,
-      payload
+      payload,
     );
   }
 
+  // ===== ADMIN APIs ====
+  getAllUsers(userId: number): Observable<GetAllUsersResponse[]> {
+    return this.http.get<GetAllUsersResponse[]>(
+      `${this.BASE_URL}/api/v1/user/${userId}/admin/getAllUsers`,
+    );
+  }
 }
 
 export interface AppUser {
@@ -93,19 +107,30 @@ export interface CookieUserDetails {
 }
 
 export type UpdateUserRequest = {
-  userId: number,
-  email: string,
-  name: string,
-  username: string,
-}
+  userId: number;
+  email: string;
+  name: string;
+  username: string;
+};
 
 export type ChangePasswordRequest = {
-  oldPwd: string,
-  newPwd: string,
-}
+  oldPwd: string;
+  newPwd: string;
+};
 
 export type ChangePwdResponse = {
   success: boolean;
   message: string;
   data: string;
-}
+};
+
+export type GetAllUsersResponse = {
+  userId: number;
+  name: string;
+  username: string;
+  email: string;
+  role: string;
+  suspended: boolean;
+  addedDate: string;
+  status?: string; // "Active" or "Suspended" // optional field
+};

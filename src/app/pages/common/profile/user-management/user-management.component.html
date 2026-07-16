@@ -4,24 +4,12 @@
 
     <span class="p-input-icon-left search-box">
       <i class="pi pi-search"></i>
-      <input
-        pInputText
-        type="text"
-        [(ngModel)]="searchTerm"
-        placeholder="Search users..."
-        class="field-input"
-      />
+      <input pInputText type="text" [(ngModel)]="searchTerm" placeholder="Search users..." class="field-input" />
     </span>
   </div>
 
-  <p-table
-    [value]="filteredUsers"
-    [paginator]="true"
-    [rows]="5"
-    responsiveLayout="stack"
-    [breakpoint]="'768px'"
-    styleClass="p-datatable-sm users-table"
-  >
+  <p-table [value]="filteredUsers" [loading]="isLoading" [paginator]="true" [rows]="5" responsiveLayout="stack" [breakpoint]="'768px'"
+    styleClass="p-datatable-sm users-table">
     <ng-template pTemplate="header">
       <tr>
         <th>Username</th>
@@ -44,22 +32,21 @@
           <span class="status-dot" [class.status-dot--suspended]="user.status === 'Suspended'"></span>
           {{ user.status }}
         </td>
-        <td data-label="Joined">{{ user.joined | date: 'MMM d, y' }}</td>
+        <td data-label="Joined">{{ user.addedDate | date: 'MMM d, y' }}</td>
         <td data-label="Action" class="text-end">
-          <button
-            pButton
-            type="button"
-            [label]="user.status === 'Active' ? 'Suspend' : 'Activate'"
-            class="p-button-sm btn-outline-accent"
-            (click)="toggleStatus(user)"
-          ></button>
+          <!-- Dont show Suspend Button for Admin Account -->
+          @if(user.role !== "ADMIN"){
+          <button pButton type="button" [label]="user.status === 'Active' ? 'Suspend' : 'Activate'"
+            class="p-button-sm btn-outline-accent" (click)="toggleStatus(user)"></button>
+          }
+          <button pButton type="button" label="Delete" class="ms-2" severity="danger"></button>
         </td>
       </tr>
     </ng-template>
 
     <ng-template pTemplate="emptymessage">
       <tr>
-        <td colspan="6" class="text-center text-muted py-4">No users found.</td>
+        <td colspan="6" class="text-center py-4">No users found.</td>
       </tr>
     </ng-template>
   </p-table>
