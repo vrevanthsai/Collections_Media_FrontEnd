@@ -16,6 +16,7 @@ import { SelectModule } from 'primeng/select';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { CommonModule, NgIf, TitleCasePipe } from '@angular/common';
 import { CategoryService } from '../../services/category-service';
+import { MessageService } from 'primeng/api';
 
 @Component({
   selector: 'app-update-collection',
@@ -82,6 +83,7 @@ export class UpdateCollection {
     private collectionService: CollectionsService,
     private titleCasePipe: TitleCasePipe,
     private categoryService: CategoryService,
+    private messageService: MessageService,
   ) {
     // create local var to store incoming data
     const collection = this.data.collection;
@@ -206,20 +208,24 @@ export class UpdateCollection {
           // Success case
           next: (res) => {
             console.log('collection data after update: ', res);
-            this.errorNotification = {
-              show: true,
-              type: "Success",
-              text: "Collection Updated"
-            }
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Success',
+              detail: 'Collection Updated Successfully!',
+              life: 3000, // auto-dismiss after 3s
+            });
           },
           // Error case
           error: (err) => {
             console.log('error = ', err);
-            this.errorNotification = {
-              show: true,
-              type: 'error',
-              text: err?.error?.message || 'Updating Collection failed, please try again!',
-            };
+            this.messageService.add({
+              severity: 'error',
+              summary:
+                err?.error?.message ||
+                'Updating Collection failed, please try again!',
+              detail: 'Try again!',
+              life: 3000, // auto-dismiss after 3s
+            });
           },
           // Completed case- this case runs only once when success case is done and no errors are there
           complete: () => {

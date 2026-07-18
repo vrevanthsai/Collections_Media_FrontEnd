@@ -41,6 +41,12 @@ export class UserManagementComponent {
   susprndUserStatus: boolean = false;
   suspendErrorMessage: string = '';
   suspendLoading: boolean = false;
+  deleteDialogVisible: boolean = false;
+  deleteUserConfirmation: string = '';
+  deleteUserId: number | null = null;
+  deleteUserName: string = '';
+  deleteErrorMessage: string = '';
+  deleteUserLoading: boolean = false;
 
   ngOnInit(): void {
     this.loadAllUsers();
@@ -103,7 +109,7 @@ export class UserManagementComponent {
             next: (res: string) => {
               this.messageService.add({
                 severity: 'success',
-                summary: "User Status",
+                summary: 'User Status',
                 detail: res || 'User status updated successfully!',
                 life: 3000, // auto-dismiss after 3s
               });
@@ -128,6 +134,51 @@ export class UserManagementComponent {
     } else {
       this.suspendErrorMessage =
         'Please type "Suspend-User" or "Activate-User" to confirm.';
+    }
+  }
+
+  deleteUserDialog(user: GetAllUsersResponse): void {
+    this.deleteDialogVisible = true;
+    this.deleteUserId = user.userId;
+    this.deleteUserName = user.username;
+  }
+
+  deleteUserHandler(): void {
+    if (this.deleteUserConfirmation.trim() === 'Yes-Delete-This-User') {
+      if (this.deleteUserId !== null) {
+        this.deleteUserLoading = true;
+        this.profileService
+          .deleteUserById(this.userId, this.deleteUserId)
+          .subscribe({
+            next: (res) => {
+              this.messageService.add({
+                severity: 'success',
+                summary: 'User Status',
+                detail: res || 'User status updated successfully!',
+                life: 3000, // auto-dismiss after 3s
+              });
+              this.loadAllUsers(); // Refresh the user list after user deletion
+              this.deleteDialogVisible = false;
+              this.deleteUserConfirmation = '';
+              this.deleteErrorMessage = '';
+              this.deleteUserLoading = false;
+            },
+            error: (err) => {
+              console.log('Error while deleting user data: ', err);
+              this.messageService.add({
+                severity: 'error',
+                summary:
+                  err?.error?.message || 'Error while deleting user data',
+                detail: 'Try again!',
+                life: 3000, // auto-dismiss after 3s
+              });
+              this.deleteUserLoading = false; // Reset loading state
+            },
+          });
+      }
+    } else {
+      this.deleteErrorMessage =
+        'Please type "Yes-Delete-This-User" to confirm.';
     }
   }
 }

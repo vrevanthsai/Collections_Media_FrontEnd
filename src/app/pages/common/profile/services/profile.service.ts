@@ -81,6 +81,14 @@ export class ProfileService {
     );
   }
 
+  // User Based- Delete myAccount Api
+  deleteMyAccountById(userId: number): Observable<string>{
+    return this.http.delete(
+      `${this.BASE_URL}/api/v1/user/${userId}/profile/delete-my-account`,
+      { responseType: 'text' } // expecting a plain text response
+    );
+  }
+
   // ===== ADMIN APIs ====
   getAllUsers(userId: number): Observable<GetAllUsersResponse[]> {
     return this.http.get<GetAllUsersResponse[]>(
@@ -93,6 +101,14 @@ export class ProfileService {
     return this.http.put(
       `${this.BASE_URL}/api/v1/user/${userId}/admin/suspend-user/${suspendedUserId}/${suspendValue}`,
       null, // no body needed for this request
+      { responseType: 'text' } // expecting a plain text response
+    );
+  }
+
+  // Admin based- Delete User Api
+  deleteUserById(userId: number, deleteUserId: number): Observable<string>{
+    return this.http.delete(
+      `${this.BASE_URL}/api/v1/user/${userId}/admin/delete-user/${deleteUserId}`,
       { responseType: 'text' } // expecting a plain text response
     );
   }

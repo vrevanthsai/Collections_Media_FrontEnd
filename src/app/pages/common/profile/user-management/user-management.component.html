@@ -12,6 +12,7 @@
     [breakpoint]="'768px'" styleClass="p-datatable-sm users-table">
     <ng-template pTemplate="header">
       <tr>
+        <th>UserId</th>
         <th>Username</th>
         <th>Email</th>
         <th>Role</th>
@@ -23,6 +24,7 @@
 
     <ng-template pTemplate="body" let-user>
       <tr>
+        <td data-label="UserId">{{ user.userId }}</td>
         <td data-label="Username">{{ user.username }}</td>
         <td data-label="Email">{{ user.email }}</td>
         <td data-label="Role">
@@ -39,7 +41,11 @@
           <button pButton type="button" [label]="user.status === 'Active' ? 'Suspend' : 'Activate'"
             class="p-button-sm btn-outline-accent" (click)="suspendStatus(user)"></button>
           }
-          <button pButton type="button" label="Delete" class="ms-2" severity="danger"></button>
+          <!-- Admin cant delete his own account -->
+          @if(user.userId !== userId){
+            <button pButton type="button" label="Delete" class="ms-2" severity="danger"
+            (click)="deleteUserDialog(user)"></button>
+          }         
         </td>
       </tr>
     </ng-template>
@@ -55,15 +61,34 @@
 <!-- Suspend User Dialog -->
 <p-dialog header="Suspend User" [modal]="true" [(visible)]="suspendDialogVisible" [style]="{ width: '25rem' }">
   <div class="d-flex flex-column gap-3">
-    <span class="d-block mb-2">Are you sure you want to <strong>{{ susprndUserStatus ? 'activate' : 'suspend' }}</strong> this user?</span>
+    <span class="d-block mb-2">Are you sure you want to <strong>{{ susprndUserStatus ? 'activate' : 'suspend'
+        }}</strong> this user?</span>
     <div class="d-flex flex-column gap-1">
-      <label for="name" class="small fw-semibold">Please type <strong>{{ susprndUserStatus ? 'Activate-User' : 'Suspend-User' }}</strong> to confirm</label>
+      <label for="name" class="small fw-semibold">Please type <strong>{{ susprndUserStatus ? 'Activate-User' :
+          'Suspend-User' }}</strong> to confirm</label>
       <input pInputText id="name" [(ngModel)]="suspendUserConfirmation" />
       <div *ngIf="suspendErrorMessage !== ''" class="text-danger small mt-1">{{ suspendErrorMessage }}</div>
     </div>
     <div class="d-flex justify-content-end gap-2">
       <button type="button" pButton severity="secondary" (click)="suspendDialogVisible = false">Cancel</button>
       <button type="button" pButton (click)="suspendUserHandler()" label="Confirm" [loading]="suspendLoading"></button>
+    </div>
+  </div>
+</p-dialog>
+
+<!-- Delete User Dialog -->
+<p-dialog header="Delete User" [modal]="true" [(visible)]="deleteDialogVisible" [style]="{ width: '25rem' }">
+  <div class="d-flex flex-column gap-3">
+    <span class="d-block mb-2">Are you sure you want to <strong>delete this {{deleteUserName}} user</strong>?</span>
+    <div class="d-flex flex-column gap-1">
+      <label for="name" class="small fw-semibold">Please type <strong>Yes-Delete-This-User</strong> to confirm</label>
+      <input pInputText id="name" [(ngModel)]="deleteUserConfirmation" />
+      <div *ngIf="deleteErrorMessage !== ''" class="text-danger small mt-1">{{ deleteErrorMessage }}</div>
+    </div>
+    <div class="d-flex justify-content-end gap-2">
+      <button type="button" pButton severity="secondary" (click)="deleteDialogVisible = false">Cancel</button>
+      <button type="button" pButton (click)="deleteUserHandler()" label="Confirm"
+        [loading]="deleteUserLoading"></button>
     </div>
   </div>
 </p-dialog>
