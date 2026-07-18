@@ -2,10 +2,11 @@ import { Component, inject } from '@angular/core';
 import { Layout } from './components/layout/layout/layout';
 import { ToastModule } from 'primeng/toast';
 import { ThemeService } from './pages/services/theme-service';
+import { ConfirmPopupModule } from 'primeng/confirmpopup';
 
 @Component({
   selector: 'app-root',
-  imports: [Layout, ToastModule],
+  imports: [Layout, ToastModule, ConfirmPopupModule],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })

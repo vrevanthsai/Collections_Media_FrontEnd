@@ -27,16 +27,16 @@
             <p-progressSpinner strokeWidth="4" fill="#EEEEEE" animationDuration=".5s"></p-progressSpinner>
         </div>
         } @else {
-            <!-- async pipe used for safely retrieving async data from parent or to wait until async data is complete -->
+        <!-- async pipe used for safely retrieving async data from parent or to wait until async data is complete -->
         <p-table [value]="(categoriesDataObservable() | async) || []" responsiveLayout="scroll"
             class="p-datatable-striped" [tableStyle]="{'min-width':'50rem'}">
 
             <ng-template pTemplate="header">
                 <tr>
-                    <th >#</th>
+                    <th>#</th>
                     <th>Category Name</th>
                     <th>Edit</th>
-                    <th >Delete</th>
+                    <th>Delete</th>
                 </tr>
             </ng-template>
 
@@ -60,8 +60,8 @@
                     <td>
                         @if(isEditMode(category.categoryId)) {
 
-                        <button pButton type="button" icon="pi pi-check" label="Update" class="p-button-success me-2"
-                            (click)="updateCategory(category.categoryId, newCategoryName)">
+                        <button type="button" pButton icon="pi pi-check" label="Update" class="p-button-success me-2"
+                            (click)="updateCategory(category.categoryId, newCategoryName, $event)">
                         </button>
 
                         <button pButton type="button" icon="pi pi-times" label="Cancel" class="p-button-secondary"
