@@ -14,26 +14,52 @@ import { redirectIfLoggedInGuard } from './components/layout/guards/redirect-if-
 // when the user navigates to that path. The routes are defined as an array of objects,
 //  where each object has a 'path' and a 'component' property. The 'path' is the URL segment that will trigger the route, and the 'component' is the Angular component that will be rendered when the route is activated. In this example, the routes array is currently empty, meaning that there are no defined routes in the application yet.
 export const routes: Routes = [
-    { path:'', title:"Intro Page", component: Intro, // '' means root path of the application
-        canActivate: [redirectIfLoggedInGuard] // redirectIfLoggedInGuard- if user already loggedIN then redirect to /home page
-     },
-    { path:'home' , title:"Collection Media App", component: Home ,
-        canActivate: [authGuard] // canActivate- accepts True/False/UrlTree and an Observable/Promise of those
-    },
-    // Auth Routes
-    { path:'login' , title:"Login Page", component: Login },
-    { path:'register' , title:"Register Page", component: Register },
-    { path:'forgot-password' , title:"Forgot Password Page", component: ForgotPassword },
-    // Collection Routes
-    { path:'collections/add-collection' , title:"Add Collection Page", component: AddCollection ,
-        canActivate: [authGuard]
-    },
-    // Dynamic ID opens the selected collection's full details page.
-    { path:'collections/:id' , title:"Collection Details", component: CollectionDetail,
-        canActivate: [authGuard]
-    },
-    // Admin-Routes- User Mangaement routes
-    { path:'admin/user-management' , title:"User Management Page", component: Intro , // Todo- create its comp
-        canActivate: [authGuard, adminGuard]
-    },
+  {
+    path: '',
+    title: 'Intro Page',
+    component: Intro, // '' means root path of the application
+    canActivate: [redirectIfLoggedInGuard], // redirectIfLoggedInGuard- if user already loggedIN then redirect to /home page
+  },
+  {
+    path: 'home',
+    title: 'Collection Media App',
+    component: Home,
+    canActivate: [authGuard], // canActivate- accepts True/False/UrlTree and an Observable/Promise of those
+  },
+  // Auth Routes
+  { path: 'login', title: 'Login Page', component: Login },
+  { path: 'register', title: 'Register Page', component: Register },
+  {
+    path: 'forgot-password',
+    title: 'Forgot Password Page',
+    component: ForgotPassword,
+  },
+  // Collection Routes
+  {
+    path: 'collections/add-collection',
+    title: 'Add Collection Page',
+    component: AddCollection,
+    canActivate: [authGuard],
+  },
+  // Dynamic ID opens the selected collection's full details page.
+  {
+    path: 'collections/:id',
+    title: 'Collection Details',
+    component: CollectionDetail,
+    canActivate: [authGuard],
+  },
+  // Admin-Routes- User Mangaement routes
+  {
+    path: 'admin/user-management',
+    title: 'User Management Page',
+    component: Intro, // Todo- create its comp
+    canActivate: [authGuard, adminGuard],
+  },
+  // Profile routes are lazy-loaded and defined in profile.routes.ts. The profile feature area has its own routing configuration, which is imported and used here.
+  {
+    path: 'account',
+    loadChildren: () =>
+      import('./pages/common/profile/profile.routes').then((m) => m.PROFILE_ROUTES),
+    canActivate: [authGuard],
+  },
 ];

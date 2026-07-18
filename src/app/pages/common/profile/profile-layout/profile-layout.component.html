@@ -1,0 +1,40 @@
+<div class="profile-shell">
+  <!-- Header band -->
+  <header class="profile-header">
+    <div class="container-fluid px-3 px-md-4">
+      <div class="d-flex flex-column align-items-center py-3">
+        <p-avatar
+          [image]="user().avatarUrl"
+          shape="circle"
+          size="large"
+          styleClass="profile-header__avatar mb-2"
+        ></p-avatar>
+        <h1 class="profile-header__name mb-0">{{ user().username }}</h1>
+        <span class="profile-header__role" *ngIf="user().role === 'ADMIN'">
+          <i class="pi pi-verified"></i> Admin
+        </span>
+      </div>
+
+      <!-- Top navigation: PrimeNG Tabs used WITHOUT panels, driving the router -->
+      <nav class="profile-nav">
+        <p-tabs [value]="activeTab">
+          <p-tablist>
+            @for (item of navItems; track item.path) {
+              <p-tab [value]="item.path" [routerLink]="item.path">
+                <i [class]="item.icon"></i>
+                <span>{{ item.label }}</span>
+              </p-tab>
+            }
+          </p-tablist>
+        </p-tabs>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Routed page content -->
+  <main class="profile-content">
+    <div class="container-fluid px-3 px-md-4 py-4">
+      <router-outlet></router-outlet>
+    </div>
+  </main>
+</div>

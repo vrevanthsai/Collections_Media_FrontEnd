@@ -115,6 +115,8 @@ export class Register {
         username: this.registerForm.get('username')?.value,
         password: this.registerForm.get('password')?.value,
         selectedCategories: this.registerForm.value.selectedCategories,
+        // we send current date as addedDate to the DB - when user account created
+        addedDate: new Date().toISOString(),
       };
 
       // Todo- add client side validation for form inputs before calling API
@@ -140,7 +142,7 @@ export class Register {
         error: (err: any) => {
           console.log('Error from Register API: ', err);
           // Reset/empty all form input fields if an error occurs while registering
-          this.registerForm.reset();
+          // this.registerForm.reset();
           this.errorNotification = {
             show: true,
             type: 'error',

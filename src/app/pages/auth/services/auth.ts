@@ -3,6 +3,7 @@ import { inject, Injectable, signal, WritableSignal } from '@angular/core';
 import { jwtDecode } from 'jwt-decode';
 import { catchError, Observable, tap, throwError } from 'rxjs';
 import { CookieService } from '../../../interceptors/cookie.service';
+import { ThemeService } from '../../services/theme-service';
 
 // This service file will handle all backend auth APIs integration logic
 @Injectable({
@@ -16,7 +17,9 @@ export class AuthService {
   private loggedIn = signal<boolean>(false);
   private cookieService = inject(CookieService);
   // get user info from cookie which is stored after user logged-In(or login-service-method)
-  private name = signal<string | null>(this.cookieService.getCookie('name'));
+  private userDetails = JSON.parse(this.cookieService.getCookie('userDetails') || '{}');
+  private name = signal<string | null>(this.userDetails.name || null);
+  themeService = inject(ThemeService);
 
   // DI for HttpClient for API integrations
   constructor(private http: HttpClient) {}
@@ -50,9 +53,15 @@ export class AuthService {
               this.cookieService.setEncryptedCookie('accessToken', response.data.accessToken, 7); // key-value and 7 days expiry
               this.cookieService.setEncryptedCookie('refreshToken', response.data.refreshToken, 7);
               this.cookieService.setCookie('userId', JSON.stringify(response.data.userId), 7); // store userId-type number as string
-              this.cookieService.setCookie('name', response.data.name, 7);
-              this.cookieService.setCookie('email', response.data.email, 7);
-              this.cookieService.setCookie('username', response.data.username, 7);             
+              
+              let userDetails = {
+                name: response.data.name,
+                email: response.data.email,
+                username: response.data.username,
+                addedDate: response.data.addedDate,
+                avatarName: response.data.imagename || '', // if user has uploaded profile-pic then it will be present or else empty string
+              };
+              this.cookieService.setCookie('userDetails', JSON.stringify(userDetails), 7);           
 
               // Getting Roles info from extracting token
               const decodedToken: any = jwtDecode(response.data.accessToken);
@@ -89,14 +98,15 @@ export class AuthService {
   logout(): void {
     this.cookieService.deleteCookie('accessToken');
     this.cookieService.deleteCookie('refreshToken');
-    this.cookieService.deleteCookie('name');
-    this.cookieService.deleteCookie('email');
-    this.cookieService.deleteCookie('username');
     this.cookieService.deleteCookie('userId');
     this.cookieService.deleteCookie('role');
+    this.cookieService.deleteCookie('userDetails');
     // Clear/remove categories-array data of user in localStorage
     localStorage.removeItem('categories');
     localStorage.removeItem('favoriteCollectionIds');
+    localStorage.removeItem('darkMode');
+    // when logout revert theme back to dark
+    this.themeService.setTheme(true);
   }
 
   // Setter/ Getter Methods of Signal-variable
@@ -152,6 +162,15 @@ export class AuthService {
 
     return false;
   }
+
+  // Request to Activate Suspended User Account Api method
+  activateAccountRequest(userId: number, request: string){
+    return this.http.post(
+      `${this.BASE_URL}/api/v1/auth/requestAccountActivate/user/${userId}`,
+      request,
+      { responseType: 'text' } // expecting a plain text response
+    );
+  }
 }
 
 // Type of payload to be sent to register API-backend
@@ -164,6 +183,7 @@ export type RegisterRequest = {
   username: string;
   password: string;
   selectedCategories: string[];
+  addedDate: string;
 };
 
 export type LoginRequest = {
@@ -176,14 +196,14 @@ export type AuthResponse = {
   success: boolean;
   message: string;
   data: {
-    success: boolean;
-    message: string;
     accessToken: string;
     refreshToken: string;
     userId: number;
     name: string;
     email: string;
     username: string;
+    addedDate: string;
+    imagename?: string; // optional field - if user has uploaded profile-pic then it will be present or else not
   };
 };
 

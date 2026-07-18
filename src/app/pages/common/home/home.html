@@ -112,7 +112,8 @@
           <div class="row g-4">
             <!-- Angular's new control-flow loop syntax -->
             <!-- track gives unique identifier for each item and ?? is the nullish coalescing operator- if id not there then uses name+index value -->
-            @for (collection of paginatedCollections(); track collection.collectionId ?? collection.name + $index; let i = $index) {
+            @for (collection of paginatedCollections(); track collection.collectionId ?? collection.name + $index; let i
+            = $index) {
             <div class="col-12 col-md-6 col-xxl-4">
               <!-- The whole card opens its collection details page. -->
               <article class="collection-card" role="link" tabindex="0" [attr.aria-label]="'View ' + collection.name"
@@ -120,7 +121,7 @@
                 <div class="card-accent" aria-hidden="true"></div>
 
                 <!-- Header keeps long collection names readable and visible. -->
-                  <header class="collection-card-header">
+                <header class="collection-card-header">
                   <p-tag [value]="(collection.categoryName ?? '') | titlecase" severity="contrast"></p-tag>
                   <h3 class="collection-name">{{ i + 1 }}. {{ collection.name | titlecase }}</h3>
                   <span class="view-hint">Open collection <i class="pi pi-arrow-up-right"></i></span>
@@ -182,10 +183,12 @@
           </div>
           }
           } @else {
+          @if(!suspendedUserStatus){
+            <!-- No Collection Section -->
           <p-card class="shadow-sm border-0 text-center empty-state-card">
             <div class="py-4">
               <h2 class="h4 mb-2">No collections available</h2>
-              <p class="text-muted mb-4">
+              <p class="mb-4">
                 {{ hasActiveFilters() ? 'No collections matched the selected filters.' : 'Start by adding your first
                 manga collection.' }}
               </p>
@@ -198,6 +201,21 @@
               </div>
             </div>
           </p-card>
+          } @else {
+            <p-card class="shadow-sm border-0 text-center empty-state-card">
+            <div class="py-4">
+              <h2 class="h4 mb-2">Your Account is Suspended by Admin</h2>
+              <p class="mb-4">
+                Please type <strong>I-am-sorry</strong> to request Admin to activate your account below?
+              </p>
+              <input pInputText id="name" class="mb-2" [(ngModel)]="suspendUserConfirmation" />
+              <div *ngIf="suspendErrorMessage !== ''" class="text-danger small mt-1">{{ suspendErrorMessage }}</div>
+              <div class="empty-state-actions">
+                <button type="button" pButton (click)="activateAccount()" [loading]="suspendLoading">Request</button>
+              </div>
+            </div>
+          </p-card>
+          }
           }
           }
         </div>

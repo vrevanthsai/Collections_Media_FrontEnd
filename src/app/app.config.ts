@@ -11,7 +11,7 @@ import Aura from '@primeuix/themes/aura';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { authInterceptor } from './interceptors/auth.interceptors';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
-import { MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -32,6 +32,8 @@ export const appConfig: ApplicationConfig = {
       withInterceptors([authInterceptor]), // it takes multiple interceptors
     ),
     // To enable Toasters using primeng ToastService - we need to provide it in root module
-    MessageService
+    MessageService,
+    // to enable confirmPopups(p-confirmpopup)
+    ConfirmationService,
   ],
 };

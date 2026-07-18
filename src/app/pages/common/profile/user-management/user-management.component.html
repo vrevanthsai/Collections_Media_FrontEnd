@@ -1,0 +1,94 @@
+<div class="panel-card">
+  <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4">
+    <h2 class="panel-card__title mb-0"><i class="pi pi-users"></i> User Management</h2>
+
+    <span class="p-input-icon-left search-box">
+      <i class="pi pi-search"></i>
+      <input pInputText type="text" [(ngModel)]="searchTerm" placeholder="Search users..." class="field-input" />
+    </span>
+  </div>
+
+  <p-table [value]="filteredUsers" [loading]="isLoading" [paginator]="true" [rows]="5" responsiveLayout="stack"
+    [breakpoint]="'768px'" styleClass="p-datatable-sm users-table">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>UserId</th>
+        <th>Username</th>
+        <th>Email</th>
+        <th>Role</th>
+        <th>Status</th>
+        <th>Joined</th>
+        <th></th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-user>
+      <tr>
+        <td data-label="UserId">{{ user.userId }}</td>
+        <td data-label="Username">{{ user.username }}</td>
+        <td data-label="Email">{{ user.email }}</td>
+        <td data-label="Role">
+          <span class="role-tag" [class.role-tag--admin]="user.role === 'Admin'">{{ user.role }}</span>
+        </td>
+        <td data-label="Status">
+          <span class="status-dot" [class.status-dot--suspended]="user.status === 'Suspended'"></span>
+          {{ user.status }}
+        </td>
+        <td data-label="Joined">{{ user.addedDate | date: 'MMM d, y' }}</td>
+        <td data-label="Action" class="text-end">
+          <!-- Dont show Suspend Button for Admin Account -->
+          @if(user.role !== "ADMIN"){
+          <button pButton type="button" [label]="user.status === 'Active' ? 'Suspend' : 'Activate'"
+            class="p-button-sm btn-outline-accent" (click)="suspendStatus(user)"></button>
+          }
+          <!-- Admin cant delete his own account -->
+          @if(user.userId !== userId){
+            <button pButton type="button" label="Delete" class="ms-2" severity="danger"
+            (click)="deleteUserDialog(user)"></button>
+          }         
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="6" class="text-center py-4">No users found.</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<!-- Suspend User Dialog -->
+<p-dialog header="Suspend User" [modal]="true" [(visible)]="suspendDialogVisible" [style]="{ width: '25rem' }">
+  <div class="d-flex flex-column gap-3">
+    <span class="d-block mb-2">Are you sure you want to <strong>{{ susprndUserStatus ? 'activate' : 'suspend'
+        }}</strong> this user?</span>
+    <div class="d-flex flex-column gap-1">
+      <label for="name" class="small fw-semibold">Please type <strong>{{ susprndUserStatus ? 'Activate-User' :
+          'Suspend-User' }}</strong> to confirm</label>
+      <input pInputText id="name" [(ngModel)]="suspendUserConfirmation" />
+      <div *ngIf="suspendErrorMessage !== ''" class="text-danger small mt-1">{{ suspendErrorMessage }}</div>
+    </div>
+    <div class="d-flex justify-content-end gap-2">
+      <button type="button" pButton severity="secondary" (click)="suspendDialogVisible = false">Cancel</button>
+      <button type="button" pButton (click)="suspendUserHandler()" label="Confirm" [loading]="suspendLoading"></button>
+    </div>
+  </div>
+</p-dialog>
+
+<!-- Delete User Dialog -->
+<p-dialog header="Delete User" [modal]="true" [(visible)]="deleteDialogVisible" [style]="{ width: '25rem' }">
+  <div class="d-flex flex-column gap-3">
+    <span class="d-block mb-2">Are you sure you want to <strong>delete this {{deleteUserName}} user</strong>?</span>
+    <div class="d-flex flex-column gap-1">
+      <label for="name" class="small fw-semibold">Please type <strong>Yes-Delete-This-User</strong> to confirm</label>
+      <input pInputText id="name" [(ngModel)]="deleteUserConfirmation" />
+      <div *ngIf="deleteErrorMessage !== ''" class="text-danger small mt-1">{{ deleteErrorMessage }}</div>
+    </div>
+    <div class="d-flex justify-content-end gap-2">
+      <button type="button" pButton severity="secondary" (click)="deleteDialogVisible = false">Cancel</button>
+      <button type="button" pButton (click)="deleteUserHandler()" label="Confirm"
+        [loading]="deleteUserLoading"></button>
+    </div>
+  </div>
+</p-dialog>

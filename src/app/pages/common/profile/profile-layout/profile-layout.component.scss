@@ -1,0 +1,115 @@
+// ---- Palette ----
+$bg-dark: #17151f;
+$bg-panel: #1f1c2c;
+$accent: #ff8fab;
+$accent-soft: rgba(255, 143, 171, 0.15);
+$text-muted: #a6a3b3;
+
+.profile-shell {
+  min-height: 100vh;
+  // background: $bg-dark;
+  // color: #fff;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+}
+
+// ---- Header ----
+.profile-header {
+  background: linear-gradient(135deg, #3a3350 0%, #5b3a52 50%, #2c3a52 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+
+  &__avatar {
+    width: 56px;
+    height: 56px;
+    border: 2px solid $accent;
+  }
+
+  &__name {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  &__role {
+    font-size: 0.8rem;
+    color: $accent;
+    background: rgba(0, 0, 0, 0.25);
+    padding: 0.15rem 0.6rem;
+    border-radius: 1rem;
+    margin-top: 0.35rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+}
+
+// ---- Tabs (PrimeNG v18+ "Tabs without panels" overrides) ----
+.profile-nav {
+  ::ng-deep .p-tabs {
+    background: transparent;
+  }
+
+  ::ng-deep .p-tablist {
+    background: transparent;
+    border: none;
+  }
+
+  // Horizontal scroll on small screens instead of wrapping/overflow
+  ::ng-deep .p-tablist-content {
+    overflow-x: auto;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    &::-webkit-scrollbar { display: none; }
+  }
+
+  ::ng-deep .p-tablist-tab-list {
+    background: transparent;
+    border: none;
+    gap: 0.25rem;
+  }
+
+  ::ng-deep .p-tab {
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: $text-muted;
+    padding: 0.85rem 1rem;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: color 0.15s ease, border-color 0.15s ease;
+
+    &:hover {
+      background: $accent-soft;
+      color: #fff;
+    }
+
+    &.p-tab-active {
+      color: #fff;
+      background: transparent;
+    }
+  }
+
+  // The little animated indicator bar under the active tab
+  ::ng-deep .p-tablist-active-bar {
+    background-color: $accent;
+    height: 3px;
+  }
+}
+
+// ---- Content area ----
+.profile-content {
+  background: inherit !important;
+}
+
+// ---- Responsive tweaks ----
+@media (max-width: 576px) {
+  .profile-header__name {
+    font-size: 1.15rem;
+  }
+
+  ::ng-deep .p-tab {
+    padding: 0.7rem 0.75rem;
+    font-size: 0.85rem;
+  }
+}

@@ -1,0 +1,87 @@
+@use "../shared/shared-styles" as *;
+
+.search-box {
+  width: 100%;
+  max-width: 260px;
+  position: relative;
+
+  input {
+    width: 100%;
+  }
+}
+
+.search-box i {
+  position: absolute;
+  right: 20px;
+  top: 12px;
+}
+
+.role-tag {
+  display: inline-block;
+  padding: 0.2rem 0.65rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgba(166, 163, 179, 0.15);
+  color: $text-muted;
+
+  &--admin {
+    background: rgba(255, 143, 171, 0.15);
+    color: $accent;
+  }
+}
+
+.status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #4caf50;
+  margin-right: 0.4rem;
+
+  &--suspended {
+    background: #e05263;
+  }
+}
+
+::ng-deep .users-table {
+  background: transparent;
+
+  .p-datatable-thead > tr > th {
+    background: rgba(255, 255, 255, 0.03);
+    color: $text-muted;
+    border-color: $border-subtle;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .p-datatable-tbody > tr {
+    background: transparent;
+    color: #fff;
+
+    > td {
+      border-color: $border-subtle;
+    }
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.03) !important;
+    }
+  }
+
+  .p-paginator {
+    background: transparent;
+    color: $text-muted;
+  }
+}
+
+@media (max-width: 767px) {
+  ::ng-deep .users-table .p-datatable-tbody > tr > td {
+    border-bottom: 1px solid $border-subtle;
+
+    &::before {
+      color: $text-muted;
+      font-weight: 600;
+    }
+  }
+}

@@ -1,5 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, input, output, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  inject,
+  input,
+  output,
+  signal,
+} from '@angular/core';
 import {
   FormControl,
   FormGroup,
@@ -23,6 +30,7 @@ import { ButtonModule } from 'primeng/button';
 import { MatDialog } from '@angular/material/dialog';
 import { DeleteCategory } from '../delete-category/delete-category';
 import { CookieService } from '../../../interceptors/cookie.service';
+import { ConfirmationService } from 'primeng/api';
 
 @Component({
   selector: 'app-add-category',
@@ -34,6 +42,7 @@ import { CookieService } from '../../../interceptors/cookie.service';
     InputTextModule,
     TableModule,
     ButtonModule,
+    CommonModule,
   ],
   templateUrl: './add-category.html',
   styleUrl: './add-category.scss',
@@ -41,6 +50,7 @@ import { CookieService } from '../../../interceptors/cookie.service';
 export class AddCategory {
   private readonly matDialog = inject(MatDialog);
   private cookieService = inject(CookieService);
+  private confirmationService = inject(ConfirmationService);
 
   categoryName = new FormControl<string>('', [Validators.required]);
 
@@ -58,7 +68,7 @@ export class AddCategory {
   loading = signal(false);
   editingCategoryId = signal<number | null>(null);
   newCategoryName = '';
-  actionTriggered = output<boolean>(); 
+  actionTriggered = output<boolean>();
   categoriesData = input<Observable<CategoryResponse[]> | null>(null);
   // this below var is connected to p-table and it takes async data when api call is done and updates it in p-table
   categoriesDataObservable = computed<Observable<CategoryResponse[]>>(
@@ -76,9 +86,9 @@ export class AddCategory {
   }
 
   // this method calls the loadCategories() method in parent comp/add-collection and reload the categories array when ever any add/update/delete opeations is done
-  notifyParent(value : boolean) {
+  notifyParent(value: boolean) {
     // Emit the event with optional data
-    this.actionTriggered.emit(value); 
+    this.actionTriggered.emit(value);
   }
 
   addCategory() {
@@ -109,7 +119,9 @@ export class AddCategory {
           this.errorNotification = {
             show: true,
             type: 'error',
-            text: err?.error?.message || 'Failed to add category. Please try again.',
+            text:
+              err?.error?.message ||
+              'Failed to add category. Please try again.',
           };
         },
       });
@@ -138,39 +150,64 @@ export class AddCategory {
   }
 
   // Update category method
-  updateCategory(categoryId: number, newCategoryName: string) {
-    this.editingCategoryId.set(null);
-    if (this.authService.isAuthenticated() && newCategoryName.trim() !== '') {
-      const userIdStr = this.cookieService.getCookie('userId');
-      const userId = userIdStr ? parseInt(userIdStr, 10) : 0;
-      const categoryRequest: CategoryRequest = {
-        userId: userId,
-        categoryName: newCategoryName,
-      };
+  updateCategory(categoryId: number, newCategoryName: string, event: Event) {
+    // if Confirm Popup is accepted(ok) then we proceed with updating categoryName and if rejected(no) then return/do nothing
+    this.confirmationService.confirm({
+      target: event.currentTarget as HTMLElement,
+      message:
+        'Are you sure you want to proceed? and once categoryName is updated then it will be reflected in all linked Collections Data also!',
+      icon: 'pi pi-exclamation-triangle',
+      rejectButtonProps: {
+        label: 'NO',
+        severity: 'secondary',
+        outlined: true,
+      },
+      acceptButtonProps: {
+        label: 'YES',
+      },
+      accept: () => {
+        this.editingCategoryId.set(null);
+        if (
+          this.authService.isAuthenticated() &&
+          newCategoryName.trim() !== ''
+        ) {
+          const userIdStr = this.cookieService.getCookie('userId');
+          const userId = userIdStr ? parseInt(userIdStr, 10) : 0;
+          const categoryRequest: CategoryRequest = {
+            userId: userId,
+            categoryName: newCategoryName,
+          };
 
-      this.categoryService
-        .updateCategoryService(categoryId, categoryRequest)
-        .subscribe({
-          next: (response) => {
-            console.log('Category updated successfully:', response);
-            this.errorNotification = {
-              show: true,
-              type: 'success',
-              text: 'Category Updated Successfully! Please check the Category List below to see the updated category.',
-            };
-            // Reload the categories list from parent comp after successful update
-            this.notifyParent(true);
-          },
-          error: (err) => {
-            console.error('Error updating category:', err);
-            this.errorNotification = {
-              show: true,
-              type: 'error',
-              text: 'Failed to update category. Please try again.',
-            };
-          },
-        });
-    }
+          this.categoryService
+            .updateCategoryService(categoryId, categoryRequest)
+            .subscribe({
+              next: (response) => {
+                console.log('Category updated successfully:', response);
+                this.errorNotification = {
+                  show: true,
+                  type: 'success',
+                  text: 'Category Updated Successfully! Please check the Category List below to see the updated category.',
+                };
+                // Reload the categories list from parent comp after successful update
+                this.notifyParent(true);
+              },
+              error: (err) => {
+                console.error('Error updating category:', err);
+                this.errorNotification = {
+                  show: true,
+                  type: 'error',
+                  text:
+                    err?.error?.message ||
+                    'Failed to update category. Please try again.',
+                };
+              },
+            });
+        }
+      },
+      reject: () => {
+        return; // do nothing
+      },
+    });
   }
 
   cancelEdit() {
@@ -195,7 +232,7 @@ export class AddCategory {
       .subscribe({
         next: (deleted: CategoryDeleteResponse) => {
           // if category does not have any linked collection then only it will be deleted successfully and return success=true, else it will return success=false with a error-msg
-          if (deleted?.success){
+          if (deleted?.success) {
             // Reload the categories list after successful deletion
             this.notifyParent(true);
             this.errorNotification = {

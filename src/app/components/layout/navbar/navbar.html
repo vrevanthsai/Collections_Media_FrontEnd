@@ -17,14 +17,15 @@
           <li class="nav-item">
             <a class="nav-link" routerLink="/collections/add-collection" routerLinkActive="active">Add Collection</a>
           </li>
-          <!-- Only for Admins - this NavLinks are available -->
-          <li class="nav-item" *ngIf="isAdmin()">
-            <a class="nav-link" routerLink="/admin/user-management" routerLinkActive="active">User Management</a>
-          </li>
           <!-- For logged-IN User -->
-          <li>
-            <button class="btn btn-primary">{{name()}}</button> <!-- Profile button- with user name-->
-            <button type="button" (click)="logout()" class="btn btn-outline-danger">Logout</button>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              {{name()}}
+            </a>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" routerLink="/account/profile">Profile</a></li>
+              <li><a class="dropdown-item" routerLink="" role="button" (click)="logout()">Logout</a></li>
+            </ul>
           </li>
         } @else {
           <li class="nav-item">

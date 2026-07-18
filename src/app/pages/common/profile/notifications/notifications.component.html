@@ -1,0 +1,17 @@
+<div class="row">
+  <div class="col-12 col-lg-8" style="margin: auto;">
+    <div class="panel-card">
+      <h2 class="panel-card__title"><i class="pi pi-bell"></i> Notifications</h2>
+
+      <div class="notif-list mt-4">
+        <div class="notif-row" *ngFor="let pref of prefs">
+          <div class="notif-row__text">
+            <div class="notif-row__label">{{ pref.label }}</div>
+            <div class="notif-row__desc">{{ pref.description }}</div>
+          </div>
+          <p-toggleswitch [(ngModel)]="pref.enabled"></p-toggleswitch>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

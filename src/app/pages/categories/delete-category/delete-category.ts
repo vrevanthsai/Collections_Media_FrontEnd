@@ -2,22 +2,31 @@ import { Component, inject, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { AuthService } from '../../auth/services/auth';
 import { ButtonModule } from 'primeng/button';
-import { CategoryDeleteResponse, CategoryResponse, CategoryService } from '../../services/category-service';
+import {
+  CategoryDeleteResponse,
+  CategoryResponse,
+  CategoryService,
+} from '../../services/category-service';
 import { CookieService } from '../../../interceptors/cookie.service';
+import { InputTextModule } from 'primeng/inputtext';
+import { FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-delete-category',
-  imports: [ButtonModule],
+  imports: [ButtonModule, InputTextModule, FormsModule, CommonModule],
   templateUrl: './delete-category.html',
   styleUrl: './delete-category.scss',
 })
 export class DeleteCategory {
-  deleteResponse : CategoryDeleteResponse | null = null;
+  deleteResponse: CategoryDeleteResponse | null = null;
   private cookieService = inject(CookieService);
+  deleteCategoryConfirmation: string = '';
+  deleteErrorMessage: string = '';
 
   constructor(
     // Getting Data from DialogREf of AddCategoryComponent
-    @Inject(MAT_DIALOG_DATA) public data: { category : CategoryResponse },
+    @Inject(MAT_DIALOG_DATA) public data: { category: CategoryResponse },
     // Get current Dialog model reference
     private dialogRef: MatDialogRef<DeleteCategory>,
     private authService: AuthService,
@@ -29,24 +38,33 @@ export class DeleteCategory {
     const userId = parseInt(this.cookieService.getCookie('userId') || '0', 10);
     // proceed further only if user is authenticated
     if (this.authService.isAuthenticated()) {
-      // Call Delete-Category-Api
-      this.categoryService
-        .deleteCategoryService(userId, this.data.category.categoryId!) // ! - it will not have null value
-        .subscribe({
-          next: (res) => {
-            this.deleteResponse = res;
-            // TODO- show String response-msg in Toaster/Notification-PopUp format instead of console.logs
-            console.log(res);
-          },
-          error: (err) => {
-            console.log('err from delete category api= ', err);
-          },
-          // Complete case
-          complete: () => {
-            // close dialog and pass true-boolean value to Home-comp to refresh getAll-api data after deleting
-            this.dialogRef.close(this.deleteResponse);
-          },
-        });
+      if (
+        this.deleteCategoryConfirmation.trim() === 'Yes-Delete-This-Category'
+      ) {
+        // Call Delete-Category-Api
+        this.categoryService
+          .deleteCategoryService(userId, this.data.category.categoryId!) // ! - it will not have null value
+          .subscribe({
+            next: (res) => {
+              this.deleteResponse = res;
+              // TODO- show String response-msg in Toaster/Notification-PopUp format instead of console.logs
+              console.log(res);
+              this.deleteCategoryConfirmation = '';
+              this.deleteErrorMessage = '';
+            },
+            error: (err) => {
+              console.log('err from delete category api= ', err);
+            },
+            // Complete case
+            complete: () => {
+              // close dialog and pass true-boolean value to Home-comp to refresh getAll-api data after deleting
+              this.dialogRef.close(this.deleteResponse);
+            },
+          });
+      } else {
+        this.deleteErrorMessage =
+          'Please type "Yes-Delete-This-Category" to confirm.';
+      }
     }
   }
 
