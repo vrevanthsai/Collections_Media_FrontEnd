@@ -41,6 +41,7 @@ export class CollectionDetail implements OnInit, OnDestroy {
   shareMessage = signal('');
   private objectUrl: string | null = null;
   private collectionId = 0;
+  userId = parseInt(this.cookieService.getCookie('userId') || '0', 10);
 
   // Reads and validates the collection ID supplied by the details route.
   ngOnInit(): void {
@@ -140,9 +141,8 @@ export class CollectionDetail implements OnInit, OnDestroy {
     this.loading.set(true);
     this.errorMessage.set('');
     this.revokeObjectUrl();
-    const userId = parseInt(this.cookieService.getCookie('userId') || '0', 10);
 
-    this.collectionsService.getCollectionById(userId, this.collectionId).subscribe({
+    this.collectionsService.getCollectionById(this.userId, this.collectionId).subscribe({
       next: (collection) => {
         if (!collection) {
           this.errorMessage.set('Collection not found or you do not have access to it.');

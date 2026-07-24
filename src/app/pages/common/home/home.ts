@@ -77,9 +77,9 @@ export class Home implements OnInit {
 
   privacyOptions = [
     { label: 'All', value: null },
-    { label: 'Public', value: 'Public' },
-    { label: 'Private', value: 'Private' },
-    { label: 'Friend', value: 'Friend' },
+    { label: 'Public', value: 'PUBLIC' },
+    { label: 'Private', value: 'PRIVATE' },
+    { label: 'Friend', value: 'FRIENDS' },
   ];
   selectedCategoryLabel: string | null = null;
   suspendedUserStatus : boolean = false;

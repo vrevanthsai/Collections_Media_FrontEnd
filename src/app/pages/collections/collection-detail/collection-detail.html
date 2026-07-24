@@ -66,15 +66,15 @@
             </div>
             <div>
               <dt>Added date</dt>
-              <dd>{{ item.addedDate || 'Not available' }}</dd>
+              <dd>{{ item.addedDate | date: 'MMM d, y' }}</dd>
             </div>
             <div>
               <dt>Collection ID</dt>
               <dd>{{ item.collectionId }}</dd>
             </div>
             <div>
-              <dt>User ID</dt>
-              <dd>{{ item.userId }}</dd>
+              <dt>User Name</dt>
+              <dd>{{ item.username }}</dd>
             </div>
             <div>
               <dt>Image name</dt>
@@ -83,20 +83,23 @@
           </dl>
 
           <!-- Update and Delete reuse the existing dialog components. -->
-          <div class="detail-actions">
-            <button type="button" class="btn btn-primary" (click)="updateCollection()">
-              <i class="pi pi-pencil"></i>
-              Update
-            </button>
-            <button type="button" class="btn btn-danger" (click)="deleteCollection()">
-              <i class="pi pi-trash"></i>
-              Delete
-            </button>
-            <button type="button" class="btn btn-outline-dark" (click)="shareCollection()">
-              <i class="pi pi-share-alt"></i>
-              Share
-            </button>
-          </div>
+           <!-- only show Action buttons if currentUser is same as this collection user -->
+            @if(userId === item.userId){
+              <div class="detail-actions">
+                <button type="button" class="btn btn-primary" (click)="updateCollection()">
+                  <i class="pi pi-pencil"></i>
+                  Update
+                </button>
+                <button type="button" class="btn btn-danger" (click)="deleteCollection()">
+                  <i class="pi pi-trash"></i>
+                  Delete
+                </button>
+                <button type="button" class="btn btn-outline-dark" (click)="shareCollection()">
+                  <i class="pi pi-share-alt"></i>
+                  Share
+                </button>
+              </div>
+            }          
 
           @if (shareMessage()) {
             <p class="share-message" aria-live="polite">{{ shareMessage() }}</p>

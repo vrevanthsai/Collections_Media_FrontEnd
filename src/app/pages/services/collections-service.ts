@@ -82,7 +82,8 @@ export type CollectionDto = {
   name: string,
   category: string,
   categoryName?: string, // added for better display in UI
-  userId: string,
+  userId: number,
+  username?: string, // optional
   rating: number,
   review: string,
   progress: string,

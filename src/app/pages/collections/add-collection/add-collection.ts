@@ -62,7 +62,7 @@ export class AddCollection {
   categoriesData$ = new BehaviorSubject<CategoryResponse[]>([]);
 
   // get user info from cookie which is stored after user logged-In
-  userId = signal<string | null>(this.cookieService.getCookie('userId'));
+  userId = signal<number>(parseInt(this.cookieService.getCookie('userId') || '0', 10));
 
   // Collection Progress-Dropdown Fixed data
   progressData = [
@@ -74,9 +74,9 @@ export class AddCollection {
 
   // Collection Privacy-Dropdown Fixed data
   privacyData = [
-    { label: 'Public', value: 'Public' },
-    { label: 'Private', value: 'Private' },
-    { label: 'Friend', value: 'Friend' },
+    { label: 'Public', value: 'PUBLIC' },
+    { label: 'Private', value: 'PRIVATE' },
+    { label: 'Friend', value: 'FRIENDS' },
   ];
 
   constructor(
@@ -125,10 +125,8 @@ export class AddCollection {
   }
 
   loadCategories(): void {
-    let userId = parseInt(this.userId() || ''); // Convert to number, default to 0 if null
-
-    if (!isNaN(userId)) {
-      this.categoryService.getUserCategories(userId).subscribe({
+    if (!isNaN(this.userId())) {
+      this.categoryService.getUserCategories(this.userId()).subscribe({
         next: (data) => {
           // var to send async data to child comp safely
           this.categoriesData$.next(data);
@@ -151,7 +149,7 @@ export class AddCollection {
         },
       });
     } else {
-      console.error('Invalid userId: ', userId);
+      console.error('Invalid userId: ', this.userId());
     }
   }
 
@@ -177,7 +175,7 @@ export class AddCollection {
       const collectionDto: CollectionDto = {
         name: this.addCollectionForm.get('name')?.value,
         category: this.addCollectionForm.get('category')?.value,
-        userId: this.cookieService.getCookie('userId') || '',
+        userId: this.userId(),
         rating: this.addCollectionForm.get('rating')?.value,
         review: this.addCollectionForm.get('review')?.value,
         progress: this.addCollectionForm.get('progress')?.value,
