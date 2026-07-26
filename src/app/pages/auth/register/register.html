@@ -30,6 +30,9 @@
         @if(username.errors?.['required']){
         <div>Username is required.</div>
         }
+        <div *ngIf="username.errors?.['minlength']">
+          username must be at least 3 characters long.
+        </div>
       </div>
       }
     </div>

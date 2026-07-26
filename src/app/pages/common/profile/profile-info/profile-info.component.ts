@@ -62,6 +62,7 @@ export class ProfileInfoComponent implements OnInit {
   });
   // file/image form input
   selectedFile: File | null = null;
+  allowImageLoad = true; // flag to control image loading
 
   constructor(
     private fb: FormBuilder,
@@ -71,9 +72,28 @@ export class ProfileInfoComponent implements OnInit {
 
   ngOnInit(): void {
     this.initializeForm();
-    // if user has uploaded avatar image then get image-Data directly from this BE Api else use default avatar image
-    this.loadUserAvatarImage();
     this.checkIfUserDetailsExist();
+
+    // Receive updated avatar URL if exists from ProfileService and update the user signal and only called when Usser updates his profile
+    this.profileService.sharedAvatarBlobData$.subscribe(
+      (avatarBlob: Blob | undefined) => {
+        if (avatarBlob) {
+          const reader = new FileReader();
+          reader.onload = () => {
+            this.user().avatarUrl = reader.result as string;
+          };
+          reader.readAsDataURL(avatarBlob);
+
+          this.allowImageLoad = false; // we already have the updated avatar, so no need to load it again from backend twice
+        }
+      },
+    );
+
+    // Load user avatar image from backend if exists
+    if (this.allowImageLoad) {
+      // if user has uploaded avatar image then get image-Data directly from this BE Api else use default avatar image
+      this.loadUserAvatarImage();
+    }
   }
 
   // this single ImageApi call will be used in 2 comps at once- where avatar/imageBlob will be sent from this comp to service-var and that service-var will send that imageBlob data to ProfileLayoutComponent to show latest/available avattar image without seperately calling 2 API calls from these 2 comps

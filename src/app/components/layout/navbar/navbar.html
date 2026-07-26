@@ -1,44 +1,83 @@
-<!-- Bootstrap navbar design code -->
-<nav class="navbar navbar-expand-lg bg-body-tertiary">
+<nav class="navbar navbar-expand-lg app-navbar">
   <div class="container-fluid">
-    <a class="navbar-brand" routerLink="/home">Collection Media App</a>
+    <a class="navbar-brand d-flex align-items-center gap-2" routerLink="/home">
+      <span class="brand-logo"><i class="pi pi-box"></i></span>
+      <span class="brand-text">Collection Media App</span>
+    </a>
+
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown"
       aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
+
     <div class="collapse navbar-collapse" id="navbarNavDropdown">
-      <ul class="navbar-nav">
-        <!-- For Conditional Rendering - We are Using Modern Angular Control Flow instead of old *ngIf() directives -->
-        <!-- True- then Home/Collections/Profile/logout is visible or False- then they are invisible and Intro/Register/Login is visible -->
-        @if(isLoggedIn()){
-          <li class="nav-item">
-            <a class="nav-link" routerLink="/home" routerLinkActive="active">Home</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" routerLink="/collections/add-collection" routerLinkActive="active">Add Collection</a>
-          </li>
-          <!-- For logged-IN User -->
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-              {{name()}}
-            </a>
-            <ul class="dropdown-menu">
-              <li><a class="dropdown-item" routerLink="/account/profile">Profile</a></li>
-              <li><a class="dropdown-item" routerLink="" role="button" (click)="logout()">Logout</a></li>
-            </ul>
-          </li>
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        @if (isLoggedIn()) {
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/home" routerLinkActive="active">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/collections/add-collection" routerLinkActive="active">
+            Add Collection
+          </a>
+        </li>
         } @else {
-          <li class="nav-item">
-            <a class="nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Intro</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" routerLink="/register" routerLinkActive="active">Register</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" routerLink="/login" routerLinkActive="active">Login</a>
-          </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+            Intro
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/register" routerLinkActive="active">Register</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/login" routerLinkActive="active">Login</a>
+        </li>
         }
       </ul>
+
+      <!-- Right-side cluster: search, notifications, avatar — only when logged in -->
+      @if (isLoggedIn()) {
+      <div class="navbar-right d-flex align-items-center gap-2 gap-lg-3 mt-3 mt-lg-0">
+        <!-- Search -->
+        <div class="nav-search d-none d-md-flex align-items-center">
+          <i class="pi pi-search nav-search__icon"></i>
+          <input type="text" pInputText class="nav-search__input" placeholder="Search" [(ngModel)]="searchTerm"
+            (keyup.enter)="onSearch()" />
+        </div>
+
+        <!-- Notifications -->
+        <a class="icon-btn" routerLink="/notifications" aria-label="Notifications">
+          <p-overlaybadge [value]="unreadCount() || undefined" severity="danger" badgeSize="small">
+            <i class="pi pi-bell notif-icon"></i>
+          </p-overlaybadge>
+        </a>
+
+        <!-- Profile avatar dropdown -->
+        <div class="nav-item dropdown profile-dropdown">
+          <a class="nav-link d-flex align-items-center p-0" role="button" data-bs-toggle="dropdown"
+            aria-expanded="false">
+            <p-avatar [image]="avatarUrl()" shape="circle" styleClass="profile-avatar"></p-avatar>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+            <li class="dropdown-header">{{ name() }}</li>
+            <li>
+              <hr class="dropdown-divider" />
+            </li>
+            <li>
+              <a class="dropdown-item" routerLink="/account/profile">
+                <i class="pi pi-user me-2"></i>Profile
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item text-danger" routerLink="" role="button" (click)="logout()">
+                <i class="pi pi-sign-out me-2"></i>Logout
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+      }
     </div>
   </div>
 </nav>
