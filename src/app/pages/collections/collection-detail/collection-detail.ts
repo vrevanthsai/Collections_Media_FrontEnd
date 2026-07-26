@@ -1,5 +1,5 @@
 import { CommonModule, TitleCasePipe } from '@angular/common';
-import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -11,6 +11,7 @@ import { DeleteCollection } from '../delete-collection/delete-collection';
 import { UpdateCollection } from '../update-collection/update-collection';
 import { CollectionDto, CollectionsService } from '../../services/collections-service';
 import { CookieService } from '../../../interceptors/cookie.service';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-collection-detail',
@@ -42,18 +43,28 @@ export class CollectionDetail implements OnInit, OnDestroy {
   private objectUrl: string | null = null;
   private collectionId = 0;
   userId = parseInt(this.cookieService.getCookie('userId') || '0', 10);
+   private destroyRef = inject(DestroyRef); 
 
   // Reads and validates the collection ID supplied by the details route.
   ngOnInit(): void {
-    this.collectionId = Number(this.route.snapshot.paramMap.get('id'));
+    // we use route.paramMap.pip() which detects and reruns whenever route-param changes in path(dynamic-routing page)
+    // instad of using route.snapshot.paramMap- which only reads/runs once when page loaded
+    this.route.paramMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((params) => {
+        const id = Number(params.get('id'));
 
-    if (!Number.isInteger(this.collectionId) || this.collectionId <= 0) {
-      this.errorMessage.set('This collection link is invalid.');
-      this.loading.set(false);
-      return;
-    }
+        if (!Number.isInteger(id) || id <= 0) {
+          this.errorMessage.set('This collection link is invalid.');
+          this.loading.set(false);
+          return;
+        }
 
-    this.loadCollection();
+        this.collectionId = id;
+        this.errorMessage.set(''); // clear any previous error when a valid id comes in
+        this.loading.set(true);    // reset loading state for the new collection
+        this.loadCollection();
+      });
   }
 
   // Releases the temporary image URL when leaving the page.
