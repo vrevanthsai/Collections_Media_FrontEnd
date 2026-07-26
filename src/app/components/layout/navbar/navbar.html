@@ -40,10 +40,74 @@
       @if (isLoggedIn()) {
       <div class="navbar-right d-flex align-items-center gap-2 gap-lg-3 mt-3 mt-lg-0">
         <!-- Search -->
-        <div class="nav-search d-none d-md-flex align-items-center">
-          <i class="pi pi-search nav-search__icon"></i>
-          <input type="text" pInputText class="nav-search__input" placeholder="Search" [(ngModel)]="searchTerm"
-            (keyup.enter)="onSearch()" />
+        <div>
+          <!-- Shared results list template -->
+          <ng-template #resultsList>
+            @for (item of searchResults(); track item.id) {
+            <a class="search-panel__row" (mousedown)="onResultClick(item)">
+              <img [src]="item.resolvedImageUrl" alt="" class="search-panel__thumb" />
+              <div class="search-panel__text">
+                <div class="search-panel__title">{{ item.title }}</div>
+                <div class="search-panel__meta">
+                  <span class="tag">{{ item.type === 'user' ? 'User' : 'Collection' }}</span>
+                </div>
+              </div>
+            </a>
+            }
+            <button class="search-panel__view-all" (mousedown)="goToSearchPage()">
+              View all results <i class="pi pi-arrow-right"></i>
+            </button>
+          </ng-template>
+
+          <!-- Desktop search -->
+          <div class="nav-search-wrapper d-none d-md-block">
+            <div class="nav-search d-flex align-items-center">
+              <i class="pi pi-search nav-search__icon"></i>
+              <input type="text" class="nav-search__input" placeholder="Search" [ngModel]="searchTerm"
+                (ngModelChange)="onSearchInput($event)" (keyup.enter)="onSearchEnter()" (focus)="onSearchFocus()"
+                (blur)="onSearchBlur()" />
+              @if (isSearching()) {
+              <i class="pi pi-spin pi-spinner nav-search__spinner"></i>
+              }
+            </div>
+
+            @if (showResultsPanel()) {
+            <div class="search-panel">
+              @if (searchResults().length > 0) {
+              <ng-container *ngTemplateOutlet="resultsList"></ng-container>
+              } @else if (!isSearching()) {
+              <div class="search-panel__empty">No results found for "{{ searchTerm }}"</div>
+              }
+            </div>
+            }
+          </div>
+
+          <!-- Mobile search trigger -->
+          <button class="icon-btn d-flex d-md-none" (click)="toggleMobileSearch()" aria-label="Search">
+            <i class="pi pi-search"></i>
+          </button>
+
+          <!-- Mobile full-width search overlay -->
+          @if (mobileSearchOpen()) {
+          <div class="mobile-search-overlay d-md-none">
+            <div class="mobile-search-bar d-flex align-items-center">
+              <i class="pi pi-search"></i>
+              <input type="text" [ngModel]="searchTerm" (ngModelChange)="onSearchInput($event)"
+                (keyup.enter)="onSearchEnter()" placeholder="Search" />
+              <button class="mobile-search-bar__close" (click)="toggleMobileSearch()">
+                <i class="pi pi-times"></i>
+              </button>
+            </div>
+
+            @if (searchResults().length > 0) {
+            <div class="search-panel search-panel--mobile">
+              <ng-container *ngTemplateOutlet="resultsList"></ng-container>
+            </div>
+            } @else if (isSearching()) {
+            <div class="search-panel search-panel--mobile search-panel__empty">Searching…</div>
+            }
+          </div>
+          }
         </div>
 
         <!-- Notifications -->
