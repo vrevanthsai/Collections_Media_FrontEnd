@@ -10,7 +10,7 @@ import { ForgotPassword } from './pages/auth/forgot-password/forgot-password';
 import { adminGuard } from './components/layout/guards/admin-guard';
 import { redirectIfLoggedInGuard } from './components/layout/guards/redirect-if-logged-in.guard';
 
-// This file defines the routes for the application. Each route maps a URL path to a component that should be displayed 
+// This file defines the routes for the application. Each route maps a URL path to a component that should be displayed
 // when the user navigates to that path. The routes are defined as an array of objects,
 //  where each object has a 'path' and a 'component' property. The 'path' is the URL segment that will trigger the route, and the 'component' is the Angular component that will be rendered when the route is activated. In this example, the routes array is currently empty, meaning that there are no defined routes in the application yet.
 export const routes: Routes = [
@@ -59,7 +59,18 @@ export const routes: Routes = [
   {
     path: 'account',
     loadChildren: () =>
-      import('./pages/common/profile/profile.routes').then((m) => m.PROFILE_ROUTES),
+      import('./pages/common/profile/profile.routes').then(
+        (m) => m.PROFILE_ROUTES,
+      ),
     canActivate: [authGuard],
   },
+  // Search Page router
+  {
+    path: 'search',
+    loadComponent: () =>
+      import('./pages/common/search/search.component').then(
+        (m) => m.SearchComponent,
+      ),
+  },
+  // User-View route(where currentUser views/sees other user-profile)
 ];

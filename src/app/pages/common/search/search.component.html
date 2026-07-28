@@ -1,0 +1,51 @@
+<div class="search-page">
+    <div class="container py-4">
+
+        <!-- Top search bar -->
+        <div class="search-page__bar mb-4">
+            <i class="pi pi-search"></i>
+            <input type="text" [(ngModel)]="searchTerm" (keyup.enter)="onSearchSubmit()"
+                placeholder="Search users or collections..." class="search-page__input" />
+            <button type="button" class="search-page__btn" (click)="onSearchSubmit()">Search</button>
+            @if(searchTerm !== ''){
+                <button type="button" class="search-page__btn" (click)="onClearSearch()">Clear Search</button>
+            }
+        </div>
+
+        @if (errorMessage()) {
+        <div class="search-page__message search-page__message--error">{{ errorMessage() }}</div>
+        }
+
+        @if (loading()) {
+        <div class="search-page__message"><i class="pi pi-spin pi-spinner"></i> Searching...</div>
+        } @else if (totalRecords() === 0 && searchTerm.trim().length >= 3 && showSearchResult) {
+        <div class="search-page__message">No results found for "{{ searchTerm }}"</div>
+        } @else if (totalRecords() > 0 && showSearchResult) {
+        <p class="search-page__count">
+            {{ totalRecords() }} result{{ totalRecords() === 1 ? '' : 's' }} found
+        </p>
+
+        <div class="row g-4">
+            @for (item of pagedResults(); track item.id) {
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="result-card" (click)="onCardClick(item)">
+                    <div class="result-card__image-wrap">
+                        <img [src]="item.resolvedImageUrl" alt="" class="result-card__image" />
+                        <span class="result-card__type-badge">
+                            {{ item.type === 'user' ? 'User' : 'Collection' }}
+                        </span>
+                    </div>
+                    <div class="result-card__body">
+                        <h3 class="result-card__title">{{ item.title }}</h3>
+                    </div>
+                </div>
+            </div>
+            }
+        </div>
+
+        <p-paginator [first]="first" [rows]="rows" [totalRecords]="totalRecords()"
+            [rowsPerPageOptions]="rowsPerPageOptions" (onPageChange)="onPageChange($event)"
+            styleClass="search-page__paginator"></p-paginator>
+        }
+    </div>
+</div>

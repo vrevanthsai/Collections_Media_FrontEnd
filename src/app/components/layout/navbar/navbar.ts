@@ -134,13 +134,11 @@ export class Navbar {
           },
         });
     } else {
-      console.log('iamge: ', item.thumbnailUrl);
-      // item.resolvedImageUrl = item.thumbnailUrl;
       this.loadOtherUserAvatarImage(item.thumbnailUrl, this.userId, item.id);
     }
   }
 
-  // Load User Avatar
+  // Load Other User Avatar
   loadOtherUserAvatarImage(
     imageName: string | undefined,
     userId: number,
