@@ -106,13 +106,12 @@ export class Navbar {
     this.searchResults.set(
       capped.map((r) => ({ ...r, resolvedImageUrl: this.placeholder })),
     );
-    console.log("capped: ", capped);
+    console.log('results ', results);
     capped.forEach((item) => this.resolveItemImage(item));
   }
 
-  private resolveItemImage(item: SearchResultItem): void {   
+  private resolveItemImage(item: SearchResultItem): void {
     if (item.type !== 'user') {
-
       if (!item.thumbnailUrl) return;
 
       const cached = this.imageCache.get(item.thumbnailUrl);
@@ -135,40 +134,47 @@ export class Navbar {
           },
         });
     } else {
-      console.log("iamge: ", item.thumbnailUrl);
+      console.log('iamge: ', item.thumbnailUrl);
       // item.resolvedImageUrl = item.thumbnailUrl;
-      this.loadOtherUserAvatarImage(item.thumbnailUrl, this.userId, item.id)
+      this.loadOtherUserAvatarImage(item.thumbnailUrl, this.userId, item.id);
     }
   }
 
   // Load User Avatar
-  loadOtherUserAvatarImage(imageName: string | undefined, userId: number, otherUserId: number): void {
+  loadOtherUserAvatarImage(
+    imageName: string | undefined,
+    userId: number,
+    otherUserId: number,
+  ): void {
     if (
       userId !== null &&
       imageName !== '' &&
       imageName !== undefined &&
       imageName !== null
     ) {
-      this.commonService.getOtherUserAvatarImage(userId, otherUserId).subscribe({
-        next: (imageBlob: Blob) => {
-          const reader = new FileReader();
-          let avatarUrl = '';
-          reader.onload = () => {
-            avatarUrl = reader.result as string;
-            this.patchResolvedUrl(otherUserId, avatarUrl);
-          };
-          reader.readAsDataURL(imageBlob);
-        },
-        error: (err: any) => {
-          console.log(
-            'Error while fetching User Avatar Image in Search results: ',
-            err,
-          );
-        },
-      });
+      this.commonService
+        .getOtherUserAvatarImage(userId, otherUserId)
+        .subscribe({
+          next: (imageBlob: Blob) => {
+            const reader = new FileReader();
+            let avatarUrl = '';
+            reader.onload = () => {
+              avatarUrl = reader.result as string;
+              this.patchResolvedUrl(otherUserId, avatarUrl);
+            };
+            reader.readAsDataURL(imageBlob);
+          },
+          error: (err: any) => {
+            console.log(
+              'Error while fetching User Avatar Image in Search results: ',
+              err,
+            );
+          },
+        });
     } else {
       // If no avatar image is uploaded, use a default avatar image
-      let avatarUrl = 'https://api.dicebear.com/7.x/adventurer/svg?seed=rinku112';
+      let avatarUrl =
+        'https://api.dicebear.com/7.x/adventurer/svg?seed=rinku112';
       this.patchResolvedUrl(otherUserId, avatarUrl);
     }
   }
@@ -217,7 +223,7 @@ export class Navbar {
 
     // Load user avatar image from backend if exists
     // only show/call image after user loggined or his accessToken is refreshed
-    if (this.allowImageLoad && this.authService.getLoggedIn()) {
+    if (this.allowImageLoad && (this.isLoggedIn() || this.authService.isAuthenticated())) {
       this.loadUserAvatarImage();
     }
   }
@@ -284,6 +290,16 @@ export class Navbar {
     );
     // reset searchResults after navigating to above pages
     this.searchResults.set([]);
+  }
+
+  onClearSearch(event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+
+    this.searchTerm = '';
+    this.searchResults.set([]);
+    this.showResultsPanel.set(false);
+    this.isSearching.set(false);
   }
 
   toggleMobileSearch(): void {

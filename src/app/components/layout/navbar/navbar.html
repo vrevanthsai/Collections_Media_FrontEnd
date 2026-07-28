@@ -68,6 +68,11 @@
                 (blur)="onSearchBlur()" />
               @if (isSearching()) {
               <i class="pi pi-spin pi-spinner nav-search__spinner"></i>
+              } @else if (searchTerm) {
+              <button type="button" class="nav-search__clear" (mousedown)="onClearSearch($event)"
+                aria-label="Clear search">
+                <i class="pi pi-times"></i>
+              </button>
               }
             </div>
 
@@ -94,6 +99,12 @@
               <i class="pi pi-search"></i>
               <input type="text" [ngModel]="searchTerm" (ngModelChange)="onSearchInput($event)"
                 (keyup.enter)="onSearchEnter()" placeholder="Search" />
+              @if (searchTerm) {
+              <button type="button" class="mobile-search-bar__clear" (mousedown)="onClearSearch($event)"
+                aria-label="Clear search">
+                <i class="pi pi-times"></i>
+              </button>
+              }
               <button class="mobile-search-bar__close" (click)="toggleMobileSearch()">
                 <i class="pi pi-times"></i>
               </button>
