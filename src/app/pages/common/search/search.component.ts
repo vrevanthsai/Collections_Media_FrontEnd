@@ -201,7 +201,7 @@ export class SearchComponent implements OnInit, OnDestroy {
 
   onCardClick(item: SearchResultItem): void {
     this.router.navigate(
-      item.type === 'user' ? ['/profile', item.id] : ['/collections', item.id],
+      item.type === 'user' ? ['users-profile', item.id] : ['/collections', item.id],
     );
   }
 

@@ -1,0 +1,88 @@
+<div class="user-view-page">
+    <div class="container py-4">
+
+        @if (loading()) {
+        <div class="uvp-message"><i class="pi pi-spin pi-spinner"></i> Loading profile...</div>
+        } @else if (errorMessage()) {
+        <div class="uvp-message uvp-message--error">{{ errorMessage() }}</div>
+        } @else if (user(); as u) {
+
+        <!-- User header -->
+        <div class="user-header">
+            <p-avatar [image]="avatarUrl()" shape="circle" styleClass="user-header__avatar"></p-avatar>
+            <div class="user-header__info">
+                <h1 class="user-header__name">{{ u.name || u.username }}</h1>
+                <p class="user-header__username">&#64;{{ u.username }}</p>
+                <p class="user-header__joined">
+                    <i class="pi pi-calendar"></i> Joined {{ u.addedDate | date: 'MMM d, y' }}
+                </p>
+            </div>
+        </div>
+
+        <h2 class="uvp-section-title">Collections ({{ totalRecords() }})</h2>
+
+        @if (totalRecords() === 0) {
+        <div class="uvp-message">This user hasn't added any collections yet.</div>
+        } @else {
+        <div class="row g-3">
+            @for (item of pagedCollections(); track item.collectionId; let i = $index) {
+            <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+                <div class="collection-card">
+                    <div class="collection-card__topbar"></div>
+
+                    <div class="collection-card__body">
+                        <span class="collection-card__category">{{ item.categoryName }}</span>
+
+                        <h3 class="collection-card__title">{{ globalIndex(i) }}. {{ item.name }}</h3>
+
+                        <a class="collection-card__open-link" (click)="goToCollection(item.collectionId)">
+                            Open collection <i class="pi pi-external-link"></i>
+                        </a>
+
+                        <!-- Rating -->
+                        <div class="info-box">
+                            <div class="info-box__icon info-box__icon--rating">
+                                <i class="pi pi-star-fill"></i>
+                            </div>
+                            <div class="info-box__content">
+                                <span class="info-box__label">Rating</span>
+                                <div class="info-box__value">
+                                    <span class="stars">
+                                        @for (filled of starArray(item.rating); track $index) {
+                                        <i class="pi" [class.pi-star-fill]="filled" [class.pi-star]="!filled"></i>
+                                        }
+                                    </span>
+                                    <span class="stars-fraction">{{ item.rating }}/5</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Status -->
+                        <div class="info-box">
+                            <div class="info-box__icon info-box__icon--status">
+                                <i class="pi pi-chart-line"></i>
+                            </div>
+                            <div class="info-box__content">
+                                <span class="info-box__label">Status</span>
+                                <span class="status-pill" [ngClass]="statusClass(item.progress)">
+                                    {{ item.progress }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="collection-card__added-date">
+                            <i class="pi pi-clock"></i> Added {{ item.addedDate | date: 'MMM d, y' }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            }
+        </div>
+
+        <p-paginator [first]="first" [rows]="rows" [totalRecords]="totalRecords()"
+            [rowsPerPageOptions]="rowsPerPageOptions" (onPageChange)="onPageChange($event)"
+            styleClass="uvp-paginator"></p-paginator>
+        }
+        }
+    </div>
+</div>

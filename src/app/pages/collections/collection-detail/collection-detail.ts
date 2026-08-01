@@ -43,7 +43,7 @@ export class CollectionDetail implements OnInit, OnDestroy {
   private objectUrl: string | null = null;
   private collectionId = 0;
   userId = parseInt(this.cookieService.getCookie('userId') || '0', 10);
-   private destroyRef = inject(DestroyRef); 
+  private destroyRef = inject(DestroyRef); 
 
   // Reads and validates the collection ID supplied by the details route.
   ngOnInit(): void {
@@ -165,6 +165,10 @@ export class CollectionDetail implements OnInit, OnDestroy {
           this.collection.set(collection);
           this.loading.set(false);
           return;
+        }
+
+        if(collection.imageUrl){
+          collection.imageUrl = collection.imageUrl + collection.userId; // append this collection's creator userId to imageUrl
         }
 
         this.collectionsService.getCollectionImage(collection.imageUrl).subscribe({

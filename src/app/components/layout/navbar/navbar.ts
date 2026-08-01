@@ -99,6 +99,9 @@ export class Navbar {
         this.handleSearchResults(results); // cap at 5 rows
         this.showResultsPanel.set(true);
       });
+
+      // reassign userId whenever the cookie changes (e.g., after login or logout)
+    this.userId = parseInt(this.cookieService.getCookie('userId') || '0', 10);
   }
 
   private handleSearchResults(results: SearchResultItem[]): void {
@@ -284,7 +287,7 @@ export class Navbar {
     this.searchTerm = '';
     // add router logic to navigate to user-view page if username is there or to single collection page
     this.router.navigate(
-      item.type === 'user' ? ['/profile', item.id] : ['/collections', item.id],
+      item.type === 'user' ? ['users-profile', item.id] : ['/collections', item.id],
     );
     // reset searchResults after navigating to above pages
     this.searchResults.set([]);

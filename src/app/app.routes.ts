@@ -73,4 +73,8 @@ export const routes: Routes = [
       ),
   },
   // User-View route(where currentUser views/sees other user-profile)
+  {
+    path: 'users-profile/:userId',
+    loadComponent: () => import('./pages/common/user-profile-view/user-profile-view').then(m => m.UserProfileView)
+  }
 ];

@@ -63,6 +63,17 @@ export class CommonService {
       { responseType: 'blob' },
     );
   }
+
+  getUserProfileView(
+    currentUserId: number,
+    viewUserId: number
+  ): Observable<{ user: UserProfileUser; collections: UserProfileCollection[] }> {
+    return this.http
+      .get<UserProfileViewApiResponse>(
+        `${this.BASE_URL}/api/v1/user/${currentUserId}/profile/user-view-page/${viewUserId}`
+      )
+      .pipe(map((res) => res.data));
+  }
 }
 
 // ---- Raw API shapes ----
@@ -94,4 +105,38 @@ export interface SearchResultItem {
   title: string;
   thumbnailUrl: string;
   resolvedImageUrl?: string; // filled in after fetching, read-only in the template
+}
+
+// User View/Profile page types
+export interface UserProfileUser {
+  userId: number;
+  username: string;
+  name: string;
+  imageName: string;
+  addedDate: string;
+}
+
+export interface UserProfileCollection {
+  collectionId: number;
+  name: string;
+  category: number;
+  categoryName: string;
+  userId: number;
+  username: string;
+  rating: number;
+  review: string;
+  progress: string;
+  privacy: string;
+  addedDate: string;
+  imagename: string;
+  imageUrl: string;
+}
+
+interface UserProfileViewApiResponse {
+  success: boolean;
+  message: string;
+  data: {
+    user: UserProfileUser;
+    collections: UserProfileCollection[];
+  };
 }
