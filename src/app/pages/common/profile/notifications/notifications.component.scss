@@ -19,8 +19,16 @@ $border-subtle: rgba(255, 255, 255, 0.08);
   margin-bottom: 1.5rem;
   flex-wrap: wrap;
 
-  &__title { font-size: 1.4rem; font-weight: 700; margin: 0; }
-  &__subtitle { color: $accent; font-size: 0.85rem; margin: 0.2rem 0 0; }
+  &__title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 0;
+  }
+  &__subtitle {
+    color: $accent;
+    font-size: 0.85rem;
+    margin: 0.2rem 0 0;
+  }
 
   &__mark-btn {
     background: transparent;
@@ -34,10 +42,19 @@ $border-subtle: rgba(255, 255, 255, 0.08);
     align-items: center;
     gap: 0.4rem;
     cursor: pointer;
+    transition:
+      color 0.15s ease,
+      border-color 0.15s ease,
+      opacity 0.15s ease;
 
-    &:hover {
+    &:hover:not(:disabled) {
       color: #fff;
       border-color: $accent;
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
     }
   }
 }
@@ -47,7 +64,9 @@ $border-subtle: rgba(255, 255, 255, 0.08);
   text-align: center;
   color: $text-muted;
 
-  &--error { color: #ff6b81; }
+  &--error {
+    color: #ff6b81;
+  }
 }
 
 .notif-empty {
@@ -79,15 +98,22 @@ $border-subtle: rgba(255, 255, 255, 0.08);
   cursor: pointer;
   position: relative;
   transition: background 0.15s ease;
+  padding-right: 3rem;
 
-  &:last-child { border-bottom: none; }
+  &:last-child {
+    border-bottom: none;
+  }
 
-  &:hover { background: rgba(255, 255, 255, 0.03); }
+  &:hover {
+    background: rgba(255, 255, 255, 0.03);
+  }
 
   &--unread {
     background: $bg-panel-unread;
 
-    &:hover { background: #2f2a43 }
+    &:hover {
+      background: #2f2a43;
+    }
   }
 
   &__avatar-wrap {
@@ -113,10 +139,22 @@ $border-subtle: rgba(255, 255, 255, 0.08);
     font-size: 0.65rem;
     border: 2px solid $bg-panel;
 
-    &.notif-icon--friend  { background: #6f96ff; color: #fff; }
-    &.notif-icon--like    { background: #ff6b81; color: #fff; }
-    &.notif-icon--comment { background: #ffb020; color: #221926; }
-    &.notif-icon--default { background: $accent; color: #221926; }
+    &.notif-icon--friend {
+      background: #6f96ff;
+      color: #fff;
+    }
+    &.notif-icon--like {
+      background: #ff6b81;
+      color: #fff;
+    }
+    &.notif-icon--comment {
+      background: #ffb020;
+      color: #221926;
+    }
+    &.notif-icon--default {
+      background: $accent;
+      color: #221926;
+    }
   }
 
   &__body {
@@ -162,7 +200,10 @@ $border-subtle: rgba(255, 255, 255, 0.08);
     color: $text-muted;
     border-radius: 8px;
 
-    &:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
+    &:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+    }
   }
 
   .p-paginator-page.p-highlight {
@@ -178,5 +219,60 @@ $border-subtle: rgba(255, 255, 255, 0.08);
 
   .notif-row__text {
     font-size: 0.85rem;
+  }
+}
+
+.notif-row__delete-btn {
+  position: absolute;
+  right: 0.9rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: $text-muted;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  // opacity: 0;
+  transition: opacity 0.15s ease, background 0.15s ease, color 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: rgba(255, 107, 129, 0.15);
+    color: #ff6b81;
+  }
+
+  &:disabled {
+    opacity: 1; // stay visible while its own spinner shows
+    cursor: not-allowed;
+  }
+}
+
+// show the delete button on row hover (desktop) — always visible on touch/mobile
+// .notif-row:hover .notif-row__delete-btn {
+//   opacity: 1;
+// }
+
+@media (max-width: 767px) {
+  .notif-row__delete-btn {
+    opacity: 1; // no hover state on touch devices, so keep it visible always
+  }
+}
+
+// ---- ConfirmPopup theming to match your dark UI ----
+::ng-deep .p-confirmpopup {
+  background: $bg-panel;
+  border: 1px solid $border-subtle;
+  color: #fff;
+
+  .p-confirmpopup-content {
+    color: #fff;
+  }
+
+  .p-confirmpopup-icon {
+    color: #ffb020;
   }
 }

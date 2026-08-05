@@ -224,6 +224,15 @@ export class Navbar {
       },
     );
 
+    // Receive Notification statue value(true) to rerun/recall loadUnReadNotificationsCount()- whenever user clicks any notification or mark all read buttons in notification page
+    this.notificationsService.notificationsStatus$.subscribe(
+      (status: boolean) => {
+        if(status){
+          this.loadUnReadNotificationsCount();
+        }
+      }
+    )
+
     // Load user avatar image from backend if exists
     // only show/call image after user loggined or his accessToken is refreshed
     if (this.allowImageLoad && (this.isLoggedIn() || this.authService.isAuthenticated())) {

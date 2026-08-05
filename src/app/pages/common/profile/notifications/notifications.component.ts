@@ -5,21 +5,17 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PaginatorModule, PaginatorState } from 'primeng/paginator';
 import { AvatarModule } from 'primeng/avatar';
 import { NotificationItem, NotificationsService } from '../../../services/notifications-service';
-import { CollectionsService } from '../../../services/collections-service';
 import { CookieService } from '../../../../interceptors/cookie.service';
 import { CommonService } from '../../../services/common-service';
-
-interface NotificationPref {
-  key: string;
-  label: string;
-  description: string;
-  enabled: boolean;
-}
+import { ConfirmationService, MessageService } from 'primeng/api';
+import { ConfirmPopupModule } from 'primeng/confirmpopup';
+import { ToastModule } from 'primeng/toast';
 
 @Component({
   selector: 'app-notifications',
   standalone: true,
-  imports: [CommonModule, RouterModule, PaginatorModule, AvatarModule],
+  imports: [CommonModule, RouterModule, PaginatorModule, AvatarModule, ConfirmPopupModule, ToastModule],
+  providers: [ConfirmationService, MessageService],
   templateUrl: './notifications.component.html',
   styleUrls: ['./notifications.component.scss']
 })
@@ -41,6 +37,8 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   private imageCache = new Map<string, string>();
   private readonly placeholder = 'https://placehold.co/100x100?text=%20';
   private cookieService = inject(CookieService);
+  messageService = inject(MessageService);
+  private confirmationService = inject(ConfirmationService);
 
   currentUserId = parseInt(this.cookieService.getCookie('userId') || '0', 10);
 
@@ -50,6 +48,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   pagedNotifications = computed(() =>
     this.notifications().slice(this.first, this.first + this.rows)
   );
+  deleteNotifLoading: boolean = false;
 
   ngOnInit(): void {
     this.loadNotifications();
@@ -141,8 +140,25 @@ export class NotificationsComponent implements OnInit, OnDestroy {
       this.notifications.update((items) =>
         items.map((i) => (i.id === n.id ? { ...i, read: true } : i))
       );
-      // TODO: call your mark-as-read endpoint here once it exists, e.g.
-      // this.commonService.markNotificationRead(this.currentUserId, n.id).subscribe();
+      // Mark single clicked notification row as marked read and navigate to next page after this call is done
+      this.notifcationsService.markReadSingleNotification(this.currentUserId, n.id).subscribe({
+        next: (res) => {
+          console.log("Mark a single notification as Read- Res: ", res?.data);
+          // this.loadNotifications();
+          // Send status- true to shared var for navbar bell reseting its notification unread count value
+          this.notifcationsService.updateNotificationStatus(true);
+        },
+        error: (err) => {
+          console.error('Error while marking single notication as read:', err);
+          this.messageService.add({
+            severity: 'error',
+            summary:
+              err?.error?.message || 'Error while marking single notication as read',
+            detail: 'Try again!',
+            life: 3000, // auto-dismiss after 3s
+          });
+        }
+      });
     }
 
     const config = this.typeConfig(n.type);
@@ -152,8 +168,29 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   }
 
   markAllAsRead(): void {
+    // Here recalling of get loadNotification method is not needed in below service call method
+    // here frontend logic side - we manually mark all notifications as Read(true)- so recalling api is not needed
     this.notifications.update((items) => items.map((i) => ({ ...i, read: true })));
-    // TODO: call a bulk mark-all-read endpoint here once it exists
+
+    // Mark All notificaitons as Read
+    this.notifcationsService.markReadAllNotification(this.currentUserId).subscribe({
+      next: (res) => {
+        console.log("Mark all notifications as Read- Res: ", res?.data);
+        // this.loadNotifications();
+        // Send status- true to shared var for navbar bell reseting its notification unread count value
+        this.notifcationsService.updateNotificationStatus(true);
+      },
+      error: (err) => {
+        console.error('Error while marking all notication as read:', err);
+        this.messageService.add({
+          severity: 'error',
+          summary:
+            err?.error?.message || 'Error while marking all notication as read',
+          detail: 'Try again!',
+          life: 3000, // auto-dismiss after 3s
+        });
+      }
+    });
   }
 
   onPageChange(event: PaginatorState): void {
@@ -165,6 +202,42 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.imageCache.forEach((url) => URL.revokeObjectURL(url));
     this.imageCache.clear();
+  }
+
+  confirmDelete(event: Event, n: NotificationItem): void {
+    event.stopPropagation(); // don't let this bubble up to onNotificationClick on the row
+
+    this.confirmationService.confirm({
+      target: event.currentTarget as EventTarget,
+      message: 'Delete this notification?',
+      icon: 'pi pi-exclamation-triangle',
+      acceptButtonProps: { label: 'Delete', severity: 'danger' },
+      rejectButtonProps: { label: 'Cancel', severity: 'secondary', outlined: true },
+      accept: () => this.deleteNotification(n)
+    });
+  }
+
+  private deleteNotification(n: NotificationItem): void {
+    this.deleteNotifLoading = true;
+    this.notifcationsService
+      .deleteNotification(this.currentUserId, n.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.notifications.update((items) => items.filter((i) => i.id !== n.id));
+          this.messageService.add({ severity: 'success', summary: 'Deleted', detail: 'Notification removed.' });
+          this.deleteNotifLoading = false;
+          // recall loadNotifications() - to get all notifications data after deleting singel notification
+          this.loadNotifications();
+          // Send status- true to shared var for navbar bell reseting its notification unread count value
+          this.notifcationsService.updateNotificationStatus(true);
+        },
+        error: (err) => {
+          console.log("Error while deleting single notification: ", err);
+          this.deleteNotifLoading = false;
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Could not delete notification, Pls try again!!' });
+        }
+      });
   }
 }
 

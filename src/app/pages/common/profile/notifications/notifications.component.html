@@ -1,4 +1,6 @@
 <div class="notif-page">
+  <!-- Confirm Popup display model - which shows popup/confim panel below delete/trash button -->
+  <p-confirmpopup></p-confirmpopup> 
   <div class="container py-4">
 
     <div class="notif-header">
@@ -9,11 +11,9 @@
         }
       </div>
 
-      @if (unreadCount() > 0) {
-      <button type="button" class="notif-header__mark-btn" (click)="markAllAsRead()">
+      <button type="button" class="notif-header__mark-btn" [disabled]="unreadCount() === 0" (click)="markAllAsRead()">
         <i class="pi pi-check"></i> Mark all as read
       </button>
-      }
     </div>
 
     @if (loading()) {
@@ -47,6 +47,20 @@
         @if (!n.read) {
         <span class="notif-row__dot"></span>
         }
+
+        <!-- delete button -->
+          <button
+            type="button"
+            class="notif-row__delete-btn"
+            (click)="confirmDelete($event, n)"
+            aria-label="Delete notification"
+          >
+            @if (deleteNotifLoading) {
+              <i class="pi pi-spin pi-spinner"></i>
+            } @else {
+              <i class="pi pi-trash"></i>
+            }
+          </button>
       </div>
       }
     </div>
