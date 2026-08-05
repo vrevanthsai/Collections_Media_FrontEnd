@@ -24,6 +24,7 @@ import {
 } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CollectionsService } from '../../../pages/services/collections-service';
+import { NotificationCount, NotificationsService } from '../../../pages/services/notifications-service';
 
 @Component({
   selector: 'app-navbar',
@@ -47,7 +48,7 @@ export class Navbar {
     this.cookieService.getCookie('userDetails') || '{}',
   );
   name = signal<string | null>(this.userDetails.name || null);
-  unreadCount = signal(3); // wire this up to your notifications service
+  unreadCount = signal(0);
   avatarUrl = signal<string | undefined>(undefined);
   allowImageLoad = true; // flag to control image loading
   userId = parseInt(this.cookieService.getCookie('userId') || '0', 10);
@@ -72,6 +73,7 @@ export class Navbar {
     private profileService: ProfileService,
     private commonService: CommonService,
     private collectionsService: CollectionsService,
+    private notificationsService: NotificationsService
   ) {
     this.searchInput$
       .pipe(
@@ -100,7 +102,7 @@ export class Navbar {
         this.showResultsPanel.set(true);
       });
 
-      // reassign userId whenever the cookie changes (e.g., after login or logout)
+    // reassign userId whenever the cookie changes (e.g., after login or logout)
     this.userId = parseInt(this.cookieService.getCookie('userId') || '0', 10);
   }
 
@@ -227,6 +229,27 @@ export class Navbar {
     if (this.allowImageLoad && (this.isLoggedIn() || this.authService.isAuthenticated())) {
       this.loadUserAvatarImage();
     }
+
+    // load unread Notifications count for Bell icon in navbar
+    this.loadUnReadNotificationsCount();
+  }
+
+  loadUnReadNotificationsCount() {
+    this.notificationsService.getUnreadNotificationsCount(this.userId).subscribe({
+      next: (res: NotificationCount) => {
+        this.unreadCount.set(res?.data);
+      },
+      error: (err) => {
+        console.log('Error while fetching Unread Notification count: ', err);
+        this.messageService.add({
+          severity: 'error',
+          summary:
+            err?.error?.message || 'Error while fetching Unread Notification count',
+          detail: 'Try again!',
+          life: 3000, // auto-dismiss after 3s
+        });
+      }
+    })
   }
 
   // Logout feature

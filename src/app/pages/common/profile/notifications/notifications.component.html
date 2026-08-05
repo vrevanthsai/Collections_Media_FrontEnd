@@ -1,17 +1,58 @@
-<div class="row">
-  <div class="col-12 col-lg-8" style="margin: auto;">
-    <div class="panel-card">
-      <h2 class="panel-card__title"><i class="pi pi-bell"></i> Notifications</h2>
+<div class="notif-page">
+  <div class="container py-4">
 
-      <div class="notif-list mt-4">
-        <div class="notif-row" *ngFor="let pref of prefs">
-          <div class="notif-row__text">
-            <div class="notif-row__label">{{ pref.label }}</div>
-            <div class="notif-row__desc">{{ pref.description }}</div>
-          </div>
-          <p-toggleswitch [(ngModel)]="pref.enabled"></p-toggleswitch>
-        </div>
+    <div class="notif-header">
+      <div>
+        <h1 class="notif-header__title">Notifications</h1>
+        @if (unreadCount() > 0) {
+        <p class="notif-header__subtitle">{{ unreadCount() }} unread</p>
+        }
       </div>
+
+      @if (unreadCount() > 0) {
+      <button type="button" class="notif-header__mark-btn" (click)="markAllAsRead()">
+        <i class="pi pi-check"></i> Mark all as read
+      </button>
+      }
     </div>
+
+    @if (loading()) {
+    <div class="notif-message"><i class="pi pi-spin pi-spinner"></i> Loading notifications...</div>
+    } @else if (errorMessage()) {
+    <div class="notif-message notif-message--error">{{ errorMessage() }}</div>
+    } @else if (totalRecords() === 0) {
+    <div class="notif-empty">
+      <i class="pi pi-bell"></i>
+      <p>You're all caught up — no notifications yet.</p>
+    </div>
+    } @else {
+    <div class="notif-list">
+      @for (n of pagedNotifications(); track n.id) {
+      <div class="notif-row" [class.notif-row--unread]="!n.read" (click)="onNotificationClick(n)">
+        <div class="notif-row__avatar-wrap">
+          <p-avatar [image]="avatarFor(n)" shape="circle" styleClass="notif-row__avatar"></p-avatar>
+          <span class="notif-row__type-icon" [ngClass]="typeConfig(n.type).colorClass">
+            <i [class]="typeConfig(n.type).icon"></i>
+          </span>
+        </div>
+
+        <div class="notif-row__body">
+          <p class="notif-row__text">
+            <span class="notif-row__actor">{{ n.actorName || n.actorUsername }}</span>
+            {{ typeConfig(n.type).buildMessage(n) }}
+          </p>
+          <span class="notif-row__time">{{ timeAgo(n.createdAt) }}</span>
+        </div>
+
+        @if (!n.read) {
+        <span class="notif-row__dot"></span>
+        }
+      </div>
+      }
+    </div>
+
+    <p-paginator [first]="first" [rows]="rows" [totalRecords]="totalRecords()" [rowsPerPageOptions]="rowsPerPageOptions"
+      (onPageChange)="onPageChange($event)" styleClass="notif-paginator"></p-paginator>
+    }
   </div>
 </div>
