@@ -58,6 +58,13 @@ $border-subtle: rgba(255, 255, 255, 0.08);
   }
 }
 
+.user-header .user_profile_buttons{
+  margin-left: auto; // Push buttons to the right
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
 .uvp-section-title {
   font-size: 1.1rem;
   font-weight: 700;

@@ -6,11 +6,14 @@ import { PaginatorModule, PaginatorState } from 'primeng/paginator';
 import { AvatarModule } from 'primeng/avatar';
 import { CommonService, UserProfileCollection, UserProfileUser } from '../../services/common-service';
 import { CookieService } from '../../../interceptors/cookie.service';
+import { ButtonModule } from 'primeng/button';
+import { MessageService } from 'primeng/api';
+import { CheckFriendConnectionResponse, FriendConnectionDto, FriendConnectionService, FriendResquestResponse } from '../../services/friend-connection-service';
 
 
 @Component({
   selector: 'app-user-profile-view',
-  imports: [CommonModule, RouterModule, PaginatorModule, AvatarModule],
+  imports: [CommonModule, RouterModule, PaginatorModule, AvatarModule, ButtonModule],
   templateUrl: './user-profile-view.html',
   styleUrl: './user-profile-view.scss',
 })
@@ -20,6 +23,8 @@ export class UserProfileView implements OnInit, OnDestroy {
   private commonService = inject(CommonService);
   private destroyRef = inject(DestroyRef);
   private cookieService = inject(CookieService);
+  private messageService = inject(MessageService);
+  private friendConnectionService = inject(FriendConnectionService);
 
   currentUserId = parseInt(this.cookieService.getCookie('userId') || '0', 10);
 
@@ -37,6 +42,9 @@ export class UserProfileView implements OnInit, OnDestroy {
 
   pagedCollections = computed(() => this.collections().slice(this.first, this.first + this.rows));
   totalRecords = computed(() => this.collections().length);
+  isFriendRequestSent = signal(false);
+  friendConnectionData = signal<FriendConnectionDto | null>(null);
+  friendButtonLabel: string = "Friend Request";
 
   ngOnInit(): void {
     this.route.paramMap
@@ -68,6 +76,8 @@ export class UserProfileView implements OnInit, OnDestroy {
           if (user.imageName) {
             this.resolveAvatar(user.imageName, this.currentUserId, user.userId);
           }
+          // Check friend connection status between current user and viewed user
+          this.checkFriendRequestStatus();
         },
         error: () => {
           this.loading.set(false);
@@ -135,5 +145,64 @@ export class UserProfileView implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.imageCache.forEach((url) => URL.revokeObjectURL(url));
     this.imageCache.clear();
+  }
+
+  // Send Friend Request Method
+  sendFriendRequest(){
+    this.friendConnectionService.sendFriendRequest(this.currentUserId, this.user()?.userId).subscribe({
+      next: (res: FriendResquestResponse) => {
+        this.isFriendRequestSent.set(true);
+        this.friendButtonLabel = "Request Sent";
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Success',
+          detail: res?.data || 'Friend Request Sent successfully',
+          life: 3000, // auto-dismiss after 3s
+        });
+      },
+      error: (err) => {
+        console.error('Error while sending friend request:', err);
+        this.messageService.add({
+          severity: 'error',
+          summary:
+            err?.error?.message || 'Error while sending friend request',
+          detail: 'Try again!',
+          life: 3000, // auto-dismiss after 3s
+        });
+      }
+    })
+  }
+
+  checkFriendRequestStatus(){
+    this.friendConnectionService.checkFriendConnection(this.currentUserId, this.user()?.userId).subscribe({
+      next: (res: CheckFriendConnectionResponse) => {
+        this.friendConnectionData.set(res?.data);
+        if(res?.data?.status === "PENDING"){
+          this.isFriendRequestSent.set(true);
+          this.friendButtonLabel = "Request Sent";
+        } else if(res?.data?.status === "ACCEPTED"){
+          this.isFriendRequestSent.set(true);
+          this.friendButtonLabel = "Friends";
+        }
+      },
+      error: (err) => {
+        console.error('Error while checking friend connection between 2 users :', err);
+        this.messageService.add({
+          severity: 'error',
+          summary:
+            err?.error?.message || 'Error while checking friend connection between 2 users',
+          detail: 'Try again!',
+          life: 3000, // auto-dismiss after 3s
+        });
+      }
+    })
+  }
+
+  acceptFriendRequest(){}
+
+  rejectFriendRequest(){}
+
+  blockUser(){
+
   }
 }

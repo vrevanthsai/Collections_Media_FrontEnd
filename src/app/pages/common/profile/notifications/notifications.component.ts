@@ -35,7 +35,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   rowsPerPageOptions = [10, 20, 30];
 
   private imageCache = new Map<string, string>();
-  private readonly placeholder = 'https://placehold.co/100x100?text=%20';
+  private readonly placeholder = 'https://api.dicebear.com/7.x/adventurer/svg?seed=rinku112';
   private cookieService = inject(CookieService);
   messageService = inject(MessageService);
   private confirmationService = inject(ConfirmationService);
