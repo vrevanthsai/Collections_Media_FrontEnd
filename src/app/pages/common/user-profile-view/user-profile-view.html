@@ -1,4 +1,5 @@
 <div class="user-view-page">
+    <p-confirmpopup></p-confirmpopup>
     <div class="container py-4">
 
         @if (loading()) {
@@ -19,12 +20,25 @@
             </div>
             <!-- User Profile/View Action buttons -->
             <div class="user_profile_buttons">
-                @if(friendConnectionData()?.receiverId === currentUserId && friendConnectionData()?.status === "PENDING") {
-                    <span>This user sent you a Friend Request: </span>
-                    <button pButton type="button" label="Accept" (click)="friendRequestAction('ACCEPTED')"></button>
-                    <button pButton type="button" severity="danger" label="Reject" (click)="friendRequestAction('REJECTED')"></button>
+                @if(friendConnectionData()?.receiverId === currentUserId && friendConnectionData()?.status ===
+                "PENDING") {
+                <span>This user sent you a Friend Request: </span>
+                <button pButton type="button" label="Accept" (click)="friendRequestAction('ACCEPTED')"></button>
+                <button pButton type="button" severity="danger" label="Reject"
+                    (click)="friendRequestAction('REJECTED')"></button>
                 } @else {
-                    <button pButton type="button" (click)="sendFriendRequest()" [disabled]="isFriendRequestSent()">{{ friendButtonLabel }}</button>
+                <button pButton type="button" (click)="sendFriendRequest()" [disabled]="isFriendRequestSent()">{{
+                    friendButtonLabel }}</button>
+                @if(friendConnectionData()?.status === 'ACCEPTED'){
+                <button type="button" pButton severity="danger" (click)="confirmUnfriend($event)">
+                    @if (isUnfriending) {
+                    <i class="pi pi-spin pi-spinner"></i>
+                    } @else {
+                    <i class="pi pi-user-minus"></i>
+                    <span class="d-none d-sm-inline">Unfriend</span>
+                    }
+                </button>
+                }
                 }
                 <button pButton type="button" severity="danger" label="Block User" (click)="blockUser()"></button>
             </div>

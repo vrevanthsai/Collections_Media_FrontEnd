@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -26,6 +26,20 @@ export class FriendConnectionService {
       }
     });
   }
+
+  getAllFriends(userId: number): Observable<FriendItem[]> {
+    return this.http
+      .get<FriendsListApiResponse>(`${this.BASE_URL}/${userId}/friends/get-all-friends-list`)
+      .pipe(map((res) => res.data ?? []));
+  }
+
+  unfriend(userId: number, friendUserId: number): Observable<void> {
+    return this.http
+      .delete<{ success: boolean; message: string }>(
+        `${this.BASE_URL}/${userId}/friends/unfriend/${friendUserId}`
+      )
+      .pipe(map(() => void 0));
+  }
 }
 
 export interface FriendResquestResponse {
@@ -45,4 +59,18 @@ export interface FriendConnectionDto {
   requesterId: number;
   receiverId: number;
   status: string;
+}
+
+export interface FriendItem {
+  userId: number;
+  username: string;
+  name: string;
+  imageName: string;
+  addedDate: string;
+}
+
+interface FriendsListApiResponse {
+  success: boolean;
+  message: string;
+  data: FriendItem[];
 }

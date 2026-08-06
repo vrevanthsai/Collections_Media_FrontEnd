@@ -7,13 +7,15 @@ import { AvatarModule } from 'primeng/avatar';
 import { CommonService, UserProfileCollection, UserProfileUser } from '../../services/common-service';
 import { CookieService } from '../../../interceptors/cookie.service';
 import { ButtonModule } from 'primeng/button';
-import { MessageService } from 'primeng/api';
-import { CheckFriendConnectionResponse, FriendConnectionDto, FriendConnectionService, FriendResquestResponse } from '../../services/friend-connection-service';
+import { ConfirmationService, MessageService } from 'primeng/api';
+import { CheckFriendConnectionResponse, FriendConnectionDto, FriendConnectionService, FriendItem, FriendResquestResponse } from '../../services/friend-connection-service';
+import { ConfirmPopupModule } from 'primeng/confirmpopup';
 
 
 @Component({
   selector: 'app-user-profile-view',
-  imports: [CommonModule, RouterModule, PaginatorModule, AvatarModule, ButtonModule],
+  imports: [CommonModule, RouterModule, PaginatorModule, AvatarModule, ButtonModule, ConfirmPopupModule, ButtonModule],
+  providers: [ConfirmationService, MessageService],
   templateUrl: './user-profile-view.html',
   styleUrl: './user-profile-view.scss',
 })
@@ -25,6 +27,7 @@ export class UserProfileView implements OnInit, OnDestroy {
   private cookieService = inject(CookieService);
   private messageService = inject(MessageService);
   private friendConnectionService = inject(FriendConnectionService);
+  private confirmationService = inject(ConfirmationService);
 
   currentUserId = parseInt(this.cookieService.getCookie('userId') || '0', 10);
 
@@ -45,6 +48,7 @@ export class UserProfileView implements OnInit, OnDestroy {
   isFriendRequestSent = signal(false);
   friendConnectionData = signal<FriendConnectionDto | null>(null);
   friendButtonLabel: string = "Friend Request";
+  isUnfriending: boolean = false;
 
   ngOnInit(): void {
     this.route.paramMap
@@ -114,6 +118,40 @@ export class UserProfileView implements OnInit, OnDestroy {
       // If no avatar image is uploaded, use a default avatar image
       // do nothing - already avatarUrl var has default img/avatar value/path
     }
+  }
+
+  confirmUnfriend(event: Event): void {
+    event.stopPropagation();
+
+    this.confirmationService.confirm({
+      target: event.currentTarget as EventTarget,
+      message: `Remove ${this.user()?.name || this.user()?.username} from your friends?`,
+      icon: 'pi pi-exclamation-triangle',
+      acceptButtonProps: { label: 'Unfriend', severity: 'danger' },
+      rejectButtonProps: { label: 'Cancel', severity: 'secondary', outlined: true },
+      accept: () => this.unfriend()
+    });
+  }
+
+  private unfriend(): void {
+    this.isUnfriending = true;
+    this.friendConnectionService
+      .unfriend(this.currentUserId, this.user()?.userId!) // this.user()?.userId! is otherUserId and ! is used to assert that userId is not null or undefined
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.messageService.add({ severity: 'success', summary: 'Removed', detail: `${this.user()?.name || this.user()?.username} removed from friends.` });
+          this.isUnfriending = false;
+          this.isFriendRequestSent.set(false);
+          this.friendButtonLabel = "Friend Request"; // reset
+          // recheck friend connection status after unfriending to update the UI accordingly
+          this.checkFriendRequestStatus();
+        },
+        error: () => {
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Could not remove friend.' });
+          this.isUnfriending = false;
+        }
+      });
   }
 
   onPageChange(event: PaginatorState): void {
