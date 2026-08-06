@@ -20,9 +20,9 @@
             <!-- User Profile/View Action buttons -->
             <div class="user_profile_buttons">
                 @if(friendConnectionData()?.receiverId === currentUserId && friendConnectionData()?.status === "PENDING") {
-                    <span>Friend Request: </span>
-                    <button pButton type="button" label="Accept" (click)="acceptFriendRequest()"></button>
-                    <button pButton type="button" severity="danger" label="Reject" (click)="rejectFriendRequest()"></button>
+                    <span>This user sent you a Friend Request: </span>
+                    <button pButton type="button" label="Accept" (click)="friendRequestAction('ACCEPTED')"></button>
+                    <button pButton type="button" severity="danger" label="Reject" (click)="friendRequestAction('REJECTED')"></button>
                 } @else {
                     <button pButton type="button" (click)="sendFriendRequest()" [disabled]="isFriendRequestSent()">{{ friendButtonLabel }}</button>
                 }

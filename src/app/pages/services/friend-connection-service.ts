@@ -17,16 +17,25 @@ export class FriendConnectionService {
   checkFriendConnection(currentUserId: number, otherUserId: number | undefined): Observable<CheckFriendConnectionResponse> {
     return this.http.get<CheckFriendConnectionResponse>(`${this.BASE_URL}/${currentUserId}/friends/check-friend-connection-status/${otherUserId}`);
   }
+
+  // only respond as- Accepted or Rejected
+  friendRequestAction(currentUserId: number, connectionId: number, action: 'ACCEPTED' | 'REJECTED'): Observable<FriendResquestResponse> {
+    return this.http.patch<FriendResquestResponse>(`${this.BASE_URL}/${currentUserId}/friends/respond/${connectionId}`, {}, {
+      params: {
+        action: action // sending data to backend in the form of Http-params- not body
+      }
+    });
+  }
 }
 
 export interface FriendResquestResponse {
-  success: string;
+  success: boolean;
   message: string;
   data: string;
 }
 
 export interface CheckFriendConnectionResponse {
-  success: string;
+  success: boolean;
   message: string;
   data: FriendConnectionDto;
 }

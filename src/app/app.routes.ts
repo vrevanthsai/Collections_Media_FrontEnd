@@ -71,10 +71,12 @@ export const routes: Routes = [
       import('./pages/common/search/search.component').then(
         (m) => m.SearchComponent,
       ),
+    canActivate: [authGuard],
   },
   // User-View route(where currentUser views/sees other user-profile)
   {
     path: 'users-profile/:userId',
-    loadComponent: () => import('./pages/common/user-profile-view/user-profile-view').then(m => m.UserProfileView)
+    loadComponent: () => import('./pages/common/user-profile-view/user-profile-view').then(m => m.UserProfileView),
+    canActivate: [authGuard]
   }
 ];

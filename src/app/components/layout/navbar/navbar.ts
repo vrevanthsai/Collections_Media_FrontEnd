@@ -239,8 +239,10 @@ export class Navbar {
       this.loadUserAvatarImage();
     }
 
-    // load unread Notifications count for Bell icon in navbar
-    this.loadUnReadNotificationsCount();
+    if (this.isLoggedIn() || this.authService.isAuthenticated()) {
+      // load unread Notifications count for Bell icon in navbar
+      this.loadUnReadNotificationsCount();
+    }
   }
 
   loadUnReadNotificationsCount() {

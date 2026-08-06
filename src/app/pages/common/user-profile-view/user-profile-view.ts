@@ -145,10 +145,13 @@ export class UserProfileView implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.imageCache.forEach((url) => URL.revokeObjectURL(url));
     this.imageCache.clear();
+    this.isFriendRequestSent.set(false);
+    this.friendButtonLabel = "Friend Request"; // reset
   }
 
   // Send Friend Request Method
-  sendFriendRequest(){
+  sendFriendRequest() {
+    this.friendButtonLabel = "Loading..."
     this.friendConnectionService.sendFriendRequest(this.currentUserId, this.user()?.userId).subscribe({
       next: (res: FriendResquestResponse) => {
         this.isFriendRequestSent.set(true);
@@ -162,6 +165,7 @@ export class UserProfileView implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.error('Error while sending friend request:', err);
+        this.friendButtonLabel = "Friend Request"; // reset
         this.messageService.add({
           severity: 'error',
           summary:
@@ -173,14 +177,14 @@ export class UserProfileView implements OnInit, OnDestroy {
     })
   }
 
-  checkFriendRequestStatus(){
+  checkFriendRequestStatus() {
     this.friendConnectionService.checkFriendConnection(this.currentUserId, this.user()?.userId).subscribe({
       next: (res: CheckFriendConnectionResponse) => {
         this.friendConnectionData.set(res?.data);
-        if(res?.data?.status === "PENDING"){
+        if (res?.data?.status === 'PENDING') {
           this.isFriendRequestSent.set(true);
           this.friendButtonLabel = "Request Sent";
-        } else if(res?.data?.status === "ACCEPTED"){
+        } else if (res?.data?.status === 'ACCEPTED') {
           this.isFriendRequestSent.set(true);
           this.friendButtonLabel = "Friends";
         }
@@ -198,11 +202,61 @@ export class UserProfileView implements OnInit, OnDestroy {
     })
   }
 
-  acceptFriendRequest(){}
+  friendRequestAction(action: 'ACCEPTED' | 'REJECTED') {
+    const connectionId = this.friendConnectionData()?.connectionId;
+    if (connectionId !== null && connectionId !== undefined) {
+      this.friendButtonLabel = "Loading..."
+      this.friendConnectionService.friendRequestAction(this.currentUserId, connectionId, action).subscribe({
+        next: (res: FriendResquestResponse) => {
+          if (action === 'ACCEPTED') {
+            // Manually-Frontend update status to "ACCEPTED" instead of calling checkFriendRequestStatus() method to call api to check updated status
+            // this is how signal-object-item value is done by using arrow function
+            this.friendConnectionData.update((current) =>
+              current ? { ...current, status: 'ACCEPTED' } : current
+            );
+            this.isFriendRequestSent.set(true);
+            this.friendButtonLabel = "Friends";
+          } else if (action === 'REJECTED') {
+            this.friendConnectionData.update((current) =>
+              current ? { ...current, status: 'REJECTED' } : current
+            );
+            this.isFriendRequestSent.set(false);
+            this.friendButtonLabel = "Friend Request"; // reset
+          } else {
+            this.isFriendRequestSent.set(false);
+            this.friendButtonLabel = "Friend Request"; // reset
+          }
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Success',
+            detail: res?.data || 'Friend Request processed successfully',
+            life: 3000, // auto-dismiss after 3s
+          });
+        },
+        error: (err) => {
+          console.error('Error while checking friend connection between 2 users :', err);
+          this.friendButtonLabel = "Friend Request"; // reset
+          this.messageService.add({
+            severity: 'error',
+            summary:
+              err?.error?.message || 'Error while checking friend connection between 2 users',
+            detail: 'Try again!',
+            life: 3000, // auto-dismiss after 3s
+          });
+        }
+      })
+    } else {
+      this.messageService.add({
+        severity: 'error',
+        summary:
+          'Connection ID is required to respond to friend request!!',
+        detail: 'Try again!',
+        life: 3000, // auto-dismiss after 3s
+      });
+    }
+  }
 
-  rejectFriendRequest(){}
-
-  blockUser(){
+  blockUser() {
 
   }
 }
