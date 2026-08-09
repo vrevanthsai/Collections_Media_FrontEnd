@@ -15,7 +15,7 @@ import { ToastModule } from 'primeng/toast';
   selector: 'app-notifications',
   standalone: true,
   imports: [CommonModule, RouterModule, PaginatorModule, AvatarModule, ConfirmPopupModule, ToastModule],
-  providers: [ConfirmationService, MessageService],
+  providers: [ConfirmationService],
   templateUrl: './notifications.component.html',
   styleUrls: ['./notifications.component.scss']
 })

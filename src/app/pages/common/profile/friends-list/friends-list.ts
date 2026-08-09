@@ -15,7 +15,7 @@ import { CommonService } from '../../../services/common-service';
 @Component({
   selector: 'app-friends-list',
   imports: [CommonModule, RouterModule, PaginatorModule, AvatarModule, ConfirmPopupModule, ToastModule],
-  providers: [ConfirmationService, MessageService],
+  providers: [ConfirmationService],
   templateUrl: './friends-list.html',
   styleUrl: './friends-list.scss',
 })

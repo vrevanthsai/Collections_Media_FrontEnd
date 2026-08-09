@@ -39,8 +39,16 @@
                     }
                 </button>
                 }
+                }   
+                @if(isUserBlocked){
+                <p-button label="UnBlock User" [loading]="isUnBlockLoading" loadingIcon="pi pi-spin pi-spinner" severity="danger"
+                    (click)="confirmBlockOrUnBlock($event, 'UNBLOCK')">
+                </p-button>
+                } @else {
+                <p-button label="Block User" [loading]="isBlockLoading" loadingIcon="pi pi-spin pi-spinner" severity="danger"
+                    (click)="confirmBlockOrUnBlock($event, 'BLOCK')">
+                </p-button>
                 }
-                <button pButton type="button" severity="danger" label="Block User" (click)="blockUser()"></button>
             </div>
         </div>
 

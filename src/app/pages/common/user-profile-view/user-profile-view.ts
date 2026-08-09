@@ -15,7 +15,7 @@ import { ConfirmPopupModule } from 'primeng/confirmpopup';
 @Component({
   selector: 'app-user-profile-view',
   imports: [CommonModule, RouterModule, PaginatorModule, AvatarModule, ButtonModule, ConfirmPopupModule, ButtonModule],
-  providers: [ConfirmationService, MessageService],
+  providers: [ConfirmationService],
   templateUrl: './user-profile-view.html',
   styleUrl: './user-profile-view.scss',
 })
@@ -49,6 +49,9 @@ export class UserProfileView implements OnInit, OnDestroy {
   friendConnectionData = signal<FriendConnectionDto | null>(null);
   friendButtonLabel: string = "Friend Request";
   isUnfriending: boolean = false;
+  isBlockLoading: boolean = false;
+  isUserBlocked: boolean = false;
+  isUnBlockLoading: boolean = false;
 
   ngOnInit(): void {
     this.route.paramMap
@@ -225,6 +228,13 @@ export class UserProfileView implements OnInit, OnDestroy {
         } else if (res?.data?.status === 'ACCEPTED') {
           this.isFriendRequestSent.set(true);
           this.friendButtonLabel = "Friends";
+        } else if (res?.data?.status === 'BLOCKED') {
+          this.isUserBlocked = true;
+          this.isFriendRequestSent.set(true);
+        } else {
+          // reset vars if no connection is found
+          this.isFriendRequestSent.set(false);
+          this.friendButtonLabel = "Friend Request";
         }
       },
       error: (err) => {
@@ -294,7 +304,80 @@ export class UserProfileView implements OnInit, OnDestroy {
     }
   }
 
-  blockUser() {
+  confirmBlockOrUnBlock(event: Event, action : 'BLOCK' | 'UNBLOCK'): void {
+    event.stopPropagation();
+    let commonMsg = "";
 
+    if(action === 'BLOCK'){
+      commonMsg = `are you sure to BLOCK this ${this.user()?.username} user?`
+    } else {
+      commonMsg = `are you sure to UNBLOCK this ${this.user()?.username} user?`
+    }
+
+    this.confirmationService.confirm({
+      target: event.currentTarget as EventTarget,
+      message: commonMsg,
+      icon: 'pi pi-exclamation-triangle',
+      acceptButtonProps: { label: 'Yes', severity: 'danger' },
+      rejectButtonProps: { label: 'No', severity: 'secondary', outlined: true },
+      accept: () => (action === 'BLOCK') ? this.blockUser() : this.unBlockUser()
+    });
+  }
+
+  blockUser() {
+    this.isBlockLoading = true;
+    this.friendConnectionService.blockUser(this.currentUserId, this.user()?.userId).subscribe({
+      next: (res: FriendResquestResponse) => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Success',
+          detail: (res?.data + " Successfully") || 'this user blocked successfully',
+          life: 3000, // auto-dismiss after 3s
+        });
+        this.isUserBlocked = true;
+        this.isBlockLoading = false;
+        this.isFriendRequestSent.set(true); // disable friend request button when other-user is blocked
+      },
+      error: (err) => {
+        console.error('Error while Blocking this user: ', err);
+        this.isBlockLoading = false;
+        this.messageService.add({
+          severity: 'error',
+          summary:
+            err?.error?.message || 'Error while Blocking this user',
+          detail: 'Try again!',
+          life: 3000, // auto-dismiss after 3s
+        });
+      }
+    })
+  }
+
+  unBlockUser(){
+    this.isUnBlockLoading = true;
+    this.friendConnectionService.unBlockUser(this.currentUserId, this.user()?.userId).subscribe({
+      next: (res: FriendResquestResponse) => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Success',
+          detail: (res?.data + " Successfully") || 'this user un-blocked successfully',
+          life: 3000, // auto-dismiss after 3s
+        });
+        this.isUserBlocked = false;
+        this.isUnBlockLoading = false;
+        // re-call 
+        this.checkFriendRequestStatus();
+      },
+      error: (err) => {
+        console.error('Error while UnBlocking this user: ', err);
+        this.isUnBlockLoading = false;
+        this.messageService.add({
+          severity: 'error',
+          summary:
+            err?.error?.message || 'Error while UnBlocking this user',
+          detail: 'Try again!',
+          life: 3000, // auto-dismiss after 3s
+        });
+      }
+    });
   }
 }

@@ -40,6 +40,14 @@ export class FriendConnectionService {
       )
       .pipe(map(() => void 0));
   }
+
+  blockUser(currentUserId: number, blockedUserId: number | undefined): Observable<FriendResquestResponse>{
+    return this.http.post<FriendResquestResponse>(`${this.BASE_URL}/${currentUserId}/friends/block/${blockedUserId}`,{});
+  }
+  
+  unBlockUser(currentUserId: number, blockedUserId: number | undefined): Observable<FriendResquestResponse>{
+    return this.http.post<FriendResquestResponse>(`${this.BASE_URL}/${currentUserId}/friends/unblock/${blockedUserId}`,{});
+  }
 }
 
 export interface FriendResquestResponse {
