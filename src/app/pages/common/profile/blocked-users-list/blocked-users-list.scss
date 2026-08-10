@@ -4,13 +4,13 @@ $accent: #ff8fab;
 $text-muted: #a6a3b3;
 $border-subtle: rgba(255, 255, 255, 0.08);
 
-.friends-page {
+.blocked-users-page {
   min-height: 100vh;
   background: $bg-dark;
   color: #fff;
 }
 
-.friends-header {
+.blocked-users-header {
   margin-bottom: 1.5rem;
 
   &__title {
@@ -25,7 +25,7 @@ $border-subtle: rgba(255, 255, 255, 0.08);
   }
 }
 
-.friends-message {
+.blocked-users-message {
   padding: 2rem;
   text-align: center;
   color: $text-muted;
@@ -35,7 +35,7 @@ $border-subtle: rgba(255, 255, 255, 0.08);
   }
 }
 
-.friends-empty {
+.blocked-users-empty {
   text-align: center;
   padding: 3rem 1rem;
   color: $text-muted;
@@ -48,14 +48,14 @@ $border-subtle: rgba(255, 255, 255, 0.08);
   }
 }
 
-.friends-list {
+.blocked-users-list {
   background: $bg-panel;
   border: 1px solid $border-subtle;
   border-radius: 14px;
   overflow: hidden;
 }
 
-.friend-row {
+.blocked-user-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -116,7 +116,7 @@ $border-subtle: rgba(255, 255, 255, 0.08);
     margin-top: 0.1rem;
   }
 
-  &__unfriend-btn {
+  &__unblocked-user-btn {
     background: transparent;
     border: 1px solid $border-subtle;
     color: $text-muted;
@@ -147,7 +147,7 @@ $border-subtle: rgba(255, 255, 255, 0.08);
   }
 }
 
-::ng-deep .friends-paginator {
+::ng-deep .blocked-users-paginator {
   background: transparent;
   margin-top: 1.5rem;
   justify-content: center;
@@ -187,11 +187,11 @@ $border-subtle: rgba(255, 255, 255, 0.08);
 
 // ---- Responsive ----
 @media (max-width: 576px) {
-  .friend-row {
+  .blocked-user-row {
     padding: 0.75rem 0.9rem;
   }
 
-  .friend-row__unfriend-btn {
+  .blocked-user-row__unblocked-user-btn {
     padding: 0.5rem 0.7rem; // icon-only on very small screens (text hidden via d-none d-sm-inline)
   }
 }

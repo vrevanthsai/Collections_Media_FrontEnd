@@ -77,9 +77,9 @@ export class Home implements OnInit {
 
   privacyOptions = [
     { label: 'All', value: null },
-    { label: 'Public', value: 'Public' },
-    { label: 'Private', value: 'Private' },
-    { label: 'Friend', value: 'Friend' },
+    { label: 'Public', value: 'PUBLIC' },
+    { label: 'Private', value: 'PRIVATE' },
+    { label: 'Friend', value: 'FRIENDS' },
   ];
   selectedCategoryLabel: string | null = null;
   suspendedUserStatus : boolean = false;
@@ -154,6 +154,10 @@ export class Home implements OnInit {
   paginatedCollections(): CollectionDto[] {
     const startIndex = (this.currentPage - 1) * this.pageSize;
     return this.collections.slice(startIndex, startIndex + this.pageSize);
+  }
+
+  collectionDisplayIndex(indexOnPage: number): number {
+    return (this.currentPage - 1) * this.pageSize + indexOnPage + 1;
   }
 
   // Loads the signed-in user's collections for the Home page.

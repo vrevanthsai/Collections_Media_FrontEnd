@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal, WritableSignal } from '@angular/core';
 import { jwtDecode } from 'jwt-decode';
-import { catchError, Observable, tap, throwError } from 'rxjs';
+import { catchError, map, Observable, tap, throwError } from 'rxjs';
 import { CookieService } from '../../../interceptors/cookie.service';
 import { ThemeService } from '../../services/theme-service';
 
@@ -15,6 +15,9 @@ export class AuthService {
   // Signal- used for State management - to know current state of User(loggedIN or loggedOut)
   // if signal value changed then it reflects all over application
   private loggedIn = signal<boolean>(false);
+  // Increments whenever a usable session is created or refreshed. Components that
+  // depend on the current user can react even when they stay mounted across routes.
+  private sessionVersion = signal(0);
   private cookieService = inject(CookieService);
   // get user info from cookie which is stored after user logged-In(or login-service-method)
   private userDetails = JSON.parse(this.cookieService.getCookie('userDetails') || '{}');
@@ -69,6 +72,9 @@ export class AuthService {
               // role is array/collection data from claims of jwt of backend and first item has Role data
               // sessionStorage.setItem('role', decodedToken.role[0].authority);
               this.cookieService.setCookie('role', decodedToken.role[0].authority, 7);
+              this.name.set(response.data.name || null);
+              this.loggedIn.set(true);
+              this.sessionVersion.update((version) => version + 1);
             }
           }),
         )
@@ -107,6 +113,9 @@ export class AuthService {
     localStorage.removeItem('darkMode');
     // when logout revert theme back to dark
     this.themeService.setTheme(true);
+    this.name.set(null);
+    this.loggedIn.set(false);
+    this.sessionVersion.update((version) => version + 1);
   }
 
   // Setter/ Getter Methods of Signal-variable
@@ -116,6 +125,10 @@ export class AuthService {
 
   getLoggedIn(): WritableSignal<boolean> {
     return this.loggedIn;
+  }
+
+  getSessionVersion(): WritableSignal<number> {
+    return this.sessionVersion;
   }
 
   // This method checks whether provided token is valid/expired or not
@@ -128,7 +141,7 @@ export class AuthService {
 
   // THis method Gets new Access Token(jwtToken) when available refreshToken is valid
   // THis method returns async value- so we use Observable-Return-Type
-  refreshToken(): Observable<any> {
+  refreshToken(): Observable<string> {
     const refToken = this.cookieService.getEncryptedCookie('refreshToken');
     const refTokenObj: RefreshTokenRequest = {
       refreshToken: refToken,
@@ -139,9 +152,12 @@ export class AuthService {
       .pipe(
         // we get res.accessToken which is new AccessToken and we replace it with old token in cookie
         // and refreshToken will not change
-        tap((res: any) =>
-          this.cookieService.setEncryptedCookie('accessToken', res.accessToken, 7),
-        ),
+        tap((res: any) => {
+          this.cookieService.setEncryptedCookie('accessToken', res.accessToken, 7);
+          this.loggedIn.set(true);
+          this.sessionVersion.update((version) => version + 1);
+        }),
+        map((res: any) => res.accessToken as string),
         catchError((err) => {
           // when we get error(like our provided RefreshToken is Expired) while getting new token then we logout user
           this.logout();

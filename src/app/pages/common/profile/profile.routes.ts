@@ -40,6 +40,11 @@ export const PROFILE_ROUTES: Routes = [
           import('./settings/settings.component').then((m) => m.SettingsComponent)
       },
       {
+        path: 'blocked-users-list',
+        loadComponent: () =>
+          import('./blocked-users-list/blocked-users-list').then((m) => m.BlockedUsersList)
+      },
+      {
         path: 'user-management',
         loadComponent: () =>
           import('./user-management/user-management.component').then(

@@ -23,7 +23,10 @@ export class Register {
   // define form inputs
   name = new FormControl<String>('', [Validators.required]);
   email = new FormControl<String>('', [Validators.required, Validators.email]);
-  username = new FormControl<String>('', [Validators.required]);
+  username = new FormControl<String>('', [
+    Validators.required,
+    Validators.minLength(3),
+  ]);
   password = new FormControl<String>('', [
     Validators.required,
     Validators.minLength(5),

@@ -36,7 +36,7 @@ export class UpdateCollection {
   privacy: FormControl<string | null>;
 
   // define non-input required fields
-  userId: string;
+  userId: number;
   addedDate: string;
   collectionId: number;
   imagename: string;
@@ -67,9 +67,9 @@ export class UpdateCollection {
 
   // Collection Privacy-Dropdown Fixed data
   privacyData = [
-    { label: 'Public', value: 'Public' },
-    { label: 'Private', value: 'Private' },
-    { label: 'Friend', value: 'Friend' },
+    { label: 'Public', value: 'PUBLIC' },
+    { label: 'Private', value: 'PRIVATE' },
+    { label: 'Friend', value: 'FRIENDS' },
   ];
 
   constructor(
@@ -126,7 +126,7 @@ export class UpdateCollection {
     });
 
     // Initialize non-input fields data
-    this.userId = collection.userId ?? ''; // ?? - if data not there then take ""/empty string
+    this.userId = collection.userId ?? null; // ?? - if data not there then take null
     this.addedDate = collection.addedDate ?? '';
     this.collectionId = collection.collectionId!; // !- this must not be null value
     this.imagename = collection.imageUrl ?? '';
@@ -154,10 +154,8 @@ export class UpdateCollection {
   }
 
   loadCategories(): void {
-    let userId = parseInt(this.userId || ''); // Convert to number, default to 0 if null
-
-    if (!isNaN(userId)) {
-      this.categoryService.getUserCategories(userId).subscribe({
+    if (!isNaN(this.userId)) {
+      this.categoryService.getUserCategories(this.userId).subscribe({
         next: (data) => {
           this.categories = data.map((category) => ({
             label: category.categoryName,
@@ -169,7 +167,7 @@ export class UpdateCollection {
         },
       });
     } else {
-      console.error('Invalid userId: ', userId);
+      console.error('Invalid userId: ', this.userId);
     }
   }
 

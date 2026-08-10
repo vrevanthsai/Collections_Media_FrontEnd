@@ -24,7 +24,7 @@ export class DeleteCollection {
   deleteCollection() {
     // proceed further only if user is authenticated
     if (this.authService.isAuthenticated()) {
-      const userId = parseInt(this.data.collection.userId || '0', 10);
+      const userId = this.data.collection.userId;
       // Call Delete-Collection-Api
       this.collectionService.deleteCollectionService(userId, this.data.collection.collectionId!)
       .subscribe({

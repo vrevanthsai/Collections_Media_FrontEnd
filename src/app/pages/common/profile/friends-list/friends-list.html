@@ -1,11 +1,55 @@
-<div class="row">
-  <div class="col-12 col-lg-8" style="margin: auto;">
-    <div class="panel-card">
-      <h2 class="panel-card__title"><i class="pi pi-bell"></i> Friends List</h2>
+<div class="friends-page">
+  <p-toast></p-toast>
+  <p-confirmpopup></p-confirmpopup>
 
-      <div class="notif-list mt-4">
-        Need to Develop
-      </div>
+  <div class="container py-4">
+
+    <div class="friends-header">
+      <h1 class="friends-header__title">My Friends List</h1>
+      @if (totalRecords() > 0) {
+      <p class="friends-header__subtitle">{{ totalRecords() }} friend{{ totalRecords() === 1 ? '' : 's' }}</p>
+      }
     </div>
+
+    @if (loading()) {
+    <div class="friends-message"><i class="pi pi-spin pi-spinner"></i> Loading friends...</div>
+    } @else if (errorMessage()) {
+    <div class="friends-message friends-message--error">{{ errorMessage() }}</div>
+    } @else if (totalRecords() === 0) {
+    <div class="friends-empty">
+      <i class="pi pi-users"></i>
+      <p>You haven't added any friends yet.</p>
+    </div>
+    } @else {
+    <div class="friends-list">
+      @for (f of pagedFriends(); track f.userId) {
+      <div class="friend-row">
+        <div class="friend-row__left" (click)="viewProfile(f)">
+          <p-avatar [image]="avatarFor(f)" shape="circle" styleClass="friend-row__avatar"></p-avatar>
+          <div class="friend-row__info">
+            <span class="friend-row__name">{{ f.name || f.username }}</span>
+            <span class="friend-row__username">&#64;{{ f.username }}</span>
+            <span class="friend-row__joined">
+              <i class="pi pi-calendar"></i> Joined since {{ f.addedDate | date: 'MMM d, y' }}
+            </span>
+          </div>
+        </div>
+
+        <button type="button" class="friend-row__unfriend-btn" [disabled]="isUnfriending(f.userId)"
+          (click)="confirmUnfriend($event, f)">
+          @if (isUnfriending(f.userId)) {
+          <i class="pi pi-spin pi-spinner"></i>
+          } @else {
+          <i class="pi pi-user-minus"></i>
+          <span class="d-none d-sm-inline">Unfriend</span>
+          }
+        </button>
+      </div>
+      }
+    </div>
+
+    <p-paginator [first]="first" [rows]="rows" [totalRecords]="totalRecords()" [rowsPerPageOptions]="rowsPerPageOptions"
+      (onPageChange)="onPageChange($event)" styleClass="friends-paginator"></p-paginator>
+    }
   </div>
 </div>

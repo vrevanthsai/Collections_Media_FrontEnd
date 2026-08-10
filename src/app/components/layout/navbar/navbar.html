@@ -1,44 +1,158 @@
-<!-- Bootstrap navbar design code -->
-<nav class="navbar navbar-expand-lg bg-body-tertiary">
+<nav class="navbar navbar-expand-lg app-navbar">
   <div class="container-fluid">
-    <a class="navbar-brand" routerLink="/home">Collection Media App</a>
+    <a class="navbar-brand d-flex align-items-center gap-2" routerLink="/home">
+      <span class="brand-logo"><i class="pi pi-box"></i></span>
+      <span class="brand-text">Collection Media App</span>
+    </a>
+
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown"
       aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
+
     <div class="collapse navbar-collapse" id="navbarNavDropdown">
-      <ul class="navbar-nav">
-        <!-- For Conditional Rendering - We are Using Modern Angular Control Flow instead of old *ngIf() directives -->
-        <!-- True- then Home/Collections/Profile/logout is visible or False- then they are invisible and Intro/Register/Login is visible -->
-        @if(isLoggedIn()){
-          <li class="nav-item">
-            <a class="nav-link" routerLink="/home" routerLinkActive="active">Home</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" routerLink="/collections/add-collection" routerLinkActive="active">Add Collection</a>
-          </li>
-          <!-- For logged-IN User -->
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-              {{name()}}
-            </a>
-            <ul class="dropdown-menu">
-              <li><a class="dropdown-item" routerLink="/account/profile">Profile</a></li>
-              <li><a class="dropdown-item" routerLink="" role="button" (click)="logout()">Logout</a></li>
-            </ul>
-          </li>
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        @if (isLoggedIn()) {
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/home" routerLinkActive="active">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/collections/add-collection" routerLinkActive="active">
+            Add Collection
+          </a>
+        </li>
         } @else {
-          <li class="nav-item">
-            <a class="nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Intro</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" routerLink="/register" routerLinkActive="active">Register</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" routerLink="/login" routerLinkActive="active">Login</a>
-          </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+            Intro
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/register" routerLinkActive="active">Register</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/login" routerLinkActive="active">Login</a>
+        </li>
         }
       </ul>
+
+      <!-- Right-side cluster: search, notifications, avatar — only when logged in -->
+      @if (isLoggedIn()) {
+      <div class="navbar-right d-flex align-items-center gap-2 gap-lg-3 mt-3 mt-lg-0">
+        <!-- Search -->
+        <div>
+          <!-- Shared results list template -->
+          <ng-template #resultsList>
+            @for (item of searchResults(); track item.id) {
+            <a class="search-panel__row" (mousedown)="onResultClick(item)">
+              <img [src]="item.resolvedImageUrl" alt="" class="search-panel__thumb" />
+              <div class="search-panel__text">
+                <div class="search-panel__title">{{ item.title }}</div>
+                <div class="search-panel__meta">
+                  <span class="tag">{{ item.type === 'user' ? 'User' : 'Collection' }}</span>
+                </div>
+              </div>
+            </a>
+            }
+            <button class="search-panel__view-all" (mousedown)="goToSearchPage()">
+              View all results <i class="pi pi-arrow-right"></i>
+            </button>
+          </ng-template>
+
+          <!-- Desktop search -->
+          <div class="nav-search-wrapper d-none d-md-block">
+            <div class="nav-search d-flex align-items-center">
+              <i class="pi pi-search nav-search__icon"></i>
+              <input type="text" class="nav-search__input" placeholder="Search" [ngModel]="searchTerm"
+                (ngModelChange)="onSearchInput($event)" (keyup.enter)="onSearchEnter()" (focus)="onSearchFocus()"
+                (blur)="onSearchBlur()" />
+              @if (isSearching()) {
+              <i class="pi pi-spin pi-spinner nav-search__spinner"></i>
+              } @else if (searchTerm) {
+              <button type="button" class="nav-search__clear" (mousedown)="onClearSearch($event)"
+                aria-label="Clear search">
+                <i class="pi pi-times"></i>
+              </button>
+              }
+            </div>
+
+            @if (showResultsPanel()) {
+            <div class="search-panel">
+              @if (searchResults().length > 0) {
+              <ng-container *ngTemplateOutlet="resultsList"></ng-container>
+              } @else if (!isSearching()) {
+              <div class="search-panel__empty">No results found for "{{ searchTerm }}"</div>
+              }
+            </div>
+            }
+          </div>
+
+          <!-- Mobile search trigger -->
+          <button class="icon-btn d-flex d-md-none" (click)="toggleMobileSearch()" aria-label="Search">
+            <i class="pi pi-search"></i>
+          </button>
+
+          <!-- Mobile full-width search overlay -->
+          @if (mobileSearchOpen()) {
+          <div class="mobile-search-overlay d-md-none">
+            <div class="mobile-search-bar d-flex align-items-center">
+              <i class="pi pi-search"></i>
+              <input type="text" [ngModel]="searchTerm" (ngModelChange)="onSearchInput($event)"
+                (keyup.enter)="onSearchEnter()" placeholder="Search" />
+              @if (searchTerm) {
+              <button type="button" class="mobile-search-bar__clear" (mousedown)="onClearSearch($event)"
+                aria-label="Clear search">
+                <i class="pi pi-times"></i>
+              </button>
+              }
+              <button class="mobile-search-bar__close" (click)="toggleMobileSearch()">
+                <i class="pi pi-times"></i>
+              </button>
+            </div>
+
+            @if (searchResults().length > 0) {
+            <div class="search-panel search-panel--mobile">
+              <ng-container *ngTemplateOutlet="resultsList"></ng-container>
+            </div>
+            } @else if (isSearching()) {
+            <div class="search-panel search-panel--mobile search-panel__empty">Searching…</div>
+            }
+          </div>
+          }
+        </div>
+
+        <!-- Notifications -->
+        <a class="icon-btn" routerLink="/account/notifications" aria-label="Notifications">
+          <p-overlaybadge [value]="unreadCount() || undefined" severity="danger" badgeSize="small">
+            <i class="pi pi-bell notif-icon"></i>
+          </p-overlaybadge>
+        </a>
+
+        <!-- Profile avatar dropdown -->
+        <div class="nav-item dropdown profile-dropdown">
+          <a class="nav-link d-flex align-items-center p-0" role="button" data-bs-toggle="dropdown"
+            aria-expanded="false">
+            <p-avatar [image]="avatarUrl()" shape="circle" styleClass="profile-avatar"></p-avatar>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+            <li class="dropdown-header">{{ name() }}</li>
+            <li>
+              <hr class="dropdown-divider" />
+            </li>
+            <li>
+              <a class="dropdown-item" routerLink="/account/profile">
+                <i class="pi pi-user me-2"></i>Profile
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item text-danger" routerLink="" role="button" (click)="logout()">
+                <i class="pi pi-sign-out me-2"></i>Logout
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+      }
     </div>
   </div>
 </nav>
