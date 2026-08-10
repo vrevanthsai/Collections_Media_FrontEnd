@@ -1,0 +1,197 @@
+$bg-dark: #17151f;
+$bg-panel: #1f1c2c;
+$accent: #ff8fab;
+$text-muted: #a6a3b3;
+$border-subtle: rgba(255, 255, 255, 0.08);
+
+.blocked-users-page {
+  min-height: 100vh;
+  background: $bg-dark;
+  color: #fff;
+}
+
+.blocked-users-header {
+  margin-bottom: 1.5rem;
+
+  &__title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 0;
+  }
+  &__subtitle {
+    color: $text-muted;
+    font-size: 0.85rem;
+    margin: 0.2rem 0 0;
+  }
+}
+
+.blocked-users-message {
+  padding: 2rem;
+  text-align: center;
+  color: $text-muted;
+
+  &--error {
+    color: #ff6b81;
+  }
+}
+
+.blocked-users-empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: $text-muted;
+
+  i {
+    font-size: 2.2rem;
+    display: block;
+    margin-bottom: 0.75rem;
+    opacity: 0.5;
+  }
+}
+
+.blocked-users-list {
+  background: $bg-panel;
+  border: 1px solid $border-subtle;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.blocked-user-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 1.1rem;
+  border-bottom: 1px solid $border-subtle;
+  transition: background 0.15s ease;
+
+  &:last-child {
+    border-bottom: none;
+  }
+  &:hover {
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  &__left {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    min-width: 0;
+    flex: 1;
+    cursor: pointer;
+  }
+
+  &__avatar {
+    width: 46px;
+    height: 46px;
+    flex-shrink: 0;
+  }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-width: 0;
+  }
+
+  &__name {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__username {
+    font-size: 0.8rem;
+    color: $text-muted;
+  }
+
+  &__joined {
+    font-size: 0.72rem;
+    color: $text-muted;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-top: 0.1rem;
+  }
+
+  &__unblocked-user-btn {
+    background: transparent;
+    border: 1px solid $border-subtle;
+    color: $text-muted;
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 0.5rem 0.85rem;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition:
+      color 0.15s ease,
+      border-color 0.15s ease,
+      background 0.15s ease;
+
+    &:hover:not(:disabled) {
+      color: #ff6b81;
+      border-color: #ff6b81;
+      background: rgba(255, 107, 129, 0.1);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+}
+
+::ng-deep .blocked-users-paginator {
+  background: transparent;
+  margin-top: 1.5rem;
+  justify-content: center;
+
+  .p-paginator-page,
+  .p-paginator-next,
+  .p-paginator-prev,
+  .p-paginator-first,
+  .p-paginator-last {
+    color: $text-muted;
+    border-radius: 8px;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+    }
+  }
+
+  .p-paginator-page.p-highlight {
+    background: $accent;
+    color: #221926;
+  }
+}
+
+::ng-deep .p-confirmpopup {
+  background: $bg-panel;
+  border: 1px solid $border-subtle;
+  color: #fff;
+
+  .p-confirmpopup-content {
+    color: #fff;
+  }
+  .p-confirmpopup-icon {
+    color: #ffb020;
+  }
+}
+
+// ---- Responsive ----
+@media (max-width: 576px) {
+  .blocked-user-row {
+    padding: 0.75rem 0.9rem;
+  }
+
+  .blocked-user-row__unblocked-user-btn {
+    padding: 0.5rem 0.7rem; // icon-only on very small screens (text hidden via d-none d-sm-inline)
+  }
+}

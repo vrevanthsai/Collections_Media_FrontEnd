@@ -1,0 +1,56 @@
+<div class="blocked-users-page">
+    <p-toast></p-toast>
+    <p-confirmpopup></p-confirmpopup>
+
+    <div class="container py-4">
+
+        <div class="blocked-users-header">
+            <h1 class="blocked-users-header__title">Blocked Users List</h1>
+            @if (totalRecords() > 0) {
+            <p class="blocked-users-header__subtitle">{{ totalRecords() }} blocked user{{ totalRecords() === 1 ? '' : 's' }}</p>
+            }
+        </div>
+
+        @if (loading()) {
+        <div class="blocked-users-message"><i class="pi pi-spin pi-spinner"></i> Loading blocked-users...</div>
+        } @else if (errorMessage()) {
+        <div class="blocked-users-message blocked-users-message--error">{{ errorMessage() }}</div>
+        } @else if (totalRecords() === 0) {
+        <div class="blocked-users-empty">
+            <i class="pi pi-users"></i>
+            <p>You haven't blocked any user yet.</p>
+        </div>
+        } @else {
+        <div class="blocked-users-list">
+            @for (f of pagedBlockedUsers(); track f.userId) {
+            <div class="blocked-user-row">
+                <div class="blocked-user-row__left" (click)="viewProfile(f)">
+                    <p-avatar [image]="avatarFor(f)" shape="circle" styleClass="blocked-user-row__avatar"></p-avatar>
+                    <div class="blocked-user-row__info">
+                        <span class="blocked-user-row__name">{{ f.name || f.username }}</span>
+                        <span class="blocked-user-row__username">&#64;{{ f.username }}</span>
+                        <span class="blocked-user-row__joined">
+                            <i class="pi pi-calendar"></i> Joined since {{ f.addedDate | date: 'MMM d, y' }}
+                        </span>
+                    </div>
+                </div>
+
+                <button type="button" class="blocked-user-row__unblocked-user-btn" [disabled]="isUnblocking(f.userId)"
+                    (click)="confirmUnblock($event, f)">
+                    @if (isUnblocking(f.userId)) {
+                    <i class="pi pi-spin pi-spinner"></i>
+                    } @else {
+                    <i class="pi pi-user-minus"></i>
+                    <span class="d-none d-sm-inline">UnBlock User</span>
+                    }
+                </button>
+            </div>
+            }
+        </div>
+
+        <p-paginator [first]="first" [rows]="rows" [totalRecords]="totalRecords()"
+            [rowsPerPageOptions]="rowsPerPageOptions" (onPageChange)="onPageChange($event)"
+            styleClass="blocked-users-paginator"></p-paginator>
+        }
+    </div>
+</div>

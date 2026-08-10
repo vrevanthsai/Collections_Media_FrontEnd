@@ -180,6 +180,7 @@ export class ProfileLayoutComponent implements OnInit {
       { label: 'Notifications', icon: 'pi pi-bell', path: 'notifications' },
       { label: 'Friends List', icon: 'pi pi-bell', path: 'friends-list' },
       { label: 'Settings', icon: 'pi pi-cog', path: 'settings' },
+      { label: 'Blocked Users', icon: 'pi pi-cog', path: 'blocked-users-list' },
       ...(this.profileService.isAdmin()
         ? [
             {

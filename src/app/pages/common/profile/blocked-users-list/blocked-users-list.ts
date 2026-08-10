@@ -7,18 +7,18 @@ import { AvatarModule } from 'primeng/avatar';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ConfirmPopupModule } from 'primeng/confirmpopup';
 import { ToastModule } from 'primeng/toast';
-import { FriendConnectionService, FriendItem } from '../../../services/friend-connection-service';
+import { FriendConnectionService, FriendItem, FriendsListApiResponse } from '../../../services/friend-connection-service';
 import { CookieService } from '../../../../interceptors/cookie.service';
 import { CommonService } from '../../../services/common-service';
 
 @Component({
-  selector: 'app-friends-list',
+  selector: 'app-blocked-users-list',
   imports: [CommonModule, RouterModule, PaginatorModule, AvatarModule, ConfirmPopupModule, ToastModule],
   providers: [ConfirmationService],
-  templateUrl: './friends-list.html',
-  styleUrl: './friends-list.scss',
+  templateUrl: './blocked-users-list.html',
+  styleUrl: './blocked-users-list.scss',
 })
-export class FriendsList implements OnInit, OnDestroy {
+export class BlockedUsersList implements OnInit, OnDestroy {
   private router = inject(Router);
   private friendConnectionService = inject(FriendConnectionService);
   private confirmationService = inject(ConfirmationService);
@@ -30,9 +30,9 @@ export class FriendsList implements OnInit, OnDestroy {
 
   loading = signal(false);
   errorMessage = signal('');
-  friends = signal<FriendItem[]>([]);
+  blockedUsers = signal<FriendItem[]>([]);
   avatarCache = signal<Record<number, string>>({});
-  unfriendingIds = signal<Set<number>>(new Set());
+  unblockedUserIds = signal<Set<number>>(new Set());
 
   rows = 10;
   first = 0;
@@ -41,29 +41,29 @@ export class FriendsList implements OnInit, OnDestroy {
   private imageCache = new Map<string, string>();
   private readonly placeholder = 'https://api.dicebear.com/7.x/adventurer/svg?seed=rinku112';
 
-  totalRecords = computed(() => this.friends().length);
-  pagedFriends = computed(() => this.friends().slice(this.first, this.first + this.rows));
+  totalRecords = computed(() => this.blockedUsers().length);
+  pagedBlockedUsers = computed(() => this.blockedUsers().slice(this.first, this.first + this.rows));
 
   ngOnInit(): void {
-    this.loadFriends();
+    this.loadBlockedUsers();
   }
 
-  private loadFriends(): void {
+  private loadBlockedUsers(): void {
     this.loading.set(true);
     this.errorMessage.set('');
 
     this.friendConnectionService
-      .getAllFriends(this.currentUserId)
+      .getAllBlockedUsers(this.currentUserId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (items) => {
+        next: (res: FriendsListApiResponse) => {
           this.loading.set(false);
-          this.friends.set(items);
-          items.forEach((f) => this.resolveAvatar(f));
+          this.blockedUsers.set(res?.data);
+          res?.data?.forEach((f) => this.resolveAvatar(f));
         },
         error: () => {
           this.loading.set(false);
-          this.errorMessage.set('Unable to load friends list right now.');
+          this.errorMessage.set('Unable to load blockedUsers list right now.');
         }
       });
   }
@@ -110,38 +110,38 @@ export class FriendsList implements OnInit, OnDestroy {
     this.router.navigate(['/users-profile', f.userId]);
   }
 
-  confirmUnfriend(event: Event, f: FriendItem): void {
+  confirmUnblock(event: Event, f: FriendItem): void {
     event.stopPropagation();
 
     this.confirmationService.confirm({
       target: event.currentTarget as EventTarget,
-      message: `Remove ${f.name || f.username} from your friends?`,
+      message: `Remove ${f.name || f.username} from your blocked Users list?`,
       icon: 'pi pi-exclamation-triangle',
-      acceptButtonProps: { label: 'Unfriend', severity: 'danger' },
+      acceptButtonProps: { label: 'unblock', severity: 'danger' },
       rejectButtonProps: { label: 'Cancel', severity: 'secondary', outlined: true },
-      accept: () => this.unfriend(f)
+      accept: () => this.unblock(f)
     });
   }
 
-  private unfriend(f: FriendItem): void {
-    this.unfriendingIds.update((set) => new Set(set).add(f.userId));
+  private unblock(f: FriendItem): void {
+    this.unblockedUserIds.update((set) => new Set(set).add(f.userId));
 
     this.friendConnectionService
-      .unfriend(this.currentUserId, f.userId)
+      .unBlockUser(this.currentUserId, f.userId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          this.friends.update((items) => items.filter((i) => i.userId !== f.userId));
-          // manually remove from unfriendingIds set after successful unfriend- instead of calling getAllFriends api 
-          this.unfriendingIds.update((set) => {
+          this.blockedUsers.update((items) => items.filter((i) => i.userId !== f.userId));
+          // manually remove from unblockedUserIds set after successful unblock- instead of calling getAllBlockedUsers api 
+          this.unblockedUserIds.update((set) => {
             const next = new Set(set);
             next.delete(f.userId);
             return next;
           });
-          this.messageService.add({ severity: 'success', summary: 'Removed', detail: `${f.name || f.username} removed from friends.` });
+          this.messageService.add({ severity: 'success', summary: 'Removed', detail: `${f.name || f.username} removed from blocked Users list.` });
         },
         error: () => {
-          this.unfriendingIds.update((set) => {
+          this.unblockedUserIds.update((set) => {
             const next = new Set(set);
             next.delete(f.userId);
             return next;
@@ -151,8 +151,8 @@ export class FriendsList implements OnInit, OnDestroy {
       });
   }
 
-  isUnfriending(userId: number): boolean {
-    return this.unfriendingIds().has(userId);
+  isUnblocking(userId: number): boolean {
+    return this.unblockedUserIds().has(userId);
   }
 
   onPageChange(event: PaginatorState): void {

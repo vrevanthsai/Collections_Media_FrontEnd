@@ -48,6 +48,11 @@ export class FriendConnectionService {
   unBlockUser(currentUserId: number, blockedUserId: number | undefined): Observable<FriendResquestResponse>{
     return this.http.post<FriendResquestResponse>(`${this.BASE_URL}/${currentUserId}/friends/unblock/${blockedUserId}`,{});
   }
+
+  // reusing existing inferfaces/types instead of creating other types which have same properties for block-list
+  getAllBlockedUsers(currentUserId: number): Observable<FriendsListApiResponse>{
+    return this.http.get<FriendsListApiResponse>(`${this.BASE_URL}/${currentUserId}/friends/get-blocked-users-list`);
+  }
 }
 
 export interface FriendResquestResponse {
@@ -77,7 +82,7 @@ export interface FriendItem {
   addedDate: string;
 }
 
-interface FriendsListApiResponse {
+export interface FriendsListApiResponse {
   success: boolean;
   message: string;
   data: FriendItem[];
