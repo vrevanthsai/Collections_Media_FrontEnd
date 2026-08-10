@@ -1,4 +1,4 @@
-import { Component, inject, signal, DestroyRef } from '@angular/core';
+import { Component, inject, signal, DestroyRef, effect } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../../pages/auth/services/auth';
 import { CommonModule } from '@angular/common';
@@ -104,6 +104,20 @@ export class Navbar {
 
     // reassign userId whenever the cookie changes (e.g., after login or logout)
     this.userId = parseInt(this.cookieService.getCookie('userId') || '0', 10);
+
+    // The navbar remains mounted during navigation. React to both a new login and
+    // an access-token refresh so its user-specific data is not left stale.
+    // effect() has same mechanism as useEffect() in React, it runs whenever the signal value changes and it will run only once when page loads
+    effect(() => {
+      this.authService.getSessionVersion()();
+
+      if (this.authService.getLoggedIn()()) {
+        this.refreshAuthenticatedUserData();
+      } else {
+        this.avatarUrl.set(undefined);
+        this.unreadCount.set(0);
+      }
+    });
   }
 
   private handleSearchResults(results: SearchResultItem[]): void {
@@ -233,14 +247,20 @@ export class Navbar {
       }
     )
 
-    // Load user avatar image from backend if exists
-    // only show/call image after user loggined or his accessToken is refreshed
-    if (this.allowImageLoad && (this.isLoggedIn() || this.authService.isAuthenticated())) {
-      this.loadUserAvatarImage();
-    }
+    // Initialize the shared auth signal from an existing cookie-based session.
+    // The effect above then loads the avatar and unread notification count.
+    this.authService.isAuthenticated();
+  }
 
-    if (this.isLoggedIn() || this.authService.isAuthenticated()) {
-      // load unread Notifications count for Bell icon in navbar
+  private refreshAuthenticatedUserData(): void {
+    this.userId = parseInt(this.cookieService.getCookie('userId') || '0', 10);
+    this.userDetails = JSON.parse(this.cookieService.getCookie('userDetails') || '{}');
+    this.allowImageLoad = true;
+    this.avatarUrl.set(undefined);
+    this.unreadCount.set(0);
+
+    if (this.userId > 0) {
+      this.loadUserAvatarImage();
       this.loadUnReadNotificationsCount();
     }
   }
