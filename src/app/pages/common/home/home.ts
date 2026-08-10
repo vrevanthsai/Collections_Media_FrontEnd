@@ -156,6 +156,10 @@ export class Home implements OnInit {
     return this.collections.slice(startIndex, startIndex + this.pageSize);
   }
 
+  collectionDisplayIndex(indexOnPage: number): number {
+    return (this.currentPage - 1) * this.pageSize + indexOnPage + 1;
+  }
+
   // Loads the signed-in user's collections for the Home page.
   getUserBasedCollections(): void {
     this.loading.set(true);
