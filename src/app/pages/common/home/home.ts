@@ -17,6 +17,10 @@ import { CategoryService } from '../../services/category-service';
 import { CookieService } from '../../../interceptors/cookie.service';
 import { MessageService } from 'primeng/api';
 import { InputTextModule } from 'primeng/inputtext';
+import { CheckboxModule } from 'primeng/checkbox';
+import { DialogModule } from 'primeng/dialog';
+import { FriendConnectionService, FriendItem } from '../../services/friend-connection-service';
+import { ShareCollectionService } from '../../services/share-collection-service';
 
 @Component({
   selector: 'app-home',
@@ -30,7 +34,9 @@ import { InputTextModule } from 'primeng/inputtext';
     ProgressSpinnerModule,
     TitleCasePipe,
     CommonModule,
-    InputTextModule
+    InputTextModule,
+    CheckboxModule,
+    DialogModule,
   ],
   templateUrl: './home.html',
   styleUrl: './home.scss',
@@ -46,6 +52,8 @@ export class Home implements OnInit {
   collectionService = inject(CollectionsService);
   authService = inject(AuthService);
   categoryService = inject(CategoryService);
+  private friendConnectionService = inject(FriendConnectionService);
+  private shareCollectionService = inject(ShareCollectionService);
 
   collections: CollectionDto[] = [];
   originalCollections: CollectionDto[] = [];
@@ -55,6 +63,12 @@ export class Home implements OnInit {
 
   // Stores favorite IDs locally because the backend has no favorite API yet.
   favoriteIds = new Set<number>();
+  selectedCollectionIds = new Set<number>();
+  selectedFriendIds = new Set<number>();
+  friends: FriendItem[] = [];
+  shareDialogVisible = false;
+  friendsLoading = false;
+  sharing = false;
 
   selectedFilters: CollectionFilters = {
     category: null,
@@ -258,28 +272,88 @@ export class Home implements OnInit {
     );
   }
 
-  // Uses the native share sheet, with clipboard copy as a fallback.
-  async shareCollection(collection: CollectionDto): Promise<void> {
+  isCollectionSelected(collection: CollectionDto): boolean {
+    return collection.collectionId != null && this.selectedCollectionIds.has(collection.collectionId);
+  }
+
+  toggleCollectionSelection(collection: CollectionDto): void {
     if (collection.collectionId == null) return;
+    const next = new Set(this.selectedCollectionIds);
+    next.has(collection.collectionId) ? next.delete(collection.collectionId) : next.add(collection.collectionId);
+    this.selectedCollectionIds = next;
+  }
 
-    const url = `${window.location.origin}/collections/${collection.collectionId}`;
-    const shareData = {
-      title: collection.name,
-      text: `View ${collection.name}.`,
-      url,
-    };
+  openShareDialog(): void {
+    if (!this.selectedCollectionIds.size) return;
+    this.shareDialogVisible = true;
+    this.selectedFriendIds = new Set<number>();
+    this.loadFriends();
+  }
 
-    try {
-      if (navigator.share) {
-        await navigator.share(shareData);
-      } else if (navigator.clipboard) {
-        await navigator.clipboard.writeText(url);
-      }
-    } catch (error) {
-      if ((error as DOMException).name !== 'AbortError') {
-        console.log('Collection share error = ', error);
-      }
-    }
+  closeShareDialog(): void {
+    this.shareDialogVisible = false;
+  }
+
+  toggleFriendSelection(friend: FriendItem): void {
+    const next = new Set(this.selectedFriendIds);
+    next.has(friend.userId) ? next.delete(friend.userId) : next.add(friend.userId);
+    this.selectedFriendIds = next;
+  }
+
+  isFriendSelected(friend: FriendItem): boolean {
+    return this.selectedFriendIds.has(friend.userId);
+  }
+
+  shareSelectedCollections(): void {
+    const userId = parseInt(this.userId() || '0', 10);
+    if (!userId || !this.selectedCollectionIds.size || !this.selectedFriendIds.size) return;
+
+    this.sharing = true;
+    this.shareCollectionService.shareCollections(userId, {
+      collectionIds: [...this.selectedCollectionIds],
+      friendUserIds: [...this.selectedFriendIds],
+    }).subscribe({
+      next: (response) => {
+        this.sharing = false;
+        this.shareDialogVisible = false;
+        this.selectedCollectionIds = new Set<number>();
+        const skipped = response.data?.skippedOrPartialRecipients ?? [];
+        this.messageService.add({
+          severity: skipped.length ? 'warn' : 'success',
+          summary: skipped.length ? 'Shared with some friends' : 'Collections shared',
+          detail: skipped.length
+            ? `${response.data.totalSharesCreated} shares created. Unable to share with: ${skipped.join(', ')}.`
+            : `${response.data?.totalSharesCreated ?? 0} collection shares created.`,
+          life: 4000,
+        });
+      },
+      error: (error) => {
+        this.sharing = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Could not share collections',
+          detail: error?.error?.message || 'Please try again.',
+          life: 4000,
+        });
+      },
+    });
+  }
+
+  private loadFriends(): void {
+    const userId = parseInt(this.userId() || '0', 10);
+    if (!userId) return;
+    this.friendsLoading = true;
+    this.friendConnectionService.getAllFriends(userId).subscribe({
+      next: (friends) => {
+        this.friends = friends;
+        this.friendsLoading = false;
+      },
+      error: () => {
+        this.friends = [];
+        this.friendsLoading = false;
+        this.messageService.add({ severity: 'error', summary: 'Friends unavailable', detail: 'Unable to load your friends right now.', life: 3000 });
+      },
+    });
   }
 
   // Maps progress values to PrimeNG tag colors.

@@ -92,6 +92,11 @@
             </div>
 
             <div class="results-actions">
+              <button type="button" class="share-selected-button" [disabled]="selectedCollectionIds.size === 0"
+                (click)="openShareDialog()">
+                <i class="pi pi-send"></i>
+                Share selected @if (selectedCollectionIds.size) { ({{ selectedCollectionIds.size }}) }
+              </button>
               @if (hasActiveFilters()) {
               <div class="active-filters">
                 @if (selectedFilters.category) {
@@ -116,9 +121,15 @@
             = $index) {
             <div class="col-12 col-md-6 col-xxl-4">
               <!-- The whole card opens its collection details page. -->
-              <article class="collection-card" role="link" tabindex="0" [attr.aria-label]="'View ' + collection.name"
+              <article class="collection-card" [class.selected]="isCollectionSelected(collection)" role="link" tabindex="0" [attr.aria-label]="'View ' + collection.name"
                 (click)="openCollection(collection)" (keydown.enter)="openCollection(collection)">
                 <div class="card-accent" aria-hidden="true"></div>
+
+                <label class="collection-select" (click)="$event.stopPropagation()" [attr.aria-label]="'Select ' + collection.name">
+                  <p-checkbox [binary]="true" [ngModel]="isCollectionSelected(collection)"
+                    (onChange)="toggleCollectionSelection(collection)"></p-checkbox>
+                  <span>Select</span>
+                </label>
 
                 <!-- Header keeps long collection names readable and visible. -->
                 <header class="collection-card-header">
@@ -157,10 +168,6 @@
                     (click)="toggleFavorite(collection)">
                     <i [class]="isFavorite(collection) ? 'pi pi-heart-fill' : 'pi pi-heart'"></i>
                     {{ isFavorite(collection) ? 'Favorited' : 'Add to Favorite' }}
-                  </button>
-                  <button type="button" class="card-action share-btn" (click)="shareCollection(collection)">
-                    <i class="pi pi-share-alt"></i>
-                    Share
                   </button>
                 </footer>
               </article>
@@ -224,3 +231,44 @@
 
   </div>
 </section>
+
+<p-dialog [(visible)]="shareDialogVisible" [modal]="true" [draggable]="false" [resizable]="false"
+  [style]="{ width: 'min(94vw, 34rem)' }" styleClass="share-dialog" (onHide)="closeShareDialog()">
+  <ng-template #header>
+    <div class="share-dialog-title">
+      <span class="share-dialog-icon"><i class="pi pi-send"></i></span>
+      <div><strong>Share collections</strong><small>{{ selectedCollectionIds.size }} selected collection{{ selectedCollectionIds.size === 1 ? '' : 's' }}</small></div>
+    </div>
+  </ng-template>
+
+  <p class="share-dialog-copy">Choose friends who should receive these collections.</p>
+
+  @if (friendsLoading) {
+    <div class="share-loading"><p-progressSpinner strokeWidth="4"></p-progressSpinner></div>
+  } @else if (friends.length) {
+    <div class="friend-list" role="list">
+      @for (friend of friends; track friend.userId) {
+        <div class="friend-row" [class.selected]="isFriendSelected(friend)" role="checkbox" tabindex="0"
+          [attr.aria-checked]="isFriendSelected(friend)" (click)="toggleFriendSelection(friend)"
+          (keydown.enter)="toggleFriendSelection(friend)" (keydown.space)="toggleFriendSelection(friend); $event.preventDefault()">
+          <span class="friend-avatar">{{ (friend.name || friend.username).charAt(0) | titlecase }}</span>
+          <span class="friend-details"><strong>{{ friend.name || friend.username }}</strong><small>@{{ friend.username }}</small></span>
+          <p-checkbox [binary]="true" [ngModel]="isFriendSelected(friend)" (click)="$event.stopPropagation()"
+            (onChange)="toggleFriendSelection(friend)"></p-checkbox>
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="no-friends"><i class="pi pi-users"></i><strong>No friends to share with yet</strong><span>Add friends first, then come back to share your collections.</span></div>
+  }
+
+  <ng-template #footer>
+    <div class="share-dialog-footer">
+      <span>{{ selectedFriendIds.size }} friend{{ selectedFriendIds.size === 1 ? '' : 's' }} selected</span>
+      <div><button type="button" class="btn btn-light" (click)="closeShareDialog()">Cancel</button>
+      <button type="button" class="btn btn-dark" [disabled]="!selectedFriendIds.size || sharing" (click)="shareSelectedCollections()">
+        @if (sharing) { Sharing... } @else { Send <i class="pi pi-send"></i> }
+      </button></div>
+    </div>
+  </ng-template>
+</p-dialog>
