@@ -51,6 +51,7 @@ export interface NotificationItem {
   id: number;
   type: string;
   referenceId: number;
+  sharesCount?: number; // optional or null
   createdAt: string;
   actorUserId: number;
   actorUsername: string;

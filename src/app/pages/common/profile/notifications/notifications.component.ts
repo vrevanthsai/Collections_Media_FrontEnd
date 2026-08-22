@@ -262,12 +262,18 @@ const NOTIFICATION_TYPE_MAP: Record<string, NotificationTypeConfig> = {
     buildMessage: (n) => `sent you a friend request`,
     buildLink: (n) => ['/users-profile', n.actorUserId]
   },
-  COLLECTION_LIKE: {
+  COLLECTION_LIKED: {
     icon: 'pi pi-heart-fill',
     colorClass: 'notif-icon--like',
     buildMessage: (n) => `liked your collection`,
     buildLink: (n) => ['/collections', n.referenceId]
   },
+  COLLECTION_SHARED: {
+    icon: 'pi pi-share-alt',
+    colorClass: 'notif-icon--shared',
+    buildMessage: (n) => `friend shared ${n.sharesCount ? n.sharesCount : "a"} collection with you`,
+    buildLink: (n) => ['/collections', n.referenceId] // here redirect to new Shared Collection page(referenceId=lastSharedId is not needed- directly redirect to all shared collections page)
+  }
 };
 
 const DEFAULT_TYPE_CONFIG: NotificationTypeConfig = {
