@@ -1,0 +1,37 @@
+$bg-dark: #17151f;
+$accent: #ff8fab;
+$text-muted: #a6a3b3;
+$border-subtle: rgba(255, 255, 255, 0.08);
+
+.reco-page {
+  min-height: 100vh;
+  background: $bg-dark;
+  color: #fff;
+}
+
+.reco-page__intro { margin-bottom: 1.5rem; }
+.reco-page__title { font-size: 1.5rem; font-weight: 700; margin: 0 0 0.4rem; }
+.reco-page__subtitle { color: $text-muted; font-size: 0.9rem; margin: 0; max-width: 640px; }
+
+::ng-deep .reco-page {
+  .p-tabs { background: transparent; }
+  .p-tablist { background: transparent; border-bottom: 1px solid $border-subtle; margin-bottom: 1.5rem; }
+  .p-tablist-tab-list { gap: 0.5rem; }
+
+  .p-tab {
+    background: transparent;
+    border: none;
+    color: $text-muted;
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    &:hover { color: #fff; }
+    &.p-tab-active { color: #fff; }
+  }
+
+  .p-tablist-active-bar { background-color: $accent; height: 3px; }
+  .p-tabpanel { padding: 0; }
+}

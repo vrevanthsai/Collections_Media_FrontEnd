@@ -272,7 +272,7 @@ const NOTIFICATION_TYPE_MAP: Record<string, NotificationTypeConfig> = {
     icon: 'pi pi-share-alt',
     colorClass: 'notif-icon--shared',
     buildMessage: (n) => `friend shared ${n.sharesCount ? n.sharesCount : "a"} collection with you`,
-    buildLink: (n) => ['/collections', n.referenceId] // here redirect to new Shared Collection page(referenceId=lastSharedId is not needed- directly redirect to all shared collections page)
+    buildLink: (n) => ['/recommendations'] // here redirect to new Shared Collection or Recommendations page(referenceId=lastSharedId is not needed- directly redirect to all shared collections page)
   }
 };
 

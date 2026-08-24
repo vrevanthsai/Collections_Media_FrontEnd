@@ -1,0 +1,75 @@
+<div class="share-tab">
+    <div class="share-tab__intro-row">
+        <p class="share-tab__intro">{{ introText }}</p>
+
+        @if (sortedGroups().length > 0) {
+        <div class="share-tab__filter">
+            <button type="button" class="filter-btn" [class.filter-btn--active]="sortOrder() === 'latest'"
+                (click)="setSort('latest')">
+                Latest
+            </button>
+            <button type="button" class="filter-btn" [class.filter-btn--active]="sortOrder() === 'oldest'"
+                (click)="setSort('oldest')">
+                Oldest
+            </button>
+        </div>
+        }
+    </div>
+
+    @if (loading()) {
+    <div class="share-tab__message"><i class="pi pi-spin pi-spinner"></i> Loading...</div>
+    } @else if (errorMessage()) {
+    <div class="share-tab__message share-tab__message--error">{{ errorMessage() }}</div>
+    } @else if (sortedGroups().length === 0) {
+    <div class="share-tab__empty">
+        <i class="pi pi-inbox"></i>
+        <p>{{ emptyText }}</p>
+    </div>
+    } @else {
+    <p-accordion [multiple]="true" [value]="[sortedGroups()[0].sharedByUserId]">
+        @for (group of sortedGroups(); track group.sharedByUserId) {
+        <p-accordion-panel [value]="group.sharedByUserId">
+            <p-accordion-header>
+                <div class="group-header">
+                    <p-avatar [image]="avatarFor(group)" shape="circle" styleClass="group-header__avatar"></p-avatar>
+                    <div class="group-header__info">
+                        <span class="group-header__name">{{ group.sharedByUsername }}</span>
+                        <span class="group-header__meta">
+                            {{ group.collectionCount }} collection{{ group.collectionCount === 1 ? '' : 's' }}
+                            &middot; {{ group.latestSharedAt | date: 'MMM d, y' }}
+                        </span>
+                    </div>
+                </div>
+            </p-accordion-header>
+
+            <p-accordion-content>
+                <div class="collections-scroller">
+                    @for (item of group.collections; track item.shareId) {
+                    <div class="share-card" role="button" (click)="goToCollection(item)">
+                        <div class="share-card__category">{{ item.categoryName }}</div>
+                        <div class="share-card__name">{{ item.collectionName }}</div>
+                        <div class="share-card__date">
+                            <i class="pi pi-clock"></i> {{ item.sharedAt | date: 'MMM d, y' }}
+                        </div>
+
+                        <div class="share-card__actions">
+                            <button type="button" class="share-card__action-btn"
+                                [class.share-card__action-btn--active]="isLiked(item.shareId)"
+                                (click)="toggleLike($event, item)">
+                                <i class="pi" [class.pi-heart-fill]="isLiked(item.shareId)"
+                                    [class.pi-heart]="!isLiked(item.shareId)"></i>
+                                Like
+                            </button>
+                            <button type="button" class="share-card__action-btn" (click)="onWatch($event, item)">
+                                <i class="pi pi-eye"></i> Watch
+                            </button>
+                        </div>
+                    </div>
+                    }
+                </div>
+            </p-accordion-content>
+        </p-accordion-panel>
+        }
+    </p-accordion>
+    }
+</div>

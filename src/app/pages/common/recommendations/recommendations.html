@@ -1,0 +1,40 @@
+<div class="reco-page">
+  <div class="container py-4">
+    <div class="reco-page__intro">
+      <h1 class="reco-page__title">Recommendations</h1>
+      <p class="reco-page__subtitle">
+        Collections your friends have shared with you, and collections you've shared with them —
+        all in one place.
+      </p>
+    </div>
+
+    <p-tabs [value]="activeTab()" (valueChange)="onTabChange($event)">
+      <p-tablist>
+        <p-tab value="SHARE_WITH_ME">
+          <i class="pi pi-inbox"></i> <span>Shared with Me</span>
+        </p-tab>
+        <p-tab value="SHARE_BY_ME">
+          <i class="pi pi-send"></i> <span>Shared by Me</span>
+        </p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+        <p-tabpanel value="SHARE_WITH_ME">
+          <app-share-tab-content
+            tabType="SHARE_WITH_ME"
+            introText="Collections your friends have shared with you. Expand a name to see what they sent."
+            emptyText="No one has shared a collection with you yet."
+          ></app-share-tab-content>
+        </p-tabpanel>
+
+        <p-tabpanel value="SHARE_BY_ME">
+          <app-share-tab-content
+            tabType="SHARE_BY_ME"
+            introText="Collections you've shared with your friends. Expand a name to see what you sent them."
+            emptyText="You haven't shared any collections yet."
+          ></app-share-tab-content>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  </div>
+</div>
