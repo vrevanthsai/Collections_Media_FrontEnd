@@ -20,6 +20,16 @@ export class ShareCollectionService {
       .get<RecommendationsApiResponse>(`${this.baseUrl}/${userId}/shares/get-recommendations`, { params })
       .pipe(map((res) => res.data ?? []));
   }
+
+  updateShareActionStatus(shareId: number, actionStatus: ShareActionStatus, currentUserId: number){
+    const params = new HttpParams().set('status', actionStatus); // 'status' is same name in backend Api method for Params
+    return this.http.patch<ActionStatusResponse>(`${this.baseUrl}/${currentUserId}/shares/${shareId}/action`, {}, { params }); // {} body must be there for Post and Patch requests, even if empty, otherwise it will throw error when using along with params
+  }
+
+  updateWatchListStatus(shareId: number, isWatchList: boolean, currentUserId: number){
+    const params = new HttpParams().set('isWatchList', isWatchList.toString()); // 'status' is same name in backend Api method for Params
+    return this.http.patch<ActionStatusResponse>(`${this.baseUrl}/${currentUserId}/shares/${shareId}/watch-list`, {}, { params }); // {} body must be there for Post and Patch requests, even if empty, otherwise it will throw error when using along with params
+  }
 }
 
 export interface ShareCollectionsRequest {
@@ -47,6 +57,7 @@ export interface SharedCollectionItem {
   sharedAt: string;
   actionStatus: string;
   viewed: boolean;
+  addedToWatchlist: boolean;
 }
 
 export interface ShareGroup {
@@ -62,4 +73,12 @@ interface RecommendationsApiResponse {
   success: boolean;
   message: string;
   data: ShareGroup[];
+}
+
+export type ShareActionStatus = 'PENDING' | 'LIKED' | 'DISMISSED';
+
+export interface ActionStatusResponse {
+  success: boolean;
+  message: string;
+  data: string;
 }

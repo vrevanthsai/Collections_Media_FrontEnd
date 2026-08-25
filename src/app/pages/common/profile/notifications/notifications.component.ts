@@ -265,8 +265,8 @@ const NOTIFICATION_TYPE_MAP: Record<string, NotificationTypeConfig> = {
   COLLECTION_LIKED: {
     icon: 'pi pi-heart-fill',
     colorClass: 'notif-icon--like',
-    buildMessage: (n) => `liked your collection`,
-    buildLink: (n) => ['/collections', n.referenceId]
+    buildMessage: (n) => `friend liked your collection ${n.collectionName || 'Unnamed Collection'}`,
+    buildLink: (n) => ['/collections', n.collectionId]
   },
   COLLECTION_SHARED: {
     icon: 'pi pi-share-alt',

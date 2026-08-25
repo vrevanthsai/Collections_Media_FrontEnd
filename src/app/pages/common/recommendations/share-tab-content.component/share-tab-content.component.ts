@@ -4,9 +4,10 @@ import { Router, RouterModule } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AccordionModule } from 'primeng/accordion';
 import { AvatarModule } from 'primeng/avatar';
-import { ShareCollectionService, SharedCollectionItem, ShareGroup, ShareTabType } from '../../../services/share-collection-service';
+import { ShareActionStatus, ShareCollectionService, SharedCollectionItem, ShareGroup, ShareTabType } from '../../../services/share-collection-service';
 import { CommonService } from '../../../services/common-service';
 import { CookieService } from '../../../../interceptors/cookie.service';
+import { MessageService } from 'primeng/api';
 
 @Component({
   selector: 'app-share-tab-content',
@@ -20,7 +21,7 @@ export class ShareTabContentComponent implements OnInit, OnDestroy {
   @Input() introText = '';
   @Input() emptyText = 'Nothing here yet.';
 
-  private recommendationsService = inject(ShareCollectionService);
+  private sharedCollectionService = inject(ShareCollectionService);
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
   private commonService = inject(CommonService);
@@ -33,7 +34,10 @@ export class ShareTabContentComponent implements OnInit, OnDestroy {
   groups = signal<ShareGroup[]>([]);
   sortOrder = signal<'latest' | 'oldest'>('latest');
   avatarCache = signal<Record<number, string>>({});
-  likedShareIds = signal<Set<number>>(new Set());
+  // Holds optimistic action-status changes, while the item retains the status from the last load.
+  actionLikedStatusOverrides = signal<Record<number, ShareActionStatus>>({});
+  actionWatchStatusOverrides = signal<Record<number, boolean>>({});
+  private messageService = inject(MessageService);
 
   private imageCache = new Map<string, string>();
   private readonly placeholder = 'https://api.dicebear.com/7.x/adventurer/svg?seed=rinku112'; // default avatar img
@@ -54,7 +58,7 @@ export class ShareTabContentComponent implements OnInit, OnDestroy {
     this.loading.set(true);
     this.errorMessage.set('');
 
-    this.recommendationsService
+    this.sharedCollectionService
       .getRecommendations(this.currentUserId, this.tabType)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -149,24 +153,68 @@ export class ShareTabContentComponent implements OnInit, OnDestroy {
     this.sortOrder.set(order);
   }
 
-  isLiked(shareId: number): boolean {
-    return this.likedShareIds().has(shareId);
+  isLiked(item: SharedCollectionItem): boolean {
+    // Check if there's an override for this item's shareId; if not, use the item's current actionStatus
+    return (this.actionLikedStatusOverrides()[item.shareId] ?? item.actionStatus) === 'LIKED';
   }
 
   toggleLike(event: Event, item: SharedCollectionItem): void {
     event.stopPropagation(); // don't let the click bubble up and toggle the accordion panel
-    this.likedShareIds.update((set) => {
-      const next = new Set(set);
-      next.has(item.shareId) ? next.delete(item.shareId) : next.add(item.shareId);
-      return next;
-    });
-    // TODO: call your like/unlike API here once it exists, e.g.
-    // this.recommendationsService.toggleLike(this.currentUserId, item.shareId).subscribe();
+    const nextStatus: ShareActionStatus = this.isLiked(item) ? 'PENDING' : 'LIKED';
+    // Optimistically update the UI to reflect the new status
+    this.actionLikedStatusOverrides.update((statuses) => ({ ...statuses, [item.shareId]: nextStatus }));
+
+    this.sharedCollectionService.updateShareActionStatus(item.shareId, nextStatus, this.currentUserId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          // Optionally show a success message or update UI
+          if (nextStatus === 'LIKED') {
+            this.messageService.add({ severity: 'success', summary: 'Liked', detail: 'Collection liked successfully.' });
+          }
+        },
+        error: () => {
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Error occurred while trying to like the collection.' });
+          this.actionLikedStatusOverrides.update((statuses) => {
+            const next = { ...statuses };
+            delete next[item.shareId];
+            return next;
+          });
+        }
+      });
+
+  }
+
+  isWatched(item: SharedCollectionItem): boolean {
+    // Check if there's an override for this item's shareId; if not, use the item's current actionStatus
+    return (this.actionWatchStatusOverrides()[item.shareId] ?? item.addedToWatchlist) === true;
   }
 
   onWatch(event: Event, item: SharedCollectionItem): void {
     event.stopPropagation();
-    this.router.navigate(['/collections', item.collectionId]); // todo- add /action api logic
+    //  here also same like Like status flow, toggling is done for Watch status and backend is updated but no notification is sent/created to sharedByUser(friend) account
+    const nextStatus: boolean = this.isWatched(item) ? false : true;
+    // Optimistically update the UI to reflect the new status
+    this.actionWatchStatusOverrides.update((statuses) => ({ ...statuses, [item.shareId]: nextStatus }));
+
+    this.sharedCollectionService.updateWatchListStatus(item.shareId, nextStatus, this.currentUserId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          // Optionally show a success message or update UI
+          if (nextStatus === true) {
+            this.messageService.add({ severity: 'success', summary: 'Watched', detail: 'Recommended Collection added to your Watch List successfully.' });
+          }
+        },
+        error: () => {
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Error occurred while trying to add to watch list.' });
+          this.actionWatchStatusOverrides.update((statuses) => {
+            const next = { ...statuses };
+            delete next[item.shareId];
+            return next;
+          });
+        }
+      });
   }
 
   goToCollection(item: SharedCollectionItem): void {

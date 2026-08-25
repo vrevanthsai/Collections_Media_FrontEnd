@@ -53,15 +53,23 @@
                         </div>
 
                         <div class="share-card__actions">
+                            <!-- flow- Here- when ever Like is clicked then this shared collection status gets updated to both local and backend
+                             and a new notification will be sent to shared done by user(friend) account
+                             and when reclicked/togged then status gets reseted to Pending initial/status and this linked liked notification will be removed
+                             , so you like then it creates new notification and you unlike then it removes the notification and resets the status -->
                             <button type="button" class="share-card__action-btn"
-                                [class.share-card__action-btn--active]="isLiked(item.shareId)"
+                                [class.share-card__action-btn--active]="isLiked(item)"
                                 (click)="toggleLike($event, item)">
-                                <i class="pi" [class.pi-heart-fill]="isLiked(item.shareId)"
-                                    [class.pi-heart]="!isLiked(item.shareId)"></i>
+                                <i class="pi" [class.pi-heart-fill]="isLiked(item)"
+                                    [class.pi-heart]="!isLiked(item)"></i>
                                 Like
                             </button>
-                            <button type="button" class="share-card__action-btn" (click)="onWatch($event, item)">
-                                <i class="pi pi-eye"></i> Watch
+                            <!-- Flow- same like like button but watch button just adds this shared/recommended collection to the user's watch list but it will not create any notification for the sharedByUser(friend) account
+                             and toggling works which resets/removes this shared collection from already added watch list -->
+                            <button type="button" class="share-card__action-btn" [class.share-card__action-btn--active]="isWatched(item)"
+                             (click)="onWatch($event, item)">
+                                <i class="pi pi-eye" [class.pi-eye-fill]="isWatched(item)"
+                                    [class.pi-eye]="!isWatched(item)"></i> Watch
                             </button>
                         </div>
                     </div>

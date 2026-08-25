@@ -52,6 +52,8 @@ export interface NotificationItem {
   type: string;
   referenceId: number;
   sharesCount?: number; // optional or null
+  collectionId?: number; // optional or null
+  collectionName?: string; // optional or null
   createdAt: string;
   actorUserId: number;
   actorUsername: string;
