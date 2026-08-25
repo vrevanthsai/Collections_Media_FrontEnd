@@ -71,6 +71,17 @@
             </div>
           </div>
 
+          <div class="filter-group">
+            <h3>Filter by favorite</h3>
+            <div class="filter-options">
+              <button type="button" class="filter-chip" [class.active]="$any(selectedFilters).favorite"
+                (click)="toggleFavoriteFilter()">
+                <i class="pi pi-heart"></i>
+                Favorites only
+              </button>
+            </div>
+          </div>
+
           <button type="button" class="btn btn-dark w-100 reset-button" (click)="resetFilters()">
             Reset Filters
           </button>
@@ -107,6 +118,9 @@
                 }
                 @if (selectedFilters.privacy) {
                 <p-tag [value]="'Privacy: ' + selectedFilters.privacy" severity="warn"></p-tag>
+                }
+                @if ($any(selectedFilters).favorite) {
+                <p-tag value="Favorites only" severity="danger"></p-tag>
                 }
               </div>
               }
@@ -152,11 +166,17 @@
                   </div>
 
                   <div class="summary-item">
-                    <span class="summary-icon status-icon"><i class="pi pi-chart-line"></i></span>
                     <div>
                       <span class="meta-label">Status</span>
                       <p-tag [value]="collection.progress"
                         [severity]="getProgressSeverity(collection.progress)"></p-tag>
+                    </div>
+                  </div>
+
+                  <div class="summary-item">
+                    <div>
+                      <span class="meta-label">Privacy</span>
+                      <p-tag [value]="collection.privacy" [severity]="'info'"></p-tag>
                     </div>
                   </div>
                 </div>

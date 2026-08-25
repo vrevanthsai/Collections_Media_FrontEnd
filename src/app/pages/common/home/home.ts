@@ -74,6 +74,7 @@ export class Home implements OnInit {
     category: null,
     progress: null,
     privacy: null,
+    favorite: false,
   };
 
   categories = [{ label: 'All', value: null }];
@@ -93,7 +94,7 @@ export class Home implements OnInit {
     { label: 'All', value: null },
     { label: 'Public', value: 'PUBLIC' },
     { label: 'Private', value: 'PRIVATE' },
-    { label: 'Friend', value: 'FRIENDS' },
+    { label: 'Friends', value: 'FRIENDS' },
   ];
   selectedCategoryLabel: string | null = null;
   suspendedUserStatus : boolean = false;
@@ -218,7 +219,7 @@ export class Home implements OnInit {
 
   // Clears every filter and reloads the complete user list.
   resetFilters(): void {
-    this.selectedFilters = { category: null, progress: null, privacy: null };
+    this.selectedFilters = { category: null, progress: null, privacy: null, favorite: false };
     // If the original collection list is already loaded, we can restore it directly or we call User-based-Collections-Api to get the latest collection list and then restore it.
     if (this.originalCollections.length > 0) {
       this.collections = this.originalCollections;
@@ -232,8 +233,19 @@ export class Home implements OnInit {
     return !!(
       this.selectedFilters.category ||
       this.selectedFilters.progress ||
-      this.selectedFilters.privacy
+      this.selectedFilters.privacy ||
+      this.selectedFilters.favorite
     );
+  }
+
+  // Shows only locally stored favorites; clicking again restores the other filters' results.
+  toggleFavoriteFilter(): void {
+    this.currentPage = 1;
+    this.selectedFilters = {
+      ...this.selectedFilters,
+      favorite: !this.selectedFilters.favorite,
+    };
+    this.applyLocalFiltersFallback();
   }
 
   changePage(page: number): void {
@@ -270,6 +282,9 @@ export class Home implements OnInit {
       this.favoritesStorageKey,
       JSON.stringify([...nextFavorites]),
     );
+
+    // Keep the visible result set accurate when Favorites only is active.
+    if (this.selectedFilters.favorite) this.applyLocalFiltersFallback();
   }
 
   isCollectionSelected(collection: CollectionDto): boolean {
@@ -322,7 +337,7 @@ export class Home implements OnInit {
           severity: skipped.length ? 'warn' : 'success',
           summary: skipped.length ? 'Shared with some friends' : 'Collections shared',
           detail: skipped.length
-            ? `${response.data.totalSharesCreated} shares created. Unable to share with: ${skipped.join(', ')}.`
+            ? `${response.data.totalSharesCreated} shares created. Unable to share with: ${skipped.join(', ')} due to max share collections limit(2) reached per 2hrs for this user, please try again later.`
             : `${response.data?.totalSharesCreated ?? 0} collection shares created.`,
           life: 4000,
         });
@@ -373,12 +388,14 @@ export class Home implements OnInit {
     if (this.originalCollections.length > 0) {
       this.collections = this.originalCollections.filter(
         (collection) =>
+          // if condition is true then we include the collection in the filtered list, otherwise we exclude it.
           (!this.selectedFilters.category ||
             collection.category === this.selectedFilters.category) &&
           (!this.selectedFilters.progress ||
             collection.progress === this.selectedFilters.progress) &&
           (!this.selectedFilters.privacy ||
-            collection.privacy === this.selectedFilters.privacy),
+            collection.privacy === this.selectedFilters.privacy) &&
+          (!this.selectedFilters.favorite || this.isFavorite(collection)),
       );
     } else {
       const userId = parseInt(this.userId() || '0', 10);
@@ -391,7 +408,8 @@ export class Home implements OnInit {
               (!this.selectedFilters.progress ||
                 collection.progress === this.selectedFilters.progress) &&
               (!this.selectedFilters.privacy ||
-                collection.privacy === this.selectedFilters.privacy),
+                collection.privacy === this.selectedFilters.privacy) &&
+              (!this.selectedFilters.favorite || this.isFavorite(collection)),
           );
           this.loading.set(false);
         },

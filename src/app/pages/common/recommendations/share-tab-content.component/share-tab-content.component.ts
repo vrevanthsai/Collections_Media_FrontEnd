@@ -6,6 +6,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { AvatarModule } from 'primeng/avatar';
 import { ShareCollectionService, SharedCollectionItem, ShareGroup, ShareTabType } from '../../../services/share-collection-service';
 import { CommonService } from '../../../services/common-service';
+import { CookieService } from '../../../../interceptors/cookie.service';
 
 @Component({
   selector: 'app-share-tab-content',
@@ -24,7 +25,8 @@ export class ShareTabContentComponent implements OnInit, OnDestroy {
   private destroyRef = inject(DestroyRef);
   private commonService = inject(CommonService);
 
-  private currentUserId = 4; // TODO: pull from AuthService
+  private cookieService = inject(CookieService);
+  currentUserId = parseInt(this.cookieService.getCookie('userId') || '0', 10);
 
   loading = signal(false);
   errorMessage = signal('');
