@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Input, inject, signal, computed, DestroyRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, OnChanges, Input, Output, EventEmitter, SimpleChanges, inject, signal, computed, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -16,10 +16,12 @@ import { MessageService } from 'primeng/api';
   templateUrl: './share-tab-content.component.html',
   styleUrls: ['./share-tab-content.component.scss']
 })
-export class ShareTabContentComponent implements OnInit, OnDestroy {
+export class ShareTabContentComponent implements OnInit, OnDestroy, OnChanges {
   @Input({ required: true }) tabType!: ShareTabType;
   @Input() introText = '';
   @Input() emptyText = 'Nothing here yet.';
+  @Input() refreshVersion = 0;
+  @Output() watchListChanged = new EventEmitter<void>();
 
   private sharedCollectionService = inject(ShareCollectionService);
   private router = inject(Router);
@@ -52,6 +54,12 @@ export class ShareTabContentComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.load();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['refreshVersion'] && !changes['refreshVersion'].firstChange) {
+      this.load();
+    }
   }
 
   private load(): void {
@@ -207,6 +215,11 @@ export class ShareTabContentComponent implements OnInit, OnDestroy {
           } else {
             this.messageService.add({ severity: 'warning', summary: 'Unwatched', detail: 'Recommended Collection removed from your Watch List successfully.' });
           }
+          this.watchListChanged.emit();
+
+          if (this.tabType === 'MY_WATCH_LIST') {
+            this.load();
+          }
         },
         error: () => {
           this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Error occurred while trying to add to watch list.' });
@@ -220,7 +233,7 @@ export class ShareTabContentComponent implements OnInit, OnDestroy {
   }
 
   goToCollection(item: SharedCollectionItem): void {
-    if (this.tabType === 'SHARE_WITH_ME' && !item.viewed) {
+    if ((this.tabType === 'SHARE_WITH_ME' || this.tabType === 'MY_WATCH_LIST') && !item.viewed) {
       // we need to mark as viewed for SHARE_WITH_ME tab, before navigating to collection and dont call this api if already viewed, to avoid unnecessary api call
       this.sharedCollectionService.markViewed(this.currentUserId, item.shareId)
         .pipe(takeUntilDestroyed(this.destroyRef))
@@ -241,6 +254,12 @@ export class ShareTabContentComponent implements OnInit, OnDestroy {
       this.router.navigate(['/collections', item.collectionId]);
     }
   }
+
+  onAddToCollection(event: Event): void {
+    event.stopPropagation();
+    // it will redirect User to Add Collection page to create new collection and add this shared/recommended collection to it
+    this.router.navigate(['collections/add-collection']);
+  }  
 
   ngOnDestroy(): void {
     this.imageCache.forEach((url) => URL.revokeObjectURL(url));

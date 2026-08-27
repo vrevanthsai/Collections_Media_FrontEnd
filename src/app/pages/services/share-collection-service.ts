@@ -51,7 +51,7 @@ export interface ShareCollectionsResponse {
   };
 }
 
-export type ShareTabType = 'SHARE_WITH_ME' | 'SHARE_BY_ME';
+export type ShareTabType = 'SHARE_WITH_ME' | 'SHARE_BY_ME' | 'MY_WATCH_LIST';
 
 export interface SharedCollectionItem {
   shareId: number;

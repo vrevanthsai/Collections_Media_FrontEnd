@@ -47,7 +47,7 @@
                     @for (item of group.collections; track item.shareId) {
                     <div class="share-card" role="button" (click)="goToCollection(item)">
                         <div class="share-card__category">{{ item.categoryName }}</div>
-                        @if (!item.viewed && tabType === 'SHARE_WITH_ME') {
+                        @if (!item.viewed && (tabType === 'SHARE_WITH_ME' || tabType === 'MY_WATCH_LIST')) {
                         <span class="notif-row__dot"></span>
                         }
                         <div class="share-card__name">{{ item.collectionName }}</div>
@@ -55,6 +55,8 @@
                             <i class="pi pi-clock"></i> {{ item.sharedAt | date: 'MMM d, y' }}
                         </div>
 
+                        <!-- we dont show actions for SHARE_BY_ME tab -->
+                        @if(tabType !== 'SHARE_BY_ME'){
                         <div class="share-card__actions">
                             <!-- flow- Here- when ever Like is clicked then this shared collection status gets updated to both local and backend
                              and a new notification will be sent to shared done by user(friend) account
@@ -76,6 +78,14 @@
                                     [class.pi-eye]="!isWatched(item)"></i> Watch
                             </button>
                         </div>
+                        @if(tabType === 'MY_WATCH_LIST'){
+                        <div>
+                            <button type="button" class="share-card__action-btn add-to-collection-btn" (click)="onAddToCollection($event)">
+                                Add to Your Collection
+                            </button>
+                        </div>
+                        }
+                        }
                     </div>
                     }
                 </div>

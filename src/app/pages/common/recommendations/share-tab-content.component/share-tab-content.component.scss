@@ -215,6 +215,11 @@ $border-subtle: rgba(255, 255, 255, 0.08);
   }
 }
 
+.add-to-collection-btn{
+  width: 100%;
+  margin-top: 5px;
+}
+
 ::ng-deep .share-tab {
   .p-accordion-panel {
     background: $bg-panel;

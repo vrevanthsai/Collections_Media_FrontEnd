@@ -12,8 +12,14 @@ import { ShareTabContentComponent } from './share-tab-content.component/share-ta
 })
 export class Recommendations {
   activeTab = signal<ShareTabType>('SHARE_WITH_ME');
+  watchListRefreshVersion = signal(0);
 
   onTabChange(value: string | number | undefined): void {
     this.activeTab.set(value as ShareTabType);
+  }
+
+  // to refresh the load method for 3rd-MY_WATCH_LIST tab whenever watch  button triggers in 1st-tab
+  refreshWatchList(): void {
+    this.watchListRefreshVersion.update((version) => version + 1);
   }
 }

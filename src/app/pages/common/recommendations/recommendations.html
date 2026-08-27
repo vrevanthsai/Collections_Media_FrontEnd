@@ -3,7 +3,7 @@
     <div class="reco-page__intro">
       <h1 class="reco-page__title">Recommendations</h1>
       <p class="reco-page__subtitle">
-        Collections your friends have shared with you, and collections you've shared with them —
+        Collections your friends have shared with you, and collections you've shared with them, and collections you've added to your watch list —
         all in one place.
       </p>
     </div>
@@ -16,6 +16,9 @@
         <p-tab value="SHARE_BY_ME">
           <i class="pi pi-send"></i> <span>Shared by Me</span>
         </p-tab>
+        <p-tab value="MY_WATCH_LIST">
+          <i class="pi pi-bookmark"></i> <span>My Watch List</span>
+        </p-tab>
       </p-tablist>
 
       <p-tabpanels>
@@ -24,6 +27,7 @@
             tabType="SHARE_WITH_ME"
             introText="Collections your friends have shared with you. Expand a name to see what they sent."
             emptyText="No one has shared a collection with you yet."
+            (watchListChanged)="refreshWatchList()"
           ></app-share-tab-content>
         </p-tabpanel>
 
@@ -32,6 +36,15 @@
             tabType="SHARE_BY_ME"
             introText="Collections you've shared with your friends. Expand a name to see what you sent them."
             emptyText="You haven't shared any collections yet."
+          ></app-share-tab-content>
+        </p-tabpanel>
+
+        <p-tabpanel value="MY_WATCH_LIST">
+          <app-share-tab-content
+            tabType="MY_WATCH_LIST"
+            [refreshVersion]="watchListRefreshVersion()"
+            introText="Collections you've added to your watch list from your friends recommendations. Expand a name to see what you've saved."
+            emptyText="Your watch list is empty, add some collections to keep track of them from your friends shared or recommended collections in Shared with Me tab."
           ></app-share-tab-content>
         </p-tabpanel>
       </p-tabpanels>
