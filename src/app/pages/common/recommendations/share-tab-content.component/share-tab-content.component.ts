@@ -204,6 +204,8 @@ export class ShareTabContentComponent implements OnInit, OnDestroy {
           // Optionally show a success message or update UI
           if (nextStatus === true) {
             this.messageService.add({ severity: 'success', summary: 'Watched', detail: 'Recommended Collection added to your Watch List successfully.' });
+          } else {
+            this.messageService.add({ severity: 'warning', summary: 'Unwatched', detail: 'Recommended Collection removed from your Watch List successfully.' });
           }
         },
         error: () => {
@@ -218,7 +220,26 @@ export class ShareTabContentComponent implements OnInit, OnDestroy {
   }
 
   goToCollection(item: SharedCollectionItem): void {
-    this.router.navigate(['/collections', item.collectionId]);
+    if (this.tabType === 'SHARE_WITH_ME' && !item.viewed) {
+      // we need to mark as viewed for SHARE_WITH_ME tab, before navigating to collection and dont call this api if already viewed, to avoid unnecessary api call
+      this.sharedCollectionService.markViewed(this.currentUserId, item.shareId)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (res) => {
+            console.log('Successfully marked shared/recommended collection as viewed:', res);
+            // Optionally show a success message or update UI
+            // this.messageService.add({ severity: 'info', summary: 'Viewed', detail: 'Recommended Collection marked as viewed.' });
+            this.router.navigate(['/collections', item.collectionId]);
+          },
+          error: (err) => {
+            console.error('Error while marking shared/recommended collection as viewed:', err);
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Error occurred while marking as viewed.' });
+          }
+        });
+    } else {
+      // we dont need to mark as viewed for SHARE_BY_ME tab, just navigate to collection
+      this.router.navigate(['/collections', item.collectionId]);
+    }
   }
 
   ngOnDestroy(): void {

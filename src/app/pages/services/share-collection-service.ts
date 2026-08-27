@@ -21,14 +21,19 @@ export class ShareCollectionService {
       .pipe(map((res) => res.data ?? []));
   }
 
-  updateShareActionStatus(shareId: number, actionStatus: ShareActionStatus, currentUserId: number){
+  updateShareActionStatus(shareId: number, actionStatus: ShareActionStatus, currentUserId: number) {
     const params = new HttpParams().set('status', actionStatus); // 'status' is same name in backend Api method for Params
     return this.http.patch<ActionStatusResponse>(`${this.baseUrl}/${currentUserId}/shares/${shareId}/action`, {}, { params }); // {} body must be there for Post and Patch requests, even if empty, otherwise it will throw error when using along with params
   }
 
-  updateWatchListStatus(shareId: number, isWatchList: boolean, currentUserId: number){
+  updateWatchListStatus(shareId: number, isWatchList: boolean, currentUserId: number) {
     const params = new HttpParams().set('isWatchList', isWatchList.toString()); // 'status' is same name in backend Api method for Params
     return this.http.patch<ActionStatusResponse>(`${this.baseUrl}/${currentUserId}/shares/${shareId}/watch-list`, {}, { params }); // {} body must be there for Post and Patch requests, even if empty, otherwise it will throw error when using along with params
+  }
+
+  // Mark clicked shared/recommended collection as viewed
+  markViewed(userId: number, shareId: number): Observable<ActionStatusResponse> {
+    return this.http.patch<ActionStatusResponse>(`${this.baseUrl}/${userId}/shares/${shareId}/viewed`, {}); // empty body- body not needed in backend logic
   }
 }
 

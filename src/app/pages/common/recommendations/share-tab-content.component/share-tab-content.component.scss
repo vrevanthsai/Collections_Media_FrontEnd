@@ -115,7 +115,18 @@ $border-subtle: rgba(255, 255, 255, 0.08);
   }
 }
 
+.notif-row__dot {
+  position: absolute;
+  right: 15px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ff8fab;
+  flex-shrink: 0;
+}
+
 .share-card {
+  position: relative;
   background: $bg-inset;
   border: 1px solid $border-subtle;
   border-radius: 12px;
