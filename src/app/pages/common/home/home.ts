@@ -22,6 +22,11 @@ import { DialogModule } from 'primeng/dialog';
 import { FriendConnectionService, FriendItem } from '../../services/friend-connection-service';
 import { ShareCollectionService } from '../../services/share-collection-service';
 
+type UserFavorites = {
+  userID: number;
+  favoriteCollectionIds: number[];
+};
+
 @Component({
   selector: 'app-home',
   imports: [
@@ -61,7 +66,7 @@ export class Home implements OnInit {
   categoriesLoader = signal(false);
   currentPage = 1;
 
-  // Stores favorite IDs locally because the backend has no favorite API yet.
+  // Stores the current user's favorite IDs locally because the backend has no favorite API yet.
   favoriteIds = new Set<number>();
   selectedCollectionIds = new Set<number>();
   selectedFriendIds = new Set<number>();
@@ -266,7 +271,7 @@ export class Home implements OnInit {
     );
   }
 
-  // Toggles the ID and persists favorites across browser refreshes.
+  // Toggles the ID and persists favorites across browser refreshes for this user only.
   toggleFavorite(collection: CollectionDto): void {
     if (collection.collectionId == null) return;
 
@@ -278,10 +283,7 @@ export class Home implements OnInit {
     }
 
     this.favoriteIds = nextFavorites;
-    localStorage.setItem(
-      this.favoritesStorageKey,
-      JSON.stringify([...nextFavorites]),
-    );
+    this.saveFavorites(nextFavorites);
 
     // Keep the visible result set accurate when Favorites only is active.
     if (this.selectedFilters.favorite) this.applyLocalFiltersFallback();
@@ -422,20 +424,75 @@ export class Home implements OnInit {
     }
   }
 
-  // Restores valid numeric favorite IDs from local storage.
+  // Restores valid numeric favorite IDs for the signed-in user only.
   private loadFavorites(): void {
     try {
-      const storedIds = JSON.parse(
+      const storedFavorites: unknown = JSON.parse(
         localStorage.getItem(this.favoritesStorageKey) ?? '[]',
       );
-      this.favoriteIds = new Set(
-        Array.isArray(storedIds)
-          ? storedIds.filter((id): id is number => Number.isInteger(id))
-          : [],
-      );
+      const currentUserId = this.getCurrentUserId();
+      const userFavorites = Array.isArray(storedFavorites)
+        ? storedFavorites.find(
+            (entry): entry is UserFavorites =>
+              this.isUserFavorites(entry) && entry.userID === currentUserId,
+          )
+        : undefined;
+
+      this.favoriteIds = new Set(userFavorites?.favoriteCollectionIds ?? []);
     } catch {
       this.favoriteIds = new Set<number>();
     }
+  }
+
+  private saveFavorites(favoriteIds: Set<number>): void {
+    const currentUserId = this.getCurrentUserId();
+    if (currentUserId == null) return;
+
+    let storedFavorites: UserFavorites[] = [];
+    try {
+      const storedValue: unknown = JSON.parse(
+        localStorage.getItem(this.favoritesStorageKey) ?? '[]',
+      );
+      if (Array.isArray(storedValue)) {
+        storedFavorites = storedValue.filter((entry): entry is UserFavorites =>
+          this.isUserFavorites(entry),
+        );
+      }
+    } catch {
+      // Replace malformed storage with the current user's valid entry below.
+    }
+
+    const currentUserFavorites: UserFavorites = {
+      userID: currentUserId,
+      favoriteCollectionIds: [...favoriteIds],
+    };
+    const userIndex = storedFavorites.findIndex(
+      (entry) => entry.userID === currentUserId,
+    );
+
+    if (userIndex >= 0) {
+      storedFavorites[userIndex] = currentUserFavorites;
+    } else {
+      storedFavorites.push(currentUserFavorites);
+    }
+
+    localStorage.setItem(this.favoritesStorageKey, JSON.stringify(storedFavorites));
+  }
+
+  private getCurrentUserId(): number | null {
+    const userId = Number(this.cookieService.getCookie('userId'));
+    return Number.isInteger(userId) && userId > 0 ? userId : null;
+  }
+
+  private isUserFavorites(value: unknown): value is UserFavorites {
+    if (!value || typeof value !== 'object') return false;
+
+    const entry = value as UserFavorites;
+    return (
+      Number.isInteger(entry.userID) &&
+      Array.isArray(entry.favoriteCollectionIds) &&
+      entry.favoriteCollectionIds.every((id) => Number.isInteger(id))
+    );
   }
 
   // Method for Suspended User's to send activate request to Admin

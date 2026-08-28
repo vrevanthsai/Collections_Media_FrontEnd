@@ -109,7 +109,7 @@ export class AuthService {
     this.cookieService.deleteCookie('userDetails');
     // Clear/remove categories-array data of user in localStorage
     localStorage.removeItem('categories');
-    localStorage.removeItem('favoriteCollectionIds');
+    // localStorage.removeItem('favoriteCollectionIds');
     localStorage.removeItem('darkMode');
     // when logout revert theme back to dark
     this.themeService.setTheme(true);
