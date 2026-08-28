@@ -38,7 +38,7 @@
 
         <div class="notif-row__body">
           <p class="notif-row__text">
-            <span class="notif-row__actor">{{ n.actorName || n.actorUsername }}</span>
+            <span class="notif-row__actor">{{ n.actorUsername || n.actorName }}</span>
             {{ typeConfig(n.type).buildMessage(n) }}
           </p>
           <span class="notif-row__time">{{ timeAgo(n.createdAt) }}</span>

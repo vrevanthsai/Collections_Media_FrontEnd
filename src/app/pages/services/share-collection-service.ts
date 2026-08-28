@@ -48,6 +48,7 @@ export interface ShareCollectionsResponse {
   data: {
     totalSharesCreated: number;
     skippedOrPartialRecipients: string[];
+    alreadySharedMessages: string[];
   };
 }
 

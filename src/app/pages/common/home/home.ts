@@ -20,7 +20,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DialogModule } from 'primeng/dialog';
 import { FriendConnectionService, FriendItem } from '../../services/friend-connection-service';
-import { ShareCollectionService } from '../../services/share-collection-service';
+import { ShareCollectionService, ShareCollectionsResponse } from '../../services/share-collection-service';
 
 type UserFavorites = {
   userID: number;
@@ -102,8 +102,8 @@ export class Home implements OnInit {
     { label: 'Friends', value: 'FRIENDS' },
   ];
   selectedCategoryLabel: string | null = null;
-  suspendedUserStatus : boolean = false;
-  suspendUserConfirmation : string = "";
+  suspendedUserStatus: boolean = false;
+  suspendUserConfirmation: string = "";
   suspendLoading: boolean = false;
   suspendErrorMessage: string = '';
 
@@ -205,7 +205,7 @@ export class Home implements OnInit {
         this.originalCollections = [];
         this.loading.set(false);
         // adding logic for Suspended User- to request Access/Activate his account to Admin
-        if(error?.error?.success === false && error?.error?.message === "Your account has been suspended. Please contact support."){
+        if (error?.error?.success === false && error?.error?.message === "Your account has been suspended. Please contact support.") {
           this.suspendedUserStatus = true;
         }
       },
@@ -330,19 +330,34 @@ export class Home implements OnInit {
       collectionIds: [...this.selectedCollectionIds],
       friendUserIds: [...this.selectedFriendIds],
     }).subscribe({
-      next: (response) => {
+      next: (response: ShareCollectionsResponse) => {
         this.sharing = false;
         this.shareDialogVisible = false;
         this.selectedCollectionIds = new Set<number>();
         const skipped = response.data?.skippedOrPartialRecipients ?? [];
-        this.messageService.add({
-          severity: skipped.length ? 'warn' : 'success',
-          summary: skipped.length ? 'Shared with some friends' : 'Collections shared',
-          detail: skipped.length
-            ? `${response.data.totalSharesCreated} shares created. Unable to share with: ${skipped.join(', ')} due to max share collections limit(2) reached per 2hrs for this user, please try again later.`
-            : `${response.data?.totalSharesCreated ?? 0} collection shares created.`,
-          life: 4000,
-        });
+        if (skipped.length > 0 || response.data?.totalSharesCreated > 0) {
+          this.messageService.add({
+            severity: skipped.length ? 'warn' : 'success',
+            summary: response.data.totalSharesCreated <= 0 ? 'No collections are shared' : (skipped.length ? 'Shared with some friends' : 'Collections shared'),
+            detail: skipped.length
+              ? `${response.data.totalSharesCreated} shares created. Unable to share with: ${skipped.join(', ')} due to max share collections limit(2) reached per 1hr for this user, please try again later or check Shared with me tab in Recommendations page to check which collections are shared.`
+              : `${response.data?.totalSharesCreated ?? 0} collection shares created.`,
+            life: 5000,
+          });
+        }
+        const alreadyShared = response.data?.alreadySharedMessages ?? [];
+        if (alreadyShared.length > 0) {
+          var commonMsg = "";
+          alreadyShared.forEach((msg) => {
+            commonMsg += msg + "\n";
+          });
+          this.messageService.add({
+            severity: 'info',
+            summary: 'Already shared',
+            detail: commonMsg,
+            life: 4000,
+          });
+        }
       },
       error: (error) => {
         this.sharing = false;
@@ -433,9 +448,9 @@ export class Home implements OnInit {
       const currentUserId = this.getCurrentUserId();
       const userFavorites = Array.isArray(storedFavorites)
         ? storedFavorites.find(
-            (entry): entry is UserFavorites =>
-              this.isUserFavorites(entry) && entry.userID === currentUserId,
-          )
+          (entry): entry is UserFavorites =>
+            this.isUserFavorites(entry) && entry.userID === currentUserId,
+        )
         : undefined;
 
       this.favoriteIds = new Set(userFavorites?.favoriteCollectionIds ?? []);
@@ -497,14 +512,14 @@ export class Home implements OnInit {
 
   // Method for Suspended User's to send activate request to Admin
   activateAccount(): void {
-    if(this.suspendUserConfirmation.trim() === "I-am-sorry"){
-      if(this.userId !== null){
+    if (this.suspendUserConfirmation.trim() === "I-am-sorry") {
+      if (this.userId !== null) {
         this.suspendLoading = true;
         let userId: number = parseInt(this.userId() || '0', 10);
         this.authService.activateAccountRequest(userId, this.suspendUserConfirmation)
-        .subscribe({
-          next: (res: string) => {
-            this.messageService.add({
+          .subscribe({
+            next: (res: string) => {
+              this.messageService.add({
                 severity: 'success',
                 summary: "Request Status",
                 detail: res || 'Request sent successfully!',
@@ -513,9 +528,9 @@ export class Home implements OnInit {
               this.suspendUserConfirmation = ''; // Reset confirmation input
               this.suspendLoading = false; // Reset loading state
               this.suspendErrorMessage = '';
-          },
-          error: (err) => {
-            console.log('Error while sending your request: ', err);
+            },
+            error: (err) => {
+              console.log('Error while sending your request: ', err);
               this.messageService.add({
                 severity: 'error',
                 summary:
@@ -526,8 +541,8 @@ export class Home implements OnInit {
               this.suspendUserConfirmation = '';
               this.suspendLoading = false; // Reset loading state
               this.suspendErrorMessage = '';
-          }
-        })
+            }
+          })
       }
     } else {
       this.suspendErrorMessage =
