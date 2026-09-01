@@ -18,9 +18,7 @@ import { CookieService } from '../../../interceptors/cookie.service';
 import { MessageService } from 'primeng/api';
 import { InputTextModule } from 'primeng/inputtext';
 import { CheckboxModule } from 'primeng/checkbox';
-import { DialogModule } from 'primeng/dialog';
-import { FriendConnectionService, FriendItem } from '../../services/friend-connection-service';
-import { ShareCollectionService, ShareCollectionsResponse } from '../../services/share-collection-service';
+import { ShareCollectionsDialogComponent } from '../../../components/share-collections-dialog/share-collections-dialog';
 
 type UserFavorites = {
   userID: number;
@@ -41,7 +39,7 @@ type UserFavorites = {
     CommonModule,
     InputTextModule,
     CheckboxModule,
-    DialogModule,
+    ShareCollectionsDialogComponent,
   ],
   templateUrl: './home.html',
   styleUrl: './home.scss',
@@ -57,8 +55,6 @@ export class Home implements OnInit {
   collectionService = inject(CollectionsService);
   authService = inject(AuthService);
   categoryService = inject(CategoryService);
-  private friendConnectionService = inject(FriendConnectionService);
-  private shareCollectionService = inject(ShareCollectionService);
 
   collections: CollectionDto[] = [];
   originalCollections: CollectionDto[] = [];
@@ -69,11 +65,7 @@ export class Home implements OnInit {
   // Stores the current user's favorite IDs locally because the backend has no favorite API yet.
   favoriteIds = new Set<number>();
   selectedCollectionIds = new Set<number>();
-  selectedFriendIds = new Set<number>();
-  friends: FriendItem[] = [];
   shareDialogVisible = false;
-  friendsLoading = false;
-  sharing = false;
 
   selectedFilters: CollectionFilters = {
     category: null,
@@ -303,89 +295,14 @@ export class Home implements OnInit {
   openShareDialog(): void {
     if (!this.selectedCollectionIds.size) return;
     this.shareDialogVisible = true;
-    this.selectedFriendIds = new Set<number>();
-    this.loadFriends();
   }
 
-  closeShareDialog(): void {
-    this.shareDialogVisible = false;
+  onCollectionsShared(): void {
+    this.selectedCollectionIds = new Set<number>();
   }
 
-  toggleFriendSelection(friend: FriendItem): void {
-    const next = new Set(this.selectedFriendIds);
-    next.has(friend.userId) ? next.delete(friend.userId) : next.add(friend.userId);
-    this.selectedFriendIds = next;
-  }
-
-  isFriendSelected(friend: FriendItem): boolean {
-    return this.selectedFriendIds.has(friend.userId);
-  }
-
-  shareSelectedCollections(): void {
-    const userId = parseInt(this.userId() || '0', 10);
-    if (!userId || !this.selectedCollectionIds.size || !this.selectedFriendIds.size) return;
-
-    this.sharing = true;
-    this.shareCollectionService.shareCollections(userId, {
-      collectionIds: [...this.selectedCollectionIds],
-      friendUserIds: [...this.selectedFriendIds],
-    }).subscribe({
-      next: (response: ShareCollectionsResponse) => {
-        this.sharing = false;
-        this.shareDialogVisible = false;
-        this.selectedCollectionIds = new Set<number>();
-        const skipped = response.data?.skippedOrPartialRecipients ?? [];
-        if (skipped.length > 0 || response.data?.totalSharesCreated > 0) {
-          this.messageService.add({
-            severity: skipped.length ? 'warn' : 'success',
-            summary: response.data.totalSharesCreated <= 0 ? 'No collections are shared' : (skipped.length ? 'Shared with some friends' : 'Collections shared'),
-            detail: skipped.length
-              ? `${response.data.totalSharesCreated} shares created. Unable to share with: ${skipped.join(', ')} due to max share collections limit(2) reached per 1hr for this user, please try again later or check Shared with me tab in Recommendations page to check which collections are shared.`
-              : `${response.data?.totalSharesCreated ?? 0} collection shares created.`,
-            life: 5000,
-          });
-        }
-        const alreadyShared = response.data?.alreadySharedMessages ?? [];
-        if (alreadyShared.length > 0) {
-          var commonMsg = "";
-          alreadyShared.forEach((msg) => {
-            commonMsg += msg + "\n";
-          });
-          this.messageService.add({
-            severity: 'info',
-            summary: 'Already shared',
-            detail: commonMsg,
-            life: 4000,
-          });
-        }
-      },
-      error: (error) => {
-        this.sharing = false;
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Could not share collections',
-          detail: error?.error?.message || 'Please try again.',
-          life: 4000,
-        });
-      },
-    });
-  }
-
-  private loadFriends(): void {
-    const userId = parseInt(this.userId() || '0', 10);
-    if (!userId) return;
-    this.friendsLoading = true;
-    this.friendConnectionService.getAllFriends(userId).subscribe({
-      next: (friends) => {
-        this.friends = friends;
-        this.friendsLoading = false;
-      },
-      error: () => {
-        this.friends = [];
-        this.friendsLoading = false;
-        this.messageService.add({ severity: 'error', summary: 'Friends unavailable', detail: 'Unable to load your friends right now.', life: 3000 });
-      },
-    });
+  selectedCollectionIdList(): number[] {
+    return Array.from(this.selectedCollectionIds);
   }
 
   // Maps progress values to PrimeNG tag colors.

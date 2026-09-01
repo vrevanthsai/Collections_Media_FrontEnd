@@ -94,18 +94,16 @@
                   <i class="pi pi-trash"></i>
                   Delete
                 </button>
-                <button type="button" class="btn btn-outline-dark" (click)="shareCollection()">
+                <button type="button" class="btn btn-outline-dark" (click)="openShareDialog()">
                   <i class="pi pi-share-alt"></i>
                   Share
                 </button>
               </div>
             }          
 
-          @if (shareMessage()) {
-            <p class="share-message" aria-live="polite">{{ shareMessage() }}</p>
-          }
         </div>
       </article>
+      <app-share-collections-dialog [(visible)]="shareDialogVisible" [collectionIds]="collectionIdsForShare(item)"></app-share-collections-dialog>
     }
   </div>
 </section>

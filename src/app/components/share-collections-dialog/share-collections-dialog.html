@@ -1,0 +1,40 @@
+<p-dialog [visible]="visible" [modal]="true" [draggable]="false" [resizable]="false"
+  [style]="{ width: 'min(94vw, 34rem)' }" styleClass="share-dialog" (onHide)="close()">
+  <ng-template #header>
+    <div class="share-dialog-title">
+      <span class="share-dialog-icon"><i class="pi pi-send"></i></span>
+      <div><strong>Share collections</strong><small>{{ collectionIds.length }} selected collection{{ collectionIds.length === 1 ? '' : 's' }}</small></div>
+    </div>
+  </ng-template>
+
+  <p class="share-dialog-copy">Choose friends who should receive these collections.</p>
+
+  @if (friendsLoading) {
+    <div class="share-loading"><p-progressSpinner strokeWidth="4"></p-progressSpinner></div>
+  } @else if (friends.length) {
+    <div class="friend-list" role="list">
+      @for (friend of friends; track friend.userId) {
+        <div class="friend-row" [class.selected]="isFriendSelected(friend)" role="checkbox" tabindex="0"
+          [attr.aria-checked]="isFriendSelected(friend)" (click)="toggleFriendSelection(friend)"
+          (keydown.enter)="toggleFriendSelection(friend)" (keydown.space)="toggleFriendSelection(friend); $event.preventDefault()">
+          <span class="friend-avatar">{{ (friend.name || friend.username).charAt(0) | titlecase }}</span>
+          <span class="friend-details"><strong>{{ friend.name || friend.username }}</strong><small>@{{ friend.username }}</small></span>
+          <p-checkbox [binary]="true" [ngModel]="isFriendSelected(friend)" (click)="$event.stopPropagation()"
+            (onChange)="toggleFriendSelection(friend)"></p-checkbox>
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="no-friends"><i class="pi pi-users"></i><strong>No friends to share with yet</strong><span>Add friends first, then come back to share your collections.</span></div>
+  }
+
+  <ng-template #footer>
+    <div class="share-dialog-footer">
+      <span>{{ selectedFriendIds.size }} friend{{ selectedFriendIds.size === 1 ? '' : 's' }} selected</span>
+      <div><button type="button" class="btn btn-light" (click)="close()">Cancel</button>
+      <button type="button" class="btn btn-dark" [disabled]="!selectedFriendIds.size || sharing" (click)="shareCollections()">
+        @if (sharing) { Sharing... } @else { Send <i class="pi pi-send"></i> }
+      </button></div>
+    </div>
+  </ng-template>
+</p-dialog>

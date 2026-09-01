@@ -12,6 +12,7 @@ import { UpdateCollection } from '../update-collection/update-collection';
 import { CollectionDto, CollectionsService } from '../../services/collections-service';
 import { CookieService } from '../../../interceptors/cookie.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ShareCollectionsDialogComponent } from '../../../components/share-collections-dialog/share-collections-dialog';
 
 @Component({
   selector: 'app-collection-detail',
@@ -24,6 +25,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     RatingModule,
     TagModule,
     TitleCasePipe,
+    ShareCollectionsDialogComponent,
   ],
   templateUrl: './collection-detail.html',
   styleUrl: './collection-detail.scss',
@@ -39,7 +41,7 @@ export class CollectionDetail implements OnInit, OnDestroy {
   collection = signal<CollectionDto | null>(null);
   loading = signal(true);
   errorMessage = signal('');
-  shareMessage = signal('');
+  shareDialogVisible = false;
   private objectUrl: string | null = null;
   private collectionId = 0;
   userId = parseInt(this.cookieService.getCookie('userId') || '0', 10);
@@ -107,32 +109,12 @@ export class CollectionDetail implements OnInit, OnDestroy {
     });
   }
 
-  // Shares the current details URL or copies it when sharing is unsupported.
-  async shareCollection(): Promise<void> {
-    const collection = this.collection();
-    if (!collection) return;
+  openShareDialog(): void {
+    if (this.collection()?.collectionId) this.shareDialogVisible = true;
+  }
 
-    const shareData = {
-      title: collection.name,
-      text: `View ${collection.name} in my collection.`,
-      url: window.location.href,
-    };
-
-    try {
-      if (navigator.share) {
-        await navigator.share(shareData);
-        this.shareMessage.set('Shared successfully.');
-      } else if (navigator.clipboard) {
-        await navigator.clipboard.writeText(shareData.url);
-        this.shareMessage.set('Link copied to clipboard.');
-      } else {
-        this.shareMessage.set('Copy the page URL to share this collection.');
-      }
-    } catch (error) {
-      if ((error as DOMException).name !== 'AbortError') {
-        this.shareMessage.set('Unable to share this collection.');
-      }
-    }
+  collectionIdsForShare(collection: CollectionDto): number[] {
+    return collection.collectionId == null ? [] : [collection.collectionId];
   }
 
   getProgressSeverity(progress: string): 'success' | 'info' | 'warn' | 'contrast' {
