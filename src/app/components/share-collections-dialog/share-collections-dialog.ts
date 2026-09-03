@@ -16,6 +16,7 @@ import { ShareCollectionService, ShareCollectionsResponse } from '../../pages/se
   styleUrl: './share-collections-dialog.scss',
 })
 export class ShareCollectionsDialogComponent implements OnChanges {
+  readonly maxFriendsPerShare = 5; // to prevent spamming from one user to other users
   @Input() visible = false;
   @Input() collectionIds: number[] = [];
   @Output() visibleChange = new EventEmitter<boolean>();
@@ -39,17 +40,32 @@ export class ShareCollectionsDialogComponent implements OnChanges {
   }
 
   close(): void {
+    this.visible = false;
     this.visibleChange.emit(false);
+  }
+
+  onDialogVisibleChange(visible: boolean): void {
+    if (!visible) this.close();
   }
 
   toggleFriendSelection(friend: FriendItem): void {
     const next = new Set(this.selectedFriendIds);
-    next.has(friend.userId) ? next.delete(friend.userId) : next.add(friend.userId);
+    if (next.has(friend.userId)) {
+      next.delete(friend.userId);
+    } else if (next.size < this.maxFriendsPerShare) {
+      next.add(friend.userId);
+    } else {
+      return;
+    }
     this.selectedFriendIds = next;
   }
 
   isFriendSelected(friend: FriendItem): boolean {
     return this.selectedFriendIds.has(friend.userId);
+  }
+
+  isFriendSelectionDisabled(friend: FriendItem): boolean {
+    return !this.isFriendSelected(friend) && this.selectedFriendIds.size >= this.maxFriendsPerShare;
   }
 
   shareCollections(): void {
@@ -59,7 +75,7 @@ export class ShareCollectionsDialogComponent implements OnChanges {
     this.sharing = true;
     this.shareCollectionService.shareCollections(userId, {
       collectionIds: this.collectionIds,
-      friendUserIds: [...this.selectedFriendIds],
+      friendUserIds: [...this.selectedFriendIds].slice(0, this.maxFriendsPerShare),
     }).subscribe({
       next: (response: ShareCollectionsResponse) => {
         this.sharing = false;
