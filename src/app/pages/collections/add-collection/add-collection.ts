@@ -99,6 +99,14 @@ export class AddCollection {
       // Non-User-input fields with their initial values
       imagename: [null ], // TODO- make this field optional from Frontend logic
     });
+
+    // receive query param from collection-detail page and set it to collection name field in add-collection form
+    this.router.routerState.root.queryParams.subscribe((params) => {
+      const collectionNameFromQuery = params['recommendedCollectionName'];
+      if (collectionNameFromQuery) {
+        this.name.setValue(collectionNameFromQuery);
+      }
+    });
   }
 
   ngOnInit(): void {

@@ -99,7 +99,13 @@
                   Share
                 </button>
               </div>
-            }          
+            } @else {
+              <!-- only Visible to other users like Friends or strangers- not to creator user of this collection -->
+              <button type="button" class="btn btn-primary" (click)="addToMyCollection(item.name)">
+                <i class="pi pi-plus"></i>
+                Add to My Collection
+              </button>
+            }         
 
         </div>
       </article>

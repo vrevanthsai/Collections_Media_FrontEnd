@@ -6,7 +6,7 @@
                 <strong>{{data.category.categoryName}}</strong>? The data will be deleted permanently along with its linked Collections data also!
             </h3>
             <div class="d-flex flex-column gap-1 mt-2">
-                <label for="name" class="fw-semibold">Please type <strong>Yes-Delete-This-Category</strong> to
+                <label for="name" class="fw-semibold">Please type <strong>'Yes-Delete-This-Category'</strong> to
                     confirm</label>
                 <input pInputText id="name" [(ngModel)]="deleteCategoryConfirmation" />
                 <div *ngIf="deleteErrorMessage !== ''" class="text-danger small mt-1">{{ deleteErrorMessage }}</div>

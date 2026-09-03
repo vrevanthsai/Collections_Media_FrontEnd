@@ -179,4 +179,9 @@ export class CollectionDetail implements OnInit, OnDestroy {
       this.objectUrl = null;
     }
   }
+
+  // Navigates to the add collection page with the specified category with query parameter- Collection Name, allowing the user to add a new collection in that category.
+  addToMyCollection(collectionName: string): void {
+    this.router.navigate(['collections/add-collection'], { queryParams: { recommendedCollectionName: collectionName } });
+  }
 }
