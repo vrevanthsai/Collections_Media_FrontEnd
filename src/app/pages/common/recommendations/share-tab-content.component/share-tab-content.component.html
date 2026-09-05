@@ -3,15 +3,26 @@
         <p class="share-tab__intro">{{ introText }}</p>
 
         @if (sortedGroups().length > 0) {
-        <div class="share-tab__filter">
-            <button type="button" class="filter-btn" [class.filter-btn--active]="sortOrder() === 'latest'"
-                (click)="setSort('latest')">
-                Latest
-            </button>
-            <button type="button" class="filter-btn" [class.filter-btn--active]="sortOrder() === 'oldest'"
-                (click)="setSort('oldest')">
-                Oldest
-            </button>
+        <div class="share-tab__controls">
+            <div class="share-tab__filter">
+                <button type="button" class="filter-btn" [class.filter-btn--active]="sortOrder() === 'latest'"
+                    (click)="setSort('latest')">
+                    Latest
+                </button>
+                <button type="button" class="filter-btn" [class.filter-btn--active]="sortOrder() === 'oldest'"
+                    (click)="setSort('oldest')">
+                    Oldest
+                </button>
+            </div>
+
+            <div class="share-tab__expand-controls">
+                <button type="button" class="expand-btn" (click)="expandAll()">
+                    <i class="pi pi-angle-double-down"></i> Expand All
+                </button>
+                <button type="button" class="expand-btn" (click)="collapseAll()">
+                    <i class="pi pi-angle-double-up"></i> Collapse All
+                </button>
+            </div>
         </div>
         }
     </div>
@@ -26,7 +37,7 @@
         <p>{{ emptyText }}</p>
     </div>
     } @else {
-    <p-accordion [multiple]="true" [value]="[sortedGroups()[0].sharedByUserId]">
+    <p-accordion [multiple]="true" [value]="expandedKeys()" (valueChange)="onAccordionValueChange($event)">
         @for (group of sortedGroups(); track group.sharedByUserId) {
         <p-accordion-panel [value]="group.sharedByUserId">
             <p-accordion-header>
@@ -80,7 +91,8 @@
                         </div>
                         @if(tabType === 'MY_WATCH_LIST'){
                         <div>
-                            <button type="button" class="share-card__action-btn add-to-collection-btn" (click)="onAddToCollection($event)">
+                            <button type="button" class="share-card__action-btn add-to-collection-btn"
+                                (click)="onAddToCollection($event, item.collectionName)">
                                 Add to Your Collection
                             </button>
                         </div>

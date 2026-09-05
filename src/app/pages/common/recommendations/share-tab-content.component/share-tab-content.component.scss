@@ -249,3 +249,42 @@ $border-subtle: rgba(255, 255, 255, 0.08);
     max-width: 160px;
   }
 }
+
+.share-tab__controls {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.share-tab__expand-controls {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.expand-btn {
+  background: transparent;
+  border: 1px solid $border-subtle;
+  color: $text-muted;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.4rem 0.7rem;
+  border-radius: 7px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:hover {
+    color: #fff;
+    border-color: $accent;
+  }
+}
+
+@media (max-width: 576px) {
+  .share-tab__controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

@@ -44,6 +44,8 @@ export class ShareTabContentComponent implements OnInit, OnDestroy, OnChanges {
   private imageCache = new Map<string, string>();
   private readonly placeholder = 'https://api.dicebear.com/7.x/adventurer/svg?seed=rinku112'; // default avatar img
 
+  expandedKeys = signal<number[]>([]); // — controls which accordion panels are open
+
   sortedGroups = computed(() => {
     const list = [...this.groups()];
     const dir = this.sortOrder() === 'latest' ? -1 : 1;
@@ -73,6 +75,8 @@ export class ShareTabContentComponent implements OnInit, OnDestroy, OnChanges {
         next: (groups) => {
           this.loading.set(false);
           this.groups.set(groups);
+          // default: open the first group, same behavior as before
+          this.expandedKeys.set(groups.length > 0 ? [groups[0].sharedByUserId] : []);
           groups.forEach((g) => this.resolveAvatar(g));
         },
         error: () => {
@@ -80,6 +84,21 @@ export class ShareTabContentComponent implements OnInit, OnDestroy, OnChanges {
           this.errorMessage.set('Unable to load shared collections right now.');
         }
       });
+  }
+
+  // Expand All and Collapse All methods
+  expandAll(): void {
+    // it will expand all the accordion panels by setting the expandedKeys signal to an array of all sharedByUserId values from the sortedGroups signal. This will cause all panels to be open in the UI.
+    this.expandedKeys.set(this.sortedGroups().map((g) => g.sharedByUserId));
+  }
+
+  collapseAll(): void {
+    this.expandedKeys.set([]);
+  }
+
+  onAccordionValueChange(value: unknown): void {
+    // keep our signal in sync when the user manually clicks a panel header
+    this.expandedKeys.set(Array.isArray(value) ? (value as number[]) : []);
   }
 
   private resolveAvatar(n: ShareGroup): void {
@@ -255,10 +274,10 @@ export class ShareTabContentComponent implements OnInit, OnDestroy, OnChanges {
     }
   }
 
-  onAddToCollection(event: Event): void {
+  onAddToCollection(event: Event, collectionName: string): void {
     event.stopPropagation();
-    // it will redirect User to Add Collection page to create new collection and add this shared/recommended collection to it
-    this.router.navigate(['collections/add-collection']);
+    // it will redirect User to Add Collection page to create new collection and add this shared/recommended collection to it along with its collection name
+    this.router.navigate(['collections/add-collection'], { queryParams: { recommendedCollectionName: collectionName } });
   }  
 
   ngOnDestroy(): void {
