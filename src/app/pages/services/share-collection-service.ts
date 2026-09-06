@@ -35,6 +35,11 @@ export class ShareCollectionService {
   markViewed(userId: number, shareId: number): Observable<ActionStatusResponse> {
     return this.http.patch<ActionStatusResponse>(`${this.baseUrl}/${userId}/shares/${shareId}/viewed`, {}); // empty body- body not needed in backend logic
   }
+
+  // userId can be sharedByUserId or sharedWithUserId, depending on the tabType and shareId is the id of the shared collection item
+  deleteShare(userId: number, shareId: number): Observable<ActionStatusResponse> {
+    return this.http.delete<ActionStatusResponse>(`${this.baseUrl}/${userId}/shares/delete-share/${shareId}`);
+  }
 }
 
 export interface ShareCollectionsRequest {

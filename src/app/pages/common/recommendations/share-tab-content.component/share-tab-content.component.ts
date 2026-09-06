@@ -7,12 +7,13 @@ import { AvatarModule } from 'primeng/avatar';
 import { ShareActionStatus, ShareCollectionService, SharedCollectionItem, ShareGroup, ShareTabType } from '../../../services/share-collection-service';
 import { CommonService } from '../../../services/common-service';
 import { CookieService } from '../../../../interceptors/cookie.service';
-import { MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
+import { ConfirmPopupModule } from 'primeng/confirmpopup';
 
 @Component({
   selector: 'app-share-tab-content',
   standalone: true,
-  imports: [CommonModule, RouterModule, AccordionModule, AvatarModule],
+  imports: [CommonModule, RouterModule, AccordionModule, AvatarModule, ConfirmPopupModule],
   templateUrl: './share-tab-content.component.html',
   styleUrls: ['./share-tab-content.component.scss']
 })
@@ -43,6 +44,7 @@ export class ShareTabContentComponent implements OnInit, OnDestroy, OnChanges {
 
   private imageCache = new Map<string, string>();
   private readonly placeholder = 'https://api.dicebear.com/7.x/adventurer/svg?seed=rinku112'; // default avatar img
+  private confirmationService = inject(ConfirmationService);
 
   expandedKeys = signal<number[]>([]); // — controls which accordion panels are open
 
@@ -236,9 +238,9 @@ export class ShareTabContentComponent implements OnInit, OnDestroy, OnChanges {
           }
           this.watchListChanged.emit();
 
-          if (this.tabType === 'MY_WATCH_LIST') {
-            this.load();
-          }
+          // if (this.tabType === 'MY_WATCH_LIST') {
+          //   this.load();
+          // }
         },
         error: () => {
           this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Error occurred while trying to add to watch list.' });
@@ -278,10 +280,40 @@ export class ShareTabContentComponent implements OnInit, OnDestroy, OnChanges {
     event.stopPropagation();
     // it will redirect User to Add Collection page to create new collection and add this shared/recommended collection to it along with its collection name
     this.router.navigate(['collections/add-collection'], { queryParams: { recommendedCollectionName: collectionName } });
-  }  
+  }
 
   ngOnDestroy(): void {
     this.imageCache.forEach((url) => URL.revokeObjectURL(url));
     this.imageCache.clear();
+  }
+
+  confirmDelete(event: Event, item: SharedCollectionItem): void {
+    event.stopPropagation();
+
+    this.confirmationService.confirm({
+      target: event.currentTarget as EventTarget,
+      message: `Delete this "${item?.collectionName}" collection from your recommendations and it will be removed from both sender and receiver sides permanently?`,
+      icon: 'pi pi-exclamation-triangle',
+      acceptButtonProps: { label: 'Yes', severity: 'danger' },
+      rejectButtonProps: { label: 'No', severity: 'secondary', outlined: true },
+      accept: () => this.onDeleteShare(item)
+    });
+  }
+
+  onDeleteShare(item: SharedCollectionItem): void {
+    this.sharedCollectionService.deleteShare(this.currentUserId, item.shareId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          if (res.success) {
+            this.messageService.add({ severity: 'success', summary: 'Deleted', detail: res.data || 'Shared/Recommended Collection deleted successfully.', life: 4000 });
+            this.load(); // Refresh the list after deletion
+          }
+        },
+        error: (err) => {
+          console.error('Error while deleting shared/recommended collection:', err);
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: err?.error?.message || 'Error occurred while deleting the shared/recommended collection.' });
+        }
+      });
   }
 }
