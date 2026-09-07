@@ -98,4 +98,5 @@ export type CollectionFilters = {
   category?: string | null;
   progress?: string | null;
   privacy?: string | null;
+  favorite?: boolean;
 };

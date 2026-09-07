@@ -78,5 +78,11 @@ export const routes: Routes = [
     path: 'users-profile/:userId',
     loadComponent: () => import('./pages/common/user-profile-view/user-profile-view').then(m => m.UserProfileView),
     canActivate: [authGuard]
+  },
+  // Shared Collections or Recommendations page/router
+  {
+    path: 'recommendations',
+    loadComponent: () => import('./pages/common/recommendations/recommendations').then(m => m.Recommendations),
+    canActivate: [authGuard]
   }
 ];

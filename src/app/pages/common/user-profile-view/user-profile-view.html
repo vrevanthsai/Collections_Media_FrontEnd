@@ -30,7 +30,7 @@
                 <button pButton type="button" (click)="sendFriendRequest()" [disabled]="isFriendRequestSent()">{{
                     friendButtonLabel }}</button>
                 @if(friendConnectionData()?.status === 'ACCEPTED'){
-                <button type="button" pButton severity="danger" (click)="confirmUnfriend($event)">
+                <button type="button" pButton severity="danger" (click)="confirmUnfriend()">
                     @if (isUnfriending) {
                     <i class="pi pi-spin pi-spinner"></i>
                     } @else {
@@ -119,3 +119,25 @@
         }
     </div>
 </div>
+
+<p-dialog header="Unfriend User" [modal]="true" [(visible)]="isUnfriendDialogVisible"
+    [style]="{ width: 'min(94vw, 30rem)' }" (onHide)="cancelUnfriend()">
+    <div class="d-flex flex-column gap-3">
+        <span>Are you sure you want to remove <strong>{{ user()?.name || user()?.username }}</strong> friend from your friends and this will remove your recommendations data also between you and this friend permanently from both sides?</span>
+        <div class="d-flex flex-column gap-1">
+            <label for="unfriend-confirmation" class="small fw-semibold">
+                Type '<strong>Yes-Unfriend</strong>' to confirm
+            </label>
+            <input pInputText id="unfriend-confirmation" [(ngModel)]="unfriendConfirmation"
+                [attr.aria-invalid]="unfriendErrorMessage ? 'true' : 'false'" />
+            @if (unfriendErrorMessage) {
+            <div class="text-danger small mt-1">{{ unfriendErrorMessage }}</div>
+            }
+        </div>
+        <div class="d-flex justify-content-end gap-2">
+            <button type="button" pButton severity="secondary" (click)="cancelUnfriend()">No</button>
+            <button type="button" pButton severity="danger" (click)="confirmUnfriendAction()"
+                [disabled]="isUnfriending">Yes</button>
+        </div>
+    </div>
+</p-dialog>

@@ -17,6 +17,13 @@ import { CategoryService } from '../../services/category-service';
 import { CookieService } from '../../../interceptors/cookie.service';
 import { MessageService } from 'primeng/api';
 import { InputTextModule } from 'primeng/inputtext';
+import { CheckboxModule } from 'primeng/checkbox';
+import { ShareCollectionsDialogComponent } from '../../../components/share-collections-dialog/share-collections-dialog';
+
+type UserFavorites = {
+  userID: number;
+  favoriteCollectionIds: number[];
+};
 
 @Component({
   selector: 'app-home',
@@ -30,7 +37,9 @@ import { InputTextModule } from 'primeng/inputtext';
     ProgressSpinnerModule,
     TitleCasePipe,
     CommonModule,
-    InputTextModule
+    InputTextModule,
+    CheckboxModule,
+    ShareCollectionsDialogComponent,
   ],
   templateUrl: './home.html',
   styleUrl: './home.scss',
@@ -53,13 +62,16 @@ export class Home implements OnInit {
   categoriesLoader = signal(false);
   currentPage = 1;
 
-  // Stores favorite IDs locally because the backend has no favorite API yet.
+  // Stores the current user's favorite IDs locally because the backend has no favorite API yet.
   favoriteIds = new Set<number>();
+  selectedCollectionIds = new Set<number>();
+  shareDialogVisible = false;
 
   selectedFilters: CollectionFilters = {
     category: null,
     progress: null,
     privacy: null,
+    favorite: false,
   };
 
   categories = [{ label: 'All', value: null }];
@@ -79,11 +91,11 @@ export class Home implements OnInit {
     { label: 'All', value: null },
     { label: 'Public', value: 'PUBLIC' },
     { label: 'Private', value: 'PRIVATE' },
-    { label: 'Friend', value: 'FRIENDS' },
+    { label: 'Friends', value: 'FRIENDS' },
   ];
   selectedCategoryLabel: string | null = null;
-  suspendedUserStatus : boolean = false;
-  suspendUserConfirmation : string = "";
+  suspendedUserStatus: boolean = false;
+  suspendUserConfirmation: string = "";
   suspendLoading: boolean = false;
   suspendErrorMessage: string = '';
 
@@ -185,7 +197,7 @@ export class Home implements OnInit {
         this.originalCollections = [];
         this.loading.set(false);
         // adding logic for Suspended User- to request Access/Activate his account to Admin
-        if(error?.error?.success === false && error?.error?.message === "Your account has been suspended. Please contact support."){
+        if (error?.error?.success === false && error?.error?.message === "Your account has been suspended. Please contact support.") {
           this.suspendedUserStatus = true;
         }
       },
@@ -204,7 +216,7 @@ export class Home implements OnInit {
 
   // Clears every filter and reloads the complete user list.
   resetFilters(): void {
-    this.selectedFilters = { category: null, progress: null, privacy: null };
+    this.selectedFilters = { category: null, progress: null, privacy: null, favorite: false };
     // If the original collection list is already loaded, we can restore it directly or we call User-based-Collections-Api to get the latest collection list and then restore it.
     if (this.originalCollections.length > 0) {
       this.collections = this.originalCollections;
@@ -218,8 +230,19 @@ export class Home implements OnInit {
     return !!(
       this.selectedFilters.category ||
       this.selectedFilters.progress ||
-      this.selectedFilters.privacy
+      this.selectedFilters.privacy ||
+      this.selectedFilters.favorite
     );
+  }
+
+  // Shows only locally stored favorites; clicking again restores the other filters' results.
+  toggleFavoriteFilter(): void {
+    this.currentPage = 1;
+    this.selectedFilters = {
+      ...this.selectedFilters,
+      favorite: !this.selectedFilters.favorite,
+    };
+    this.applyLocalFiltersFallback();
   }
 
   changePage(page: number): void {
@@ -240,7 +263,7 @@ export class Home implements OnInit {
     );
   }
 
-  // Toggles the ID and persists favorites across browser refreshes.
+  // Toggles the ID and persists favorites across browser refreshes for this user only.
   toggleFavorite(collection: CollectionDto): void {
     if (collection.collectionId == null) return;
 
@@ -252,34 +275,34 @@ export class Home implements OnInit {
     }
 
     this.favoriteIds = nextFavorites;
-    localStorage.setItem(
-      this.favoritesStorageKey,
-      JSON.stringify([...nextFavorites]),
-    );
+    this.saveFavorites(nextFavorites);
+
+    // Keep the visible result set accurate when Favorites only is active.
+    if (this.selectedFilters.favorite) this.applyLocalFiltersFallback();
   }
 
-  // Uses the native share sheet, with clipboard copy as a fallback.
-  async shareCollection(collection: CollectionDto): Promise<void> {
+  isCollectionSelected(collection: CollectionDto): boolean {
+    return collection.collectionId != null && this.selectedCollectionIds.has(collection.collectionId);
+  }
+
+  toggleCollectionSelection(collection: CollectionDto): void {
     if (collection.collectionId == null) return;
+    const next = new Set(this.selectedCollectionIds);
+    next.has(collection.collectionId) ? next.delete(collection.collectionId) : next.add(collection.collectionId);
+    this.selectedCollectionIds = next;
+  }
 
-    const url = `${window.location.origin}/collections/${collection.collectionId}`;
-    const shareData = {
-      title: collection.name,
-      text: `View ${collection.name}.`,
-      url,
-    };
+  openShareDialog(): void {
+    if (!this.selectedCollectionIds.size) return;
+    this.shareDialogVisible = true;
+  }
 
-    try {
-      if (navigator.share) {
-        await navigator.share(shareData);
-      } else if (navigator.clipboard) {
-        await navigator.clipboard.writeText(url);
-      }
-    } catch (error) {
-      if ((error as DOMException).name !== 'AbortError') {
-        console.log('Collection share error = ', error);
-      }
-    }
+  onCollectionsShared(): void {
+    this.selectedCollectionIds = new Set<number>();
+  }
+
+  selectedCollectionIdList(): number[] {
+    return Array.from(this.selectedCollectionIds);
   }
 
   // Maps progress values to PrimeNG tag colors.
@@ -299,12 +322,14 @@ export class Home implements OnInit {
     if (this.originalCollections.length > 0) {
       this.collections = this.originalCollections.filter(
         (collection) =>
+          // if condition is true then we include the collection in the filtered list, otherwise we exclude it.
           (!this.selectedFilters.category ||
             collection.category === this.selectedFilters.category) &&
           (!this.selectedFilters.progress ||
             collection.progress === this.selectedFilters.progress) &&
           (!this.selectedFilters.privacy ||
-            collection.privacy === this.selectedFilters.privacy),
+            collection.privacy === this.selectedFilters.privacy) &&
+          (!this.selectedFilters.favorite || this.isFavorite(collection)),
       );
     } else {
       const userId = parseInt(this.userId() || '0', 10);
@@ -317,7 +342,8 @@ export class Home implements OnInit {
               (!this.selectedFilters.progress ||
                 collection.progress === this.selectedFilters.progress) &&
               (!this.selectedFilters.privacy ||
-                collection.privacy === this.selectedFilters.privacy),
+                collection.privacy === this.selectedFilters.privacy) &&
+              (!this.selectedFilters.favorite || this.isFavorite(collection)),
           );
           this.loading.set(false);
         },
@@ -330,32 +356,87 @@ export class Home implements OnInit {
     }
   }
 
-  // Restores valid numeric favorite IDs from local storage.
+  // Restores valid numeric favorite IDs for the signed-in user only.
   private loadFavorites(): void {
     try {
-      const storedIds = JSON.parse(
+      const storedFavorites: unknown = JSON.parse(
         localStorage.getItem(this.favoritesStorageKey) ?? '[]',
       );
-      this.favoriteIds = new Set(
-        Array.isArray(storedIds)
-          ? storedIds.filter((id): id is number => Number.isInteger(id))
-          : [],
-      );
+      const currentUserId = this.getCurrentUserId();
+      const userFavorites = Array.isArray(storedFavorites)
+        ? storedFavorites.find(
+          (entry): entry is UserFavorites =>
+            this.isUserFavorites(entry) && entry.userID === currentUserId,
+        )
+        : undefined;
+
+      this.favoriteIds = new Set(userFavorites?.favoriteCollectionIds ?? []);
     } catch {
       this.favoriteIds = new Set<number>();
     }
   }
 
+  private saveFavorites(favoriteIds: Set<number>): void {
+    const currentUserId = this.getCurrentUserId();
+    if (currentUserId == null) return;
+
+    let storedFavorites: UserFavorites[] = [];
+    try {
+      const storedValue: unknown = JSON.parse(
+        localStorage.getItem(this.favoritesStorageKey) ?? '[]',
+      );
+      if (Array.isArray(storedValue)) {
+        storedFavorites = storedValue.filter((entry): entry is UserFavorites =>
+          this.isUserFavorites(entry),
+        );
+      }
+    } catch {
+      // Replace malformed storage with the current user's valid entry below.
+    }
+
+    const currentUserFavorites: UserFavorites = {
+      userID: currentUserId,
+      favoriteCollectionIds: [...favoriteIds],
+    };
+    const userIndex = storedFavorites.findIndex(
+      (entry) => entry.userID === currentUserId,
+    );
+
+    if (userIndex >= 0) {
+      storedFavorites[userIndex] = currentUserFavorites;
+    } else {
+      storedFavorites.push(currentUserFavorites);
+    }
+
+    localStorage.setItem(this.favoritesStorageKey, JSON.stringify(storedFavorites));
+  }
+
+  private getCurrentUserId(): number | null {
+    const userId = Number(this.cookieService.getCookie('userId'));
+    return Number.isInteger(userId) && userId > 0 ? userId : null;
+  }
+
+  private isUserFavorites(value: unknown): value is UserFavorites {
+    if (!value || typeof value !== 'object') return false;
+
+    const entry = value as UserFavorites;
+    return (
+      Number.isInteger(entry.userID) &&
+      Array.isArray(entry.favoriteCollectionIds) &&
+      entry.favoriteCollectionIds.every((id) => Number.isInteger(id))
+    );
+  }
+
   // Method for Suspended User's to send activate request to Admin
   activateAccount(): void {
-    if(this.suspendUserConfirmation.trim() === "I-am-sorry"){
-      if(this.userId !== null){
+    if (this.suspendUserConfirmation.trim() === "I-am-sorry") {
+      if (this.userId !== null) {
         this.suspendLoading = true;
         let userId: number = parseInt(this.userId() || '0', 10);
         this.authService.activateAccountRequest(userId, this.suspendUserConfirmation)
-        .subscribe({
-          next: (res: string) => {
-            this.messageService.add({
+          .subscribe({
+            next: (res: string) => {
+              this.messageService.add({
                 severity: 'success',
                 summary: "Request Status",
                 detail: res || 'Request sent successfully!',
@@ -364,9 +445,9 @@ export class Home implements OnInit {
               this.suspendUserConfirmation = ''; // Reset confirmation input
               this.suspendLoading = false; // Reset loading state
               this.suspendErrorMessage = '';
-          },
-          error: (err) => {
-            console.log('Error while sending your request: ', err);
+            },
+            error: (err) => {
+              console.log('Error while sending your request: ', err);
               this.messageService.add({
                 severity: 'error',
                 summary:
@@ -377,8 +458,8 @@ export class Home implements OnInit {
               this.suspendUserConfirmation = '';
               this.suspendLoading = false; // Reset loading state
               this.suspendErrorMessage = '';
-          }
-        })
+            }
+          })
       }
     } else {
       this.suspendErrorMessage =
