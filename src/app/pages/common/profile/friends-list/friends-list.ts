@@ -1,27 +1,28 @@
 import { Component, OnInit, OnDestroy, inject, signal, computed, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PaginatorModule, PaginatorState } from 'primeng/paginator';
 import { AvatarModule } from 'primeng/avatar';
-import { ConfirmationService, MessageService } from 'primeng/api';
-import { ConfirmPopupModule } from 'primeng/confirmpopup';
+import { DialogModule } from 'primeng/dialog';
+import { InputTextModule } from 'primeng/inputtext';
+import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
-import { FriendConnectionService, FriendItem } from '../../../services/friend-connection-service';
+import { FriendConnectionService, FriendItem, FriendResquestResponse } from '../../../services/friend-connection-service';
 import { CookieService } from '../../../../interceptors/cookie.service';
 import { CommonService } from '../../../services/common-service';
+import { ButtonModule } from 'primeng/button';
 
 @Component({
   selector: 'app-friends-list',
-  imports: [CommonModule, RouterModule, PaginatorModule, AvatarModule, ConfirmPopupModule, ToastModule],
-  providers: [ConfirmationService],
+  imports: [CommonModule, FormsModule, RouterModule, PaginatorModule, AvatarModule, DialogModule, InputTextModule, ToastModule, ButtonModule],
   templateUrl: './friends-list.html',
   styleUrl: './friends-list.scss',
 })
 export class FriendsList implements OnInit, OnDestroy {
   private router = inject(Router);
   private friendConnectionService = inject(FriendConnectionService);
-  private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
   private destroyRef = inject(DestroyRef);
   private cookieService = inject(CookieService);
@@ -33,6 +34,10 @@ export class FriendsList implements OnInit, OnDestroy {
   friends = signal<FriendItem[]>([]);
   avatarCache = signal<Record<number, string>>({});
   unfriendingIds = signal<Set<number>>(new Set());
+  isUnfriendDialogVisible = false;
+  selectedFriend: FriendItem | null = null;
+  unfriendConfirmation = '';
+  unfriendErrorMessage = '';
 
   rows = 10;
   first = 0;
@@ -113,14 +118,31 @@ export class FriendsList implements OnInit, OnDestroy {
   confirmUnfriend(event: Event, f: FriendItem): void {
     event.stopPropagation();
 
-    this.confirmationService.confirm({
-      target: event.currentTarget as EventTarget,
-      message: `Remove ${f.name || f.username} from your friends?`,
-      icon: 'pi pi-exclamation-triangle',
-      acceptButtonProps: { label: 'Unfriend', severity: 'danger' },
-      rejectButtonProps: { label: 'Cancel', severity: 'secondary', outlined: true },
-      accept: () => this.unfriend(f)
-    });
+    this.selectedFriend = f;
+    this.unfriendConfirmation = '';
+    this.unfriendErrorMessage = '';
+    this.isUnfriendDialogVisible = true;
+  }
+
+  cancelUnfriend(): void {
+    this.isUnfriendDialogVisible = false;
+    this.selectedFriend = null;
+    this.unfriendConfirmation = '';
+    this.unfriendErrorMessage = '';
+  }
+
+  confirmUnfriendAction(): void {
+    if (this.unfriendConfirmation.trim() !== 'Yes-Unfriend' || !this.selectedFriend) {
+      this.unfriendErrorMessage = 'Please type Yes-Unfriend exactly to continue.';
+      return;
+    }
+
+    const friend = this.selectedFriend;
+    this.isUnfriendDialogVisible = false;
+    this.selectedFriend = null;
+    this.unfriendConfirmation = '';
+    this.unfriendErrorMessage = '';
+    this.unfriend(friend);
   }
 
   private unfriend(f: FriendItem): void {
@@ -130,7 +152,7 @@ export class FriendsList implements OnInit, OnDestroy {
       .unfriend(this.currentUserId, f.userId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: () => {
+        next: (res : FriendResquestResponse) => {
           this.friends.update((items) => items.filter((i) => i.userId !== f.userId));
           // manually remove from unfriendingIds set after successful unfriend- instead of calling getAllFriends api 
           this.unfriendingIds.update((set) => {
@@ -138,7 +160,7 @@ export class FriendsList implements OnInit, OnDestroy {
             next.delete(f.userId);
             return next;
           });
-          this.messageService.add({ severity: 'success', summary: 'Removed', detail: `${f.name || f.username} removed from friends.` });
+          this.messageService.add({ severity: 'success', summary: 'Removed', detail: res?.data || `${f.name || f.username} removed from friends.` });
         },
         error: () => {
           this.unfriendingIds.update((set) => {

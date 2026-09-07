@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy, inject, signal, computed, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PaginatorModule, PaginatorState } from 'primeng/paginator';
@@ -7,6 +8,8 @@ import { AvatarModule } from 'primeng/avatar';
 import { CommonService, UserProfileCollection, UserProfileUser } from '../../services/common-service';
 import { CookieService } from '../../../interceptors/cookie.service';
 import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
+import { InputTextModule } from 'primeng/inputtext';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { CheckFriendConnectionResponse, FriendConnectionDto, FriendConnectionService, FriendItem, FriendResquestResponse } from '../../services/friend-connection-service';
 import { ConfirmPopupModule } from 'primeng/confirmpopup';
@@ -14,7 +17,7 @@ import { ConfirmPopupModule } from 'primeng/confirmpopup';
 
 @Component({
   selector: 'app-user-profile-view',
-  imports: [CommonModule, RouterModule, PaginatorModule, AvatarModule, ButtonModule, ConfirmPopupModule, ButtonModule],
+  imports: [CommonModule, FormsModule, RouterModule, PaginatorModule, AvatarModule, ButtonModule, DialogModule, InputTextModule, ConfirmPopupModule],
   providers: [ConfirmationService],
   templateUrl: './user-profile-view.html',
   styleUrl: './user-profile-view.scss',
@@ -52,6 +55,9 @@ export class UserProfileView implements OnInit, OnDestroy {
   isBlockLoading: boolean = false;
   isUserBlocked: boolean = false;
   isUnBlockLoading: boolean = false;
+  isUnfriendDialogVisible = false;
+  unfriendConfirmation = '';
+  unfriendErrorMessage = '';
 
   ngOnInit(): void {
     this.route.paramMap
@@ -123,27 +129,38 @@ export class UserProfileView implements OnInit, OnDestroy {
     }
   }
 
-  confirmUnfriend(event: Event): void {
-    event.stopPropagation();
-
-    this.confirmationService.confirm({
-      target: event.currentTarget as EventTarget,
-      message: `Remove ${this.user()?.name || this.user()?.username} from your friends?`,
-      icon: 'pi pi-exclamation-triangle',
-      acceptButtonProps: { label: 'Unfriend', severity: 'danger' },
-      rejectButtonProps: { label: 'Cancel', severity: 'secondary', outlined: true },
-      accept: () => this.unfriend()
-    });
+  confirmUnfriend(): void {
+    this.unfriendConfirmation = '';
+    this.unfriendErrorMessage = '';
+    this.isUnfriendDialogVisible = true;
   }
 
-  private unfriend(): void {
+  cancelUnfriend(): void {
+    this.isUnfriendDialogVisible = false;
+    this.unfriendConfirmation = '';
+    this.unfriendErrorMessage = '';
+  }
+
+  confirmUnfriendAction(): void {
+    if (this.unfriendConfirmation.trim() !== 'Yes-Unfriend') {
+      this.unfriendErrorMessage = 'Please type Yes-Unfriend exactly to continue.';
+      return;
+    }
+
+    this.isUnfriendDialogVisible = false;
+    this.unfriendConfirmation = '';
+    this.unfriendErrorMessage = '';
+    this.unfriend();
+  }
+
+  private unfriend() {
     this.isUnfriending = true;
     this.friendConnectionService
       .unfriend(this.currentUserId, this.user()?.userId!) // this.user()?.userId! is otherUserId and ! is used to assert that userId is not null or undefined
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: () => {
-          this.messageService.add({ severity: 'success', summary: 'Removed', detail: `${this.user()?.name || this.user()?.username} removed from friends.` });
+        next: (res: FriendResquestResponse) => {
+          this.messageService.add({ severity: 'success', summary: 'Removed', detail: res?.data || `${this.user()?.name || this.user()?.username} removed from friends.` });
           this.isUnfriending = false;
           this.isFriendRequestSent.set(false);
           this.friendButtonLabel = "Friend Request"; // reset

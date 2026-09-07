@@ -11,6 +11,7 @@ import { MessageService } from 'primeng/api';
 import { CookieService } from '../../../../interceptors/cookie.service';
 import { AuthService } from '../../../auth/services/auth';
 import { Router } from '@angular/router';
+import { InputTextModule } from 'primeng/inputtext';
 
 @Component({
   selector: 'app-settings',
@@ -22,6 +23,7 @@ import { Router } from '@angular/router';
     ToggleSwitchModule,
     ButtonModule,
     DialogModule,
+    InputTextModule,
   ],
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.scss'],

@@ -33,12 +33,11 @@ export class FriendConnectionService {
       .pipe(map((res) => res.data ?? []));
   }
 
-  unfriend(userId: number, friendUserId: number): Observable<void> {
+  unfriend(userId: number, friendUserId: number): Observable<FriendResquestResponse> {
     return this.http
-      .delete<{ success: boolean; message: string }>(
+      .delete<FriendResquestResponse>(
         `${this.BASE_URL}/${userId}/friends/unfriend/${friendUserId}`
-      )
-      .pipe(map(() => void 0));
+      );
   }
 
   blockUser(currentUserId: number, blockedUserId: number | undefined): Observable<FriendResquestResponse>{
