@@ -1,109 +1,152 @@
-<div class="container">
-    <!-- Add Category Form logic -->
-    <div>
-        <h2 class="text-center">Add Category Form</h2>
-        <form [formGroup]="addCategoryForm" (ngSubmit)="addCategory()">
-            <!-- section to show error msg from backend if form submission fails -->
-            <div *ngIf="errorNotification.show" class="text-danger mb-3">
+<div class="page-container">
+
+    <!-- ============ Section 1: Default Categories ============ -->
+    <section class="panel">
+        <div class="panel-header">
+            <h2>Default Categories</h2>
+            <p class="subtitle">Quick-add curated categories to your account</p>
+        </div>
+
+        @if (defaultCategoriesLoading()) {
+        <div class="results-state">
+            <p-progressSpinner strokeWidth="4" fill="#EEEEEE" animationDuration=".5s"></p-progressSpinner>
+        </div>
+        } @else {
+        <div class="default-chip-grid">
+            @for (defaultCat of defaultCategories(); track defaultCat.categoryId) {
+            <div class="default-chip" [class.added]="isAlreadyAdded(defaultCat.categoryId)">
+                <span class="chip-name">{{ defaultCat.categoryName }}</span>
+
+                @if (isAlreadyAdded(defaultCat.categoryId)) {
+                <span class="chip-status">
+                    <i class="pi pi-check-circle"></i> Added
+                </span>
+                } @else {
+                <button pButton type="button" icon="pi pi-plus" class="p-button-sm p-button-rounded chip-add-btn"
+                    (click)="addDefaultCategory(defaultCat.categoryId)"
+                    [disabled]="addingDefaultCategoryId() === defaultCat.categoryId"></button>
+                }
+            </div>
+            } @empty {
+            <p class="empty-text">No default categories available right now.</p>
+            }
+        </div>
+        }
+    </section>
+
+    <!-- ============ Section 2: Add Custom Category ============ -->
+    <section class="panel">
+        <div class="panel-header">
+            <h2>Add Custom Category</h2>
+            <p class="subtitle">Create your own category to organize your collections</p>
+        </div>
+
+        <form [formGroup]="addCategoryForm" (ngSubmit)="addCategory()" class="add-category-form">
+            <div *ngIf="errorNotification.show" class="alert-error">
+                <i class="pi pi-exclamation-triangle"></i>
                 {{ errorNotification.text }}
             </div>
-            <!-- Category Name -->
-            <div class="mb-3">
-                <label for="categoryName" class="form-label">Category Name</label>
-                <input type="text" class="form-control" id="categoryName" formControlName="categoryName" required />
-                <div *ngIf="categoryName.invalid && (categoryName.dirty || categoryName.touched)"
-                    class="text-danger mt-2">
-                    <div *ngIf="categoryName.errors?.['required']">Category name is required.</div>
+
+            <div class="form-row">
+                <div class="form-field">
+                    <label for="categoryName">Category Name</label>
+                    <input type="text" pInputText class="w-100" id="categoryName" formControlName="categoryName"
+                        placeholder="e.g. Documentaries" required />
+                    <div *ngIf="categoryName.invalid && (categoryName.dirty || categoryName.touched)"
+                        class="field-error">
+                        <div *ngIf="categoryName.errors?.['required']">Category name is required.</div>
+                    </div>
                 </div>
+
+                <button type="submit" pButton icon="pi pi-plus" label="Add Category"
+                    class="p-button-primary add-btn"></button>
             </div>
-            <button type="submit" class="btn btn-primary mb-3">Add Category</button>
         </form>
-    </div>
-    <!-- Category List logic -->
-    <div>
-        <h2 class="text-center">Category List</h2>
+    </section>
+
+    <!-- ============ Section 3: Category List ============ -->
+    <section class="panel">
+        <div class="panel-header">
+            <h2>Your Categories</h2>
+            <p class="subtitle">Manage and organize all your categories</p>
+        </div>
+
         @if (loading()) {
         <div class="results-state">
             <p-progressSpinner strokeWidth="4" fill="#EEEEEE" animationDuration=".5s"></p-progressSpinner>
         </div>
         } @else {
-        <!-- async pipe used for safely retrieving async data from parent or to wait until async data is complete -->
-        <p-table [value]="(categoriesDataObservable() | async) || []" responsiveLayout="scroll"
-            class="p-datatable-striped" [tableStyle]="{'min-width':'50rem'}">
+        <div class="table-wrapper">
+            <p-table [value]="(categoriesDataObservable() | async) || []" responsiveLayout="scroll"
+                class="p-datatable-striped" [tableStyle]="{'min-width':'40rem'}">
+                <ng-template pTemplate="header">
+                    <tr>
+                        <th class="col-index">#</th>
+                        <th>Category Name</th>
+                        <th class="col-type">Type</th>
+                        <th class="col-action">Edit</th>
+                        <th class="col-action">Delete</th>
+                    </tr>
+                </ng-template>
 
-            <ng-template pTemplate="header">
-                <tr>
-                    <th>#</th>
-                    <th>Category Name</th>
-                    <th>Type</th>
-                    <th>Edit</th>
-                    <th>Delete</th>
-                </tr>
-            </ng-template>
+                <ng-template pTemplate="body" let-category let-rowIndex="rowIndex">
+                    <tr>
+                        <td class="col-index">{{ rowIndex + 1 }}</td>
 
-            <ng-template pTemplate="body" let-category let-rowIndex="rowIndex">
-                <tr>
-                    <td>{{ rowIndex + 1 }}</td>
+                        <td>
+                            @if (isEditMode(category.categoryId)) {
+                            <input pInputText class="w-100" name="name{{category.categoryId}}"
+                                [(ngModel)]="newCategoryName" required minlength="1" #c="ngModel" />
+                            <small *ngIf="c.invalid && (c.dirty || c.touched)" class="field-error">
+                                Name required
+                            </small>
+                            } @else {
+                            <span class="category-name">{{ category.categoryName }}</span>
+                            }
+                        </td>
 
-                    <td>
-                        @if(isEditMode(category.categoryId)) {
-                        <input pInputText class="w-100" name="name{{category.categoryId}}" [(ngModel)]="newCategoryName"
-                            required minlength="1" #c="ngModel">
+                        <td class="col-type">
+                            @if (category.editable) {
+                            <span class="badge badge-custom">Custom</span>
+                            } @else {
+                            <span class="badge badge-default">Default</span>
+                            }
+                        </td>
 
-                        <small *ngIf="c.invalid && (c.dirty || c.touched)" class="text-danger">
-                            Name required
-                        </small>
-                        } @else {
-                        {{ category.categoryName }}
-                        }
-                    </td>
+                        <td class="col-action">
+                            @if (isEditMode(category.categoryId)) {
+                            <div class="action-btn-group">
+                                <button type="button" pButton icon="pi pi-check" label="Update"
+                                    class="p-button-success p-button-sm"
+                                    (click)="updateCategory(category.categoryId, newCategoryName, $event)"></button>
+                                <button pButton type="button" icon="pi pi-times" label="Cancel"
+                                    class="p-button-secondary p-button-sm" (click)="cancelEdit()"></button>
+                            </div>
+                            } @else {
+                            <button pButton type="button" icon="pi pi-pencil" label="Edit" class="p-button-sm"
+                                [disabled]="!category.editable"
+                                [pTooltip]="!category.editable ? 'Default categories cannot be renamed' : ''"
+                                (click)="editCategory(category.categoryId, category.categoryName)"></button>
+                            }
+                        </td>
 
-                    <td>
-                        @if(category.editable) {
-                        <span class="badge bg-success">Custom</span>
-                        } @else {
-                        <span class="badge bg-secondary">Default</span>
-                        }
-                    </td>
+                        <td class="col-action">
+                            <button pButton type="button" icon="pi pi-trash" severity="danger" class="p-button-sm"
+                                (click)="deleteCategory(category)"></button>
+                        </td>
+                    </tr>
+                </ng-template>
 
-                    <td>
-                        @if(isEditMode(category.categoryId)) {
-
-                        <button type="button" pButton icon="pi pi-check" label="Update" class="p-button-success me-2"
-                            (click)="updateCategory(category.categoryId, newCategoryName, $event)">
-                        </button>
-
-                        <button pButton type="button" icon="pi pi-times" label="Cancel" class="p-button-secondary"
-                            (click)="cancelEdit()">
-                        </button>
-
-                        } @else {
-                            <!-- edit option must not given for default categories which are selected
-                              but edit option will be there for new categories created which are not default values -->
-                        <button pButton type="button" icon="pi pi-pencil" label="Edit" [disabled]="!category.editable"
-                            (click)="editCategory(category.categoryId, category.categoryName)">
-                        </button>
-
-                        }
-                    </td>
-
-                    <td>
-                        <button pButton type="button" icon="pi pi-trash" severity="danger"
-                            (click)="deleteCategory(category)">
-                        </button>
-                    </td>
-                </tr>
-            </ng-template>
-
-            <ng-template pTemplate="emptymessage">
-                <tr>
-                    <td colspan="4" class="text-center">
-                        No categories found.
-                    </td>
-                </tr>
-            </ng-template>
-
-        </p-table>
+                <ng-template pTemplate="emptymessage">
+                    <tr>
+                        <td colspan="5" class="text-center empty-text">
+                            No categories found.
+                        </td>
+                    </tr>
+                </ng-template>
+            </p-table>
+        </div>
         }
-    </div>
+    </section>
+
 </div>

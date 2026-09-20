@@ -2,11 +2,13 @@ import { CommonModule } from '@angular/common';
 import {
   Component,
   computed,
+  DestroyRef,
   inject,
   input,
   output,
   signal,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   FormControl,
   FormGroup,
@@ -14,13 +16,14 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { Observable, of } from 'rxjs';
+import { catchError, EMPTY, map, Observable, of, tap } from 'rxjs';
 import { AuthService } from '../../auth/services/auth';
 import {
   CategoryDeleteResponse,
   CategoryRequest,
   CategoryResponse,
   CategoryService,
+  DefaultCategoryDto,
 } from '../../services/category-service';
 import { Router } from '@angular/router';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
@@ -31,6 +34,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { DeleteCategory } from '../delete-category/delete-category';
 import { CookieService } from '../../../interceptors/cookie.service';
 import { ConfirmationService } from 'primeng/api';
+import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
   selector: 'app-add-category',
@@ -43,6 +47,7 @@ import { ConfirmationService } from 'primeng/api';
     TableModule,
     ButtonModule,
     CommonModule,
+    TooltipModule,
   ],
   templateUrl: './add-category.html',
   styleUrl: './add-category.scss',
@@ -51,6 +56,7 @@ export class AddCategory {
   private readonly matDialog = inject(MatDialog);
   private cookieService = inject(CookieService);
   private confirmationService = inject(ConfirmationService);
+  private readonly destroyRef = inject(DestroyRef);
 
   categoryName = new FormControl<string>('', [Validators.required]);
 
@@ -62,18 +68,25 @@ export class AddCategory {
     text: '',
   };
 
-  categories: CategoryResponse[] = [];
+  categories: DefaultCategoryDto[] = [];
   // get user info from cookie which is stored after user logged-In
   userId = signal<string | null>(this.cookieService.getCookie('userId'));
   loading = signal(false);
   editingCategoryId = signal<number | null>(null);
   newCategoryName = '';
   actionTriggered = output<boolean>();
-  categoriesData = input<Observable<CategoryResponse[]> | null>(null);
+  categoriesData = input<Observable<DefaultCategoryDto[]> | null>(null);
   // this below var is connected to p-table and it takes async data when api call is done and updates it in p-table
-  categoriesDataObservable = computed<Observable<CategoryResponse[]>>(
+  categoriesDataObservable = computed<Observable<DefaultCategoryDto[]>>(
     () => this.categoriesData() ?? of(this.categories),
   );
+
+  // State for the default categories section
+  defaultCategoriesObservable = signal<Observable<DefaultCategoryDto[]>>(EMPTY);
+  defaultCategoriesLoading = signal<boolean>(true);
+  addingDefaultCategoryId = signal<number | null>(null);
+  userCategoryDefaultIds = signal<Set<number>>(new Set()); // tracks which default categories user already has
+  defaultCategories = signal<DefaultCategoryDto[]>([]);
 
   constructor(
     private authService: AuthService,
@@ -83,6 +96,37 @@ export class AddCategory {
     this.addCategoryForm = new FormGroup({
       categoryName: this.categoryName,
     });
+  }
+
+  ngOnInit() {
+    this.loadDefaultCategories();
+    this.checkUserDefaultCategories();
+  }
+
+  loadDefaultCategories() {
+    this.defaultCategoriesLoading.set(true);
+
+    this.categoryService.getDefaultCategories().pipe(
+      map(res => res),
+      catchError(() => {
+        return of([]);
+      })
+    ).subscribe(data => {
+      this.defaultCategories.set(data);
+      this.defaultCategoriesLoading.set(false);
+    });
+  }
+
+  checkUserDefaultCategories() {
+    // Build the set from each emitted category list so it stays in sync with the parent.
+    this.categoriesDataObservable()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(categories => {
+        const defaultIds = categories
+          .filter(category => category.defaultCategoryId != null)
+          .map(category => category.defaultCategoryId!);
+        this.userCategoryDefaultIds.set(new Set(defaultIds));
+      });
   }
 
   // this method calls the loadCategories() method in parent comp/add-collection and reload the categories array when ever any add/update/delete opeations is done
@@ -250,5 +294,44 @@ export class AddCategory {
         },
         error: (error) => console.log('Delete dialog error = ', error),
       });
+  }
+
+  isAlreadyAdded(defaultCategoryId: number): boolean {
+    return this.userCategoryDefaultIds().has(defaultCategoryId);
+  }
+
+  addDefaultCategory(defaultCategoryId: number) {
+    this.addingDefaultCategoryId.set(defaultCategoryId);
+
+    this.categoryService.addDefaultCategoryService(this.userId(), defaultCategoryId).subscribe({
+      next: (res) => {
+        if (res.success) {
+          // instantly mark as added, no need to refetch the whole list just for this
+          const updated = new Set(this.userCategoryDefaultIds());
+          updated.add(defaultCategoryId);
+          this.userCategoryDefaultIds.set(updated);
+          // reload the categories list by calling api method from parent comp after successful addition of new category
+          this.notifyParent(true);
+        } else {
+          this.errorNotification = this.errorNotification = {
+            show: true,
+            type: 'error',
+            text: res.message,
+          };
+        }
+        this.addingDefaultCategoryId.set(null);
+      },
+      error: (err) => {
+        console.error('Error adding default category:', err);
+        this.addingDefaultCategoryId.set(null)
+        this.errorNotification = {
+          show: true,
+          type: 'error',
+          text:
+            err?.error?.message ||
+            'Failed to add new default category. Please try again.',
+        };
+      },
+    });
   }
 }

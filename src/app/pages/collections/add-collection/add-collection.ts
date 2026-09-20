@@ -14,7 +14,7 @@ import {
 } from '../../services/collections-service';
 import { SelectModule } from 'primeng/select';
 import { CommonModule } from '@angular/common';
-import { CategoryService, CategoryResponse } from '../../services/category-service';
+import { CategoryService, CategoryResponse, DefaultCategoryDto } from '../../services/category-service';
 import { TabsModule } from 'primeng/tabs';
 import { AddCategory } from '../../categories/add-category/add-category';
 import { MessageService } from 'primeng/api';
@@ -59,7 +59,7 @@ export class AddCollection {
   // Collection Category-Type dynamic data
   categories: any[] = [];
   // this syntax format is used for sending async data safely from parent to child comp whenever new list is available after CRUD
-  categoriesData$ = new BehaviorSubject<CategoryResponse[]>([]);
+  categoriesData$ = new BehaviorSubject<DefaultCategoryDto[]>([]);
 
   // get user info from cookie which is stored after user logged-In
   userId = signal<number>(parseInt(this.cookieService.getCookie('userId') || '0', 10));

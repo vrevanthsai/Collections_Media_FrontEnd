@@ -15,7 +15,7 @@ export class CategoryService {
 
   // Get Default Categories from backend API
   getDefaultCategories() {
-    return this.http.get<any[]>(`${this.BASE_URL}/api/v1/auth/get-default-categories`);
+    return this.http.get<DefaultCategoryDto[]>(`${this.BASE_URL}/api/v1/auth/get-default-categories`);
   }
 
   getUserCategories(userId: number) {
@@ -51,6 +51,17 @@ export class CategoryService {
       `${this.BASE_URL}/api/v1/user/${userId}/categories/delete-category/${categoryId}`,
     );
   }
+
+  // Post-Api - /add-default-category api to add default category into user categories
+  addDefaultCategoryService(
+    userId: string | null,
+    defaultCategoryId: number,
+  ): Observable<AddDefaultCategoryResponse> {
+    return this.http.post<AddDefaultCategoryResponse>(
+      `${this.BASE_URL}/api/v1/user/${userId}/categories/add-default-category/${defaultCategoryId}`,
+      {},
+    );
+  }
 }
 
 // Type used for Api request object/Json which is send to backend for adding new category api
@@ -68,3 +79,16 @@ export type CategoryDeleteResponse = {
   success: boolean,
   message: string,
 }
+
+export type DefaultCategoryDto = {
+  categoryId: number;
+  categoryName: string;
+  editable: boolean;
+  defaultCategoryId: number;
+};
+
+export type AddDefaultCategoryResponse = {
+  success: boolean;
+  message: string;
+  data: DefaultCategoryDto;
+};
