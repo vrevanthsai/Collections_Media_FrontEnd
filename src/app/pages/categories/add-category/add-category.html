@@ -35,6 +35,7 @@
                 <tr>
                     <th>#</th>
                     <th>Category Name</th>
+                    <th>Type</th>
                     <th>Edit</th>
                     <th>Delete</th>
                 </tr>
@@ -58,6 +59,14 @@
                     </td>
 
                     <td>
+                        @if(category.editable) {
+                        <span class="badge bg-success">Custom</span>
+                        } @else {
+                        <span class="badge bg-secondary">Default</span>
+                        }
+                    </td>
+
+                    <td>
                         @if(isEditMode(category.categoryId)) {
 
                         <button type="button" pButton icon="pi pi-check" label="Update" class="p-button-success me-2"
@@ -69,8 +78,9 @@
                         </button>
 
                         } @else {
-
-                        <button pButton type="button" icon="pi pi-pencil" label="Edit"
+                            <!-- edit option must not given for default categories which are selected
+                              but edit option will be there for new categories created which are not default values -->
+                        <button pButton type="button" icon="pi pi-pencil" label="Edit" [disabled]="!category.editable"
                             (click)="editCategory(category.categoryId, category.categoryName)">
                         </button>
 
