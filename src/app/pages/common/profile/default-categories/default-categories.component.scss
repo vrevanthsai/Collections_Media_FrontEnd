@@ -1,0 +1,191 @@
+$bg-panel: #1f1c2c;
+$bg-input: #2a2738;
+$accent: #ff8fab;
+$text-muted: #a6a3b3;
+$border-subtle: rgba(255, 255, 255, 0.08);
+
+.panel-card {
+  background: $bg-panel;
+  border: 1px solid $border-subtle;
+  border-radius: 14px;
+  padding: 1.75rem;
+}
+
+.panel-card__title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0;
+
+  i {
+    color: $accent;
+  }
+}
+
+.add-btn {
+  background: $accent !important;
+  border: none !important;
+  color: #221926 !important;
+  font-weight: 700 !important;
+  border-radius: 8px !important;
+}
+
+.status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #4caf50;
+  margin-right: 0.4rem;
+
+  &--inactive {
+    background: $text-muted;
+  }
+}
+
+.action-btns {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.btn-outline-accent {
+  background: transparent !important;
+  border: 1px solid $accent !important;
+  color: $accent !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+
+  &:hover {
+    background: rgba(255, 143, 171, 0.1) !important;
+  }
+}
+
+.btn-outline-danger {
+  background: transparent !important;
+  border: 1px solid #ff6b81 !important;
+  color: #ff6b81 !important;
+
+  &:hover {
+    background: rgba(255, 107, 129, 0.1) !important;
+  }
+}
+
+.btn-outline-success {
+  background: transparent !important;
+  border: 1px solid #2ee6a6 !important;
+  color: #2ee6a6 !important;
+
+  &:hover {
+    background: rgba(46, 230, 166, 0.1) !important;
+  }
+}
+
+.field-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: $text-muted;
+  margin-bottom: 0.5rem;
+}
+
+.field-input {
+  background: $bg-input !important;
+  border: 1px solid $border-subtle !important;
+  color: #fff !important;
+  border-radius: 8px !important;
+  padding: 0.65rem 0.9rem !important;
+
+  &:focus {
+    box-shadow: 0 0 0 2px rgba(255, 143, 171, 0.35) !important;
+    border-color: $accent !important;
+  }
+}
+
+.save-btn {
+  background: $accent !important;
+  border: none !important;
+  color: #221926 !important;
+  font-weight: 700 !important;
+  border-radius: 10px !important;
+  padding: 0.65rem 1.2rem !important;
+}
+
+.dialog-actions {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: flex-end;
+}
+
+::ng-deep .categories-table {
+  background: transparent;
+
+  .p-datatable-thead > tr > th {
+    background: rgba(255, 255, 255, 0.03);
+    color: $text-muted;
+    border-color: $border-subtle;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .p-datatable-tbody > tr {
+    background: transparent;
+    color: #fff;
+
+    > td {
+      border-color: $border-subtle;
+    }
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.03) !important;
+    }
+  }
+
+  .p-paginator {
+    background: transparent;
+    color: $text-muted;
+  }
+}
+
+::ng-deep .category-dialog {
+  .p-dialog-header {
+    background: $bg-panel;
+    color: #fff;
+    border-bottom: 1px solid $border-subtle;
+  }
+
+  .p-dialog-content {
+    background: $bg-panel;
+    color: #fff;
+  }
+}
+
+::ng-deep .p-confirmpopup {
+  background: $bg-panel;
+  border: 1px solid $border-subtle;
+  color: #fff;
+
+  .p-confirmpopup-content { color: #fff; }
+  .p-confirmpopup-icon { color: #ffb020; }
+}
+
+@media (max-width: 767px) {
+  ::ng-deep .categories-table .p-datatable-tbody > tr > td {
+    border-bottom: 1px solid $border-subtle;
+    &::before {
+      color: $text-muted;
+      font-weight: 600;
+    }
+  }
+
+  .action-btns {
+    justify-content: flex-start;
+  }
+}

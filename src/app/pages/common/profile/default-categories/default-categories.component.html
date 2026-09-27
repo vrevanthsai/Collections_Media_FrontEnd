@@ -1,0 +1,70 @@
+<p-toast></p-toast>
+<p-confirmpopup></p-confirmpopup>
+
+<div class="panel-card">
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4">
+        <h2 class="panel-card__title mb-0"><i class="pi pi-tags"></i> Default Categories</h2>
+        <button pButton type="button" label="Add New" icon="pi pi-plus" class="add-btn"
+            (click)="openAddDialog()"></button>
+    </div>
+
+    <p-table [value]="categories()" [loading]="loading()" [paginator]="true" [rows]="10"
+        [rowsPerPageOptions]="[10, 20, 30]" responsiveLayout="stack" [breakpoint]="'768px'"
+        styleClass="p-datatable-sm categories-table">
+        <ng-template pTemplate="header">
+            <tr>
+                <th>Category Name</th>
+                <th>Status</th>
+                <th class="text-end">Actions</th>
+            </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-cat>
+            <tr>
+                <td data-label="Category Name">{{ cat.categoryName }}</td>
+                <td data-label="Status">
+                    <span class="status-dot" [class.status-dot--inactive]="!cat.active"></span>
+                    {{ cat.active ? 'Active' : 'Inactive' }}
+                </td>
+                <td data-label="Actions" class="text-end">
+                    <div class="action-btns">
+                        <button pButton type="button" icon="pi pi-pencil" label="Edit"
+                            class="p-button-sm btn-outline-accent" (click)="confirmEdit($event, cat)"></button>
+                        <button pButton type="button"
+                            [icon]="isSaving(cat.id) ? 'pi pi-spin pi-spinner' : (cat.active ? 'pi pi-ban' : 'pi pi-check')"
+                            [label]="cat.active ? 'Deactivate' : 'Activate'" class="p-button-sm"
+                            [class.btn-outline-danger]="cat.active" [class.btn-outline-success]="!cat.active"
+                            [disabled]="isSaving(cat.id)" (click)="confirmToggleActive($event, cat)"></button>
+                    </div>
+                </td>
+            </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+            <tr>
+                <td colspan="3" class="text-center text-muted py-4">No categories found.</td>
+            </tr>
+        </ng-template>
+    </p-table>
+</div>
+
+<!-- Add/Edit Dialog -->
+<p-dialog [visible]="dialogVisible()" (visibleChange)="dialogVisible.set($event)" [modal]="true"
+    [style]="{ width: '90vw', maxWidth: '420px' }"
+    [header]="dialogMode() === 'add' ? 'Add Default Category' : 'Edit Default Category'" styleClass="category-dialog">
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+        <label class="field-label">Category Name</label>
+        <input pInputText type="text" formControlName="categoryName" class="w-100 field-input"
+            placeholder="e.g. Podcasts" />
+        <small class="text-danger d-block mt-1"
+            *ngIf="form.get('categoryName')?.invalid && form.get('categoryName')?.touched">
+            Category name must be at least 2 characters.
+        </small>
+
+        <div class="dialog-actions mt-4">
+            <button pButton type="button" label="Cancel" class="btn-outline-accent" (click)="closeDialog()"></button>
+            <button pButton type="submit" [label]="dialogMode() === 'add' ? 'Create' : 'Save'" class="save-btn"
+                [loading]="saving()"></button>
+        </div>
+    </form>
+</p-dialog>
