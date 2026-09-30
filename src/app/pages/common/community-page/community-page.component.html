@@ -1,0 +1,85 @@
+<div class="community-page">
+    <div class="container py-4">
+
+        <div class="community-header">
+            <h1 class="community-header__title">Community</h1>
+            <p class="community-header__subtitle">Browse public collections shared by everyone.</p>
+        </div>
+
+        <!-- Search -->
+        <div class="community-search mb-3">
+            <i class="pi pi-search"></i>
+            <input type="text" class="community-search__input" placeholder="Search by collection name..."
+                [ngModel]="searchTerm()" (ngModelChange)="onSearchInput($event)" />
+        </div>
+
+        <!-- Filters -->
+        <div class="community-filters mb-4">
+            <p-select [options]="categoryOptions()" [ngModel]="selectedCategoryId()"
+                (ngModelChange)="onCategoryChange($event)" optionLabel="label" optionValue="value"
+                placeholder="Category" class="filter-select"></p-select>
+
+            <p-select [options]="ratingOptions" [ngModel]="selectedRating()" (ngModelChange)="onRatingChange($event)"
+                optionLabel="label" optionValue="value" placeholder="Rating" class="filter-select"></p-select>
+
+            <p-select [options]="progressOptions()" [ngModel]="selectedProgress()"
+                (ngModelChange)="onProgressChange($event)" optionLabel="label" optionValue="value"
+                placeholder="Progress" class="filter-select"></p-select>
+
+            @if (hasActiveFilters()) {
+            <button type="button" class="clear-filters-btn" (click)="clearFilters()">
+                <i class="pi pi-times"></i> Clear
+            </button>
+            }
+        </div>
+
+        @if (loading()) {
+        <div class="community-message"><i class="pi pi-spin pi-spinner"></i> Loading community collections...</div>
+        } @else if (errorMessage()) {
+        <div class="community-message community-message--error">{{ errorMessage() }}</div>
+        } @else if (totalRecords() === 0) {
+        <div class="community-empty">
+            <i class="pi pi-inbox"></i>
+            <p>No public collections match your filters.</p>
+        </div>
+        } @else {
+        <p class="community-count">{{ totalRecords() }} collection{{ totalRecords() === 1 ? '' : 's' }} found</p>
+
+        <div class="row g-3">
+            @for (c of pagedCollections(); track c.collectionId) {
+            <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+                <div class="community-card" (click)="goToCollection(c)">
+                    <div class="community-card__topbar"></div>
+
+                    <div class="community-card__body">
+                        <span class="community-card__category">{{ c.categoryName }}</span>
+
+                        <h3 class="community-card__title">{{ c.name }}</h3>
+
+                        <a class="community-card__username" (click)="goToUser($event, c)">
+                            <i class="pi pi-user"></i> {{ c.username }}
+                        </a>
+
+                        <div class="community-card__stars">
+                            @for (filled of starArray(c.rating); track $index) {
+                            <i class="pi" [class.pi-star-fill]="filled" [class.pi-star]="!filled"></i>
+                            }
+                            <span class="community-card__rating-num">{{ c.rating }}/5</span>
+                        </div>
+
+                        <span class="status-pill" [ngClass]="statusClass(c.progress)">{{ c.progress }}</span>
+
+                        <div class="community-card__date">
+                            <i class="pi pi-clock"></i> {{ c.addedDate | date: 'MMM d, y' }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            }
+        </div>
+
+        <p-paginator [first]="first" [rows]="rows" [totalRecords]="totalRecords()" [rowsPerPageOptions]="[10, 20, 30]"
+            (onPageChange)="onPageChange($event)" styleClass="community-paginator"></p-paginator>
+        }
+    </div>
+</div>
