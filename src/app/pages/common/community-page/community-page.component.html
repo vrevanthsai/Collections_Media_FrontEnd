@@ -1,76 +1,107 @@
 <div class="community-page">
+    <div class="shelf-hero">
+        <div class="container py-4">
+            <h1 class="shelf-hero__title">The Community Shelf</h1>
+            <p class="shelf-hero__subtitle">
+                Every public collection your fellow members have chosen to put on display.
+            </p>
+            @if (!loading() && !errorMessage()) {
+            <p class="shelf-hero__stat">{{ allCollections().length }} collections currently on the shelf</p>
+            }
+        </div>
+    </div>
+
     <div class="container py-4">
 
-        <div class="community-header">
-            <h1 class="community-header__title">Community</h1>
-            <p class="community-header__subtitle">Browse public collections shared by everyone.</p>
-        </div>
+        <div class="shelf-toolbar">
+            <div class="shelf-search">
+                <i class="pi pi-search"></i>
+                <input type="text" class="shelf-search__input" placeholder="Search by title..." [ngModel]="searchTerm()"
+                    (ngModelChange)="onSearchInput($event)" />
+            </div>
 
-        <!-- Search -->
-        <div class="community-search mb-3">
-            <i class="pi pi-search"></i>
-            <input type="text" class="community-search__input" placeholder="Search by collection name..."
-                [ngModel]="searchTerm()" (ngModelChange)="onSearchInput($event)" />
-        </div>
+            <div class="chip-row">
+                @for (chip of categoryOptions(); track chip.value) {
+                <button type="button" class="chip" [class.chip--active]="selectedCategoryId() === chip.value"
+                    [style.--chip-color]="categoryChipVisual(chip.value).color"
+                    [style.--chip-active-bg]="categoryChipVisual(chip.value).soft"
+                    (click)="onCategoryChange(chip.value)">
+                    <i class="pi" [ngClass]="categoryChipVisual(chip.value).icon"></i>
+                    {{ chip.label }}
+                </button>
+                }
+            </div>
 
-        <!-- Filters -->
-        <div class="community-filters mb-4">
-            <p-select [options]="categoryOptions()" [ngModel]="selectedCategoryId()"
-                (ngModelChange)="onCategoryChange($event)" optionLabel="label" optionValue="value"
-                placeholder="Category" class="filter-select"></p-select>
+            <div class="chip-row">
+                @for (r of ratingOptions; track r.value) {
+                <button type="button" class="chip" [class.chip--active]="selectedRating() === r.value"
+                    (click)="onRatingChange(r.value)">
+                    @if (r.value === 'ALL') {
+                    All ratings
+                    } @else {
+                    <i class="pi pi-star-fill"></i> {{ r.value }}
+                    }
+                </button>
+                }
+            </div>
 
-            <p-select [options]="ratingOptions" [ngModel]="selectedRating()" (ngModelChange)="onRatingChange($event)"
-                optionLabel="label" optionValue="value" placeholder="Rating" class="filter-select"></p-select>
-
-            <p-select [options]="progressOptions()" [ngModel]="selectedProgress()"
-                (ngModelChange)="onProgressChange($event)" optionLabel="label" optionValue="value"
-                placeholder="Progress" class="filter-select"></p-select>
+            <div class="chip-row">
+                @for (p of progressOptions(); track p.value) {
+                <button type="button" class="chip" [class.chip--active]="selectedProgress() === p.value"
+                    (click)="onProgressChange(p.value)">
+                    <i class="pi" [ngClass]="p.value !== 'ALL' ? statusVisual(p.value).icon : 'pi-list'"></i>
+                    {{ p.label }}
+                </button>
+                }
+            </div>
 
             @if (hasActiveFilters()) {
             <button type="button" class="clear-filters-btn" (click)="clearFilters()">
-                <i class="pi pi-times"></i> Clear
+                <i class="pi pi-times"></i> Clear filters
             </button>
             }
         </div>
 
         @if (loading()) {
-        <div class="community-message"><i class="pi pi-spin pi-spinner"></i> Loading community collections...</div>
+        <div class="shelf-message"><i class="pi pi-spin pi-spinner"></i> Loading the shelf...</div>
         } @else if (errorMessage()) {
-        <div class="community-message community-message--error">{{ errorMessage() }}</div>
+        <div class="shelf-message shelf-message--error">{{ errorMessage() }}</div>
         } @else if (totalRecords() === 0) {
-        <div class="community-empty">
+        <div class="shelf-empty">
             <i class="pi pi-inbox"></i>
-            <p>No public collections match your filters.</p>
+            <p>Nothing matches these filters yet.</p>
         </div>
         } @else {
-        <p class="community-count">{{ totalRecords() }} collection{{ totalRecords() === 1 ? '' : 's' }} found</p>
+        <p class="shelf-count">{{ totalRecords() }} result{{ totalRecords() === 1 ? '' : 's' }}</p>
 
         <div class="row g-3">
             @for (c of pagedCollections(); track c.collectionId) {
             <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
-                <div class="community-card" (click)="goToCollection(c)">
-                    <div class="community-card__topbar"></div>
+                <div class="shelf-card" [style.--spine-color]="categoryVisual(c).color" (click)="goToCollection(c)">
+                    <div class="shelf-card__spine"></div>
 
-                    <div class="community-card__body">
-                        <span class="community-card__category">{{ c.categoryName }}</span>
-
-                        <h3 class="community-card__title">{{ c.name }}</h3>
-
-                        <a class="community-card__username" (click)="goToUser($event, c)">
-                            <i class="pi pi-user"></i> {{ c.username }}
-                        </a>
-
-                        <div class="community-card__stars">
-                            @for (filled of starArray(c.rating); track $index) {
-                            <i class="pi" [class.pi-star-fill]="filled" [class.pi-star]="!filled"></i>
-                            }
-                            <span class="community-card__rating-num">{{ c.rating }}/5</span>
+                    <div class="shelf-card__body">
+                        <div class="shelf-card__top">
+                            <span class="shelf-card__category-icon" [style.color]="categoryVisual(c).color">
+                                <i class="pi" [ngClass]="categoryVisual(c).icon"></i>
+                            </span>
+                            <span class="shelf-card__rating-stamp">
+                                <span class="shelf-card__rating-num">{{ c.rating }}</span>
+                                <i class="pi pi-star-fill"></i>
+                            </span>
                         </div>
 
-                        <span class="status-pill" [ngClass]="statusClass(c.progress)">{{ c.progress }}</span>
+                        <h3 class="shelf-card__title">{{ c.name }}</h3>
+                        <span class="shelf-card__category-name">{{ c.categoryName }}</span>
 
-                        <div class="community-card__date">
-                            <i class="pi pi-clock"></i> {{ c.addedDate | date: 'MMM d, y' }}
+                        <a class="shelf-card__byline" (click)="goToUser($event, c)">collected by {{ c.username }}</a>
+
+                        <div class="shelf-card__footer">
+                            <span class="status-pill" [ngClass]="statusVisual(c.progress).cls">
+                                <i class="pi" [ngClass]="statusVisual(c.progress).icon"></i>
+                                {{ c.progress }}
+                            </span>
+                            <span class="shelf-card__date">{{ c.addedDate | date: 'MMM d, y' }}</span>
                         </div>
                     </div>
                 </div>

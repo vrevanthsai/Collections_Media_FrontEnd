@@ -88,6 +88,7 @@ export const routes: Routes = [
   // Community Page route/router
   {
     path: 'community',
-    loadComponent: () => import('./pages/common/community-page/community-page.component').then(m => m.CommunityPageComponent)
+    loadComponent: () => import('./pages/common/community-page/community-page.component').then(m => m.CommunityPageComponent),
+    canActivate: [authGuard]
   }
 ];

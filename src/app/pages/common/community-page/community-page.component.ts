@@ -4,7 +4,6 @@ import { Router, RouterModule } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PaginatorModule, PaginatorState } from 'primeng/paginator';
-import { SelectModule } from 'primeng/select';
 import { CommunityCollection, CommunityService, DefaultCategoryOption } from '../../services/community.service';
 import { FormsModule } from '@angular/forms';
 
@@ -18,7 +17,7 @@ interface SelectOption<T> {
 @Component({
   selector: 'app-community-page',
   standalone: true,
-  imports: [CommonModule, RouterModule, PaginatorModule, SelectModule, FormsModule],
+  imports: [CommonModule, RouterModule, PaginatorModule, FormsModule],
   templateUrl: './community-page.component.html',
   styleUrls: ['./community-page.component.scss']
 })
@@ -51,6 +50,40 @@ export class CommunityPageComponent implements OnInit {
     { label: '2 Stars', value: 2 },
     { label: '1 Star', value: 1 }
   ];
+
+  // Todo- try to use Dynamic data instead of static data for icons or colors for default categories options
+  private categoryVisualMap: Record<number, { icon: string; color: string; soft: string }> = {
+    1: { icon: 'pi-video', color: '#e8a33d', soft: 'rgba(232, 163, 61, 0.16)' },  // Movies
+    2: { icon: 'pi-bolt', color: '#ff6f91', soft: 'rgba(255, 111, 145, 0.16)' }, // Anime
+    3: { icon: 'pi-desktop', color: '#57c2e8', soft: 'rgba(87, 194, 232, 0.16)' },  // Series
+    4: { icon: 'pi-book', color: '#8fbf5d', soft: 'rgba(143, 191, 93, 0.16)' },  // Books
+    5: { icon: 'pi-box', color: '#a879f0', soft: 'rgba(168, 121, 240, 0.16)' } // Games
+  };
+  private readonly customVisual = { icon: 'pi-tag', color: '#c7c2d6', soft: 'rgba(199, 194, 214, 0.14)' };
+  private readonly accentColor = '#ff8fab';
+  private readonly accentSoft = 'rgba(255, 143, 171, 0.16)';
+
+  categoryVisual(c: CommunityCollection): { icon: string; color: string; soft: string } {
+    if (c.defaultCategoryId != null && this.categoryVisualMap[c.defaultCategoryId]) {
+      return this.categoryVisualMap[c.defaultCategoryId];
+    }
+    return this.customVisual;
+  }
+
+  categoryChipVisual(value: FilterValue<number>): { icon: string; color: string; soft: string } {
+    if (value === 'ALL') return { icon: 'pi-th-large', color: this.accentColor, soft: this.accentSoft };
+    return this.categoryVisualMap[value as number] ?? this.customVisual;
+  }
+
+  statusVisual(progress: string): { icon: string; cls: string } {
+    // unchanged from before
+    const key = (progress || '').toLowerCase();
+    if (key === 'completed') return { icon: 'pi-check-circle', cls: 'status-pill--completed' };
+    if (['watching', 'reading', 'playing', 'inprogress'].includes(key)) return { icon: 'pi-play-circle', cls: 'status-pill--progress' };
+    if (key === 'onhold') return { icon: 'pi-pause-circle', cls: 'status-pill--onhold' };
+    if (key === 'dropped') return { icon: 'pi-times-circle', cls: 'status-pill--dropped' };
+    return { icon: 'pi-bookmark', cls: 'status-pill--planned' };
+  }
 
   categoryOptions = computed<SelectOption<number>[]>(() => [
     { label: 'All Categories', value: 'ALL' },
