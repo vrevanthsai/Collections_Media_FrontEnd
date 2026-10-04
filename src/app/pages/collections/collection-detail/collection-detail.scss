@@ -10,9 +10,13 @@
   align-items: center;
   gap: 0.55rem;
   margin-bottom: 1.25rem;
+  padding: 0;
+  border: 0;
+  background: none;
   // color: #334155;
   font-weight: 700;
   text-decoration: none;
+  cursor: pointer;
 }
 
 // Two columns keep the cover and information balanced on desktop.

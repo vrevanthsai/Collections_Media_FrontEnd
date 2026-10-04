@@ -1,4 +1,4 @@
-import { CommonModule, TitleCasePipe } from '@angular/common';
+import { CommonModule, Location, TitleCasePipe } from '@angular/common';
 import { Component, DestroyRef, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
@@ -35,6 +35,7 @@ import { MessageService } from 'primeng/api';
 export class CollectionDetail implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly location = inject(Location);
   private readonly collectionsService = inject(CollectionsService);
   private readonly matDialog = inject(MatDialog);
   private cookieService = inject(CookieService);
@@ -80,6 +81,10 @@ export class CollectionDetail implements OnInit, OnDestroy {
   // Releases the temporary image URL when leaving the page.
   ngOnDestroy(): void {
     this.revokeObjectUrl();
+  }
+
+  goBack(): void {
+    this.location.back();
   }
 
   // Opens the existing update dialog and refreshes details after success.

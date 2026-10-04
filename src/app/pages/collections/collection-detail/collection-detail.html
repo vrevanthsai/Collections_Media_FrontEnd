@@ -1,9 +1,9 @@
 <section class="detail-shell">
   <div class="container py-4 py-lg-5">
-    <a routerLink="/home" class="back-link">
+    <button type="button" class="back-link" (click)="goBack()" aria-label="Go back to the previous page">
       <i class="pi pi-arrow-left"></i>
-      Back to collections
-    </a>
+      Back
+    </button>
 
     <!-- Show one clear state while data is loading, missing, or ready. -->
     @if (loading()) {
