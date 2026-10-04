@@ -41,7 +41,7 @@ export class AddCollection {
   ]);
   review = new FormControl<string>('', [Validators.required]);
   progress = new FormControl<string>('', [Validators.required]);
-  privacy = new FormControl<string>('Public', [Validators.required]);
+  privacy = new FormControl<string | null>(null, [Validators.required]);
 
   // file/image form input
   selectedFile: File | null = null;
@@ -177,8 +177,17 @@ export class AddCollection {
   }
 
   addCollection() {
+    // Run the form validators before building a request. Validators.required does
+    // not reject whitespace-only text, so check the required values explicitly too.
+    const requiredTextFields = ['name', 'review', 'progress', 'privacy'];
+    const hasEmptyRequiredText = requiredTextFields.some((field) => {
+      const value = this.addCollectionForm.get(field)?.value;
+      return typeof value !== 'string' || value.trim().length === 0;
+    });
+    const category = this.addCollectionForm.get('category')?.value;
+    const hasInvalidCategory = category === null || category === undefined || category === '';
     // proceed further only if user is authenticated and addCollectionForm has no validation errors
-    if (this.authService.isAuthenticated() && this.addCollectionForm.valid) {
+    if (this.authService.isAuthenticated() && this.addCollectionForm.valid && !hasEmptyRequiredText && !hasInvalidCategory) {
       // build payload/json data
       const collectionDto: CollectionDto = {
         name: this.addCollectionForm.get('name')?.value,
@@ -237,6 +246,7 @@ export class AddCollection {
         text: 'Session expired! Please login again!',
       };
     } else {
+      this.addCollectionForm.markAllAsTouched();
       this.errorNotification = {
         show: true,
         type: 'validation errors',
