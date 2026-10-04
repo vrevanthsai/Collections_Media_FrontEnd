@@ -13,6 +13,8 @@ import { CollectionDto, CollectionsService } from '../../services/collections-se
 import { CookieService } from '../../../interceptors/cookie.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ShareCollectionsDialogComponent } from '../../../components/share-collections-dialog/share-collections-dialog';
+import { CheckFriendConnectionResponse, FriendConnectionDto, FriendConnectionService, FriendResquestResponse } from '../../services/friend-connection-service';
+import { MessageService } from 'primeng/api';
 
 @Component({
   selector: 'app-collection-detail',
@@ -36,6 +38,8 @@ export class CollectionDetail implements OnInit, OnDestroy {
   private readonly collectionsService = inject(CollectionsService);
   private readonly matDialog = inject(MatDialog);
   private cookieService = inject(CookieService);
+  private messageService = inject(MessageService);
+  private friendConnectionService = inject(FriendConnectionService);
 
   // Signals keep loading, error, and collection states reactive in the template.
   collection = signal<CollectionDto | null>(null);
@@ -45,7 +49,11 @@ export class CollectionDetail implements OnInit, OnDestroy {
   private objectUrl: string | null = null;
   private collectionId = 0;
   userId = parseInt(this.cookieService.getCookie('userId') || '0', 10);
-  private destroyRef = inject(DestroyRef); 
+  private destroyRef = inject(DestroyRef);
+  isFriendRequestSent = signal(false);
+  friendConnectionData = signal<FriendConnectionDto | null>(null);
+  friendButtonLabel: string = "Friend Request";
+  currentUserId = parseInt(this.cookieService.getCookie('userId') || '0', 10);
 
   // Reads and validates the collection ID supplied by the details route.
   ngOnInit(): void {
@@ -88,8 +96,8 @@ export class CollectionDetail implements OnInit, OnDestroy {
   }
 
   // send image url if present or send default img url
-  getImageUrl(imageUrl : string | null | undefined){
-    if(imageUrl === "" || imageUrl === null || imageUrl === undefined){
+  getImageUrl(imageUrl: string | null | undefined) {
+    if (imageUrl === "" || imageUrl === null || imageUrl === undefined) {
       return 'https://placehold.co/900x1200?text=No+Cover';
     } else {
       return imageUrl;
@@ -143,13 +151,16 @@ export class CollectionDetail implements OnInit, OnDestroy {
           return;
         }
 
+        // Check friend connection status using the fetched owner ID.
+        this.checkFriendRequestStatus(collection.userId);
+
         if (!collection.imageUrl) {
           this.collection.set(collection);
           this.loading.set(false);
-          return;
+          return; // if not imageUrl then returns- so below lines will not execute and no need to fetch image
         }
 
-        if(collection.imageUrl){
+        if (collection.imageUrl) {
           collection.imageUrl = collection.imageUrl + collection.userId; // append this collection's creator userId to imageUrl
         }
 
@@ -164,6 +175,7 @@ export class CollectionDetail implements OnInit, OnDestroy {
             this.loading.set(false);
           },
         });
+
       },
       error: () => {
         this.errorMessage.set('Unable to load this collection right now.');
@@ -183,5 +195,62 @@ export class CollectionDetail implements OnInit, OnDestroy {
   // Navigates to the add collection page with the specified category with query parameter- Collection Name, allowing the user to add a new collection in that category.
   addToMyCollection(collectionName: string): void {
     this.router.navigate(['collections/add-collection'], { queryParams: { recommendedCollectionName: collectionName } });
+  }
+
+  checkFriendRequestStatus(otherUserId: number) {
+    this.friendConnectionService.checkFriendConnection(this.currentUserId, otherUserId).subscribe({
+      next: (res: CheckFriendConnectionResponse) => {
+        this.friendConnectionData.set(res?.data);
+        if (res?.data?.status === 'PENDING') {
+          this.isFriendRequestSent.set(true);
+          this.friendButtonLabel = "Request Sent";
+        } else if (res?.data?.status === 'ACCEPTED') {
+          this.isFriendRequestSent.set(true);
+          this.friendButtonLabel = "Friends";
+        } else {
+          // reset vars if no connection is found
+          this.isFriendRequestSent.set(false);
+          this.friendButtonLabel = "Friend Request";
+        }
+      },
+      error: (err) => {
+        console.error('Error while checking friend connection between 2 users :', err);
+        this.messageService.add({
+          severity: 'error',
+          summary:
+            err?.error?.message || 'Error while checking friend connection between 2 users',
+          detail: 'Try again!',
+          life: 3000, // auto-dismiss after 3s
+        });
+      }
+    })
+  }
+
+  // Send Friend Request Method
+  sendFriendRequest() {
+    this.friendButtonLabel = "Loading..."
+    this.friendConnectionService.sendFriendRequest(this.currentUserId, this.collection()?.userId).subscribe({ // this.collection()?.userId is otherUserId(viewing this collection)
+      next: (res: FriendResquestResponse) => {
+        this.isFriendRequestSent.set(true);
+        this.friendButtonLabel = "Request Sent";
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Success',
+          detail: res?.data || 'Friend Request Sent successfully',
+          life: 3000, // auto-dismiss after 3s
+        });
+      },
+      error: (err) => {
+        console.error('Error while sending friend request:', err);
+        this.friendButtonLabel = "Friend Request"; // reset
+        this.messageService.add({
+          severity: 'error',
+          summary:
+            err?.error?.message || 'Error while sending friend request',
+          detail: 'Try again!',
+          life: 3000, // auto-dismiss after 3s
+        });
+      }
+    })
   }
 }

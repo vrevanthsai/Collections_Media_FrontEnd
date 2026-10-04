@@ -105,6 +105,9 @@
                 <i class="pi pi-plus"></i>
                 Add to My Collection
               </button>
+              <!-- Add Friend Request button -->
+              <button pButton type="button" class="btn btn-success" style="margin-left: 5px;" (click)="sendFriendRequest()" [disabled]="isFriendRequestSent()">{{
+                friendButtonLabel }}</button>
             }         
 
         </div>
