@@ -20,11 +20,6 @@ import { InputTextModule } from 'primeng/inputtext';
 import { CheckboxModule } from 'primeng/checkbox';
 import { ShareCollectionsDialogComponent } from '../../../components/share-collections-dialog/share-collections-dialog';
 
-type UserFavorites = {
-  userID: number;
-  favoriteCollectionIds: number[];
-};
-
 @Component({
   selector: 'app-home',
   imports: [
@@ -47,7 +42,6 @@ type UserFavorites = {
 export class Home implements OnInit {
   // Limits each Home page to six collection cards.
   private readonly pageSize = 3;
-  private readonly favoritesStorageKey = 'favoriteCollectionIds';
   private readonly router = inject(Router);
   private cookieService = inject(CookieService);
   messageService = inject(MessageService);
@@ -62,7 +56,7 @@ export class Home implements OnInit {
   categoriesLoader = signal(false);
   currentPage = 1;
 
-  // Stores the current user's favorite IDs locally because the backend has no favorite API yet.
+  // Favorite state is loaded from and saved to the collections API.
   favoriteIds = new Set<number>();
   selectedCollectionIds = new Set<number>();
   shareDialogVisible = false;
@@ -100,7 +94,6 @@ export class Home implements OnInit {
   suspendErrorMessage: string = '';
 
   ngOnInit(): void {
-    this.loadFavorites();
     if (this.authService.isAuthenticated()) {
       this.getUserBasedCollections();
     }
@@ -182,6 +175,11 @@ export class Home implements OnInit {
       next: (response) => {
         this.collections = response;
         this.originalCollections = response;
+        this.favoriteIds = new Set(
+          response
+            .filter((collection) => collection.favorite && collection.collectionId != null)
+            .map((collection) => collection.collectionId as number),
+        );
         this.loading.set(false);
       },
       error: (error) => {
@@ -235,7 +233,7 @@ export class Home implements OnInit {
     );
   }
 
-  // Shows only locally stored favorites; clicking again restores the other filters' results.
+  // Shows only favorites from the loaded collection data; clicking again restores other filters' results.
   toggleFavoriteFilter(): void {
     this.currentPage = 1;
     this.selectedFilters = {
@@ -263,22 +261,33 @@ export class Home implements OnInit {
     );
   }
 
-  // Toggles the ID and persists favorites across browser refreshes for this user only.
+  // Persists the favorite state through the collection API.
   toggleFavorite(collection: CollectionDto): void {
     if (collection.collectionId == null) return;
+    const userId = Number(this.userId());
+    if (!Number.isInteger(userId) || userId <= 0) return;
 
-    const nextFavorites = new Set(this.favoriteIds);
-    if (nextFavorites.has(collection.collectionId)) {
-      nextFavorites.delete(collection.collectionId);
-    } else {
-      nextFavorites.add(collection.collectionId);
-    }
-
-    this.favoriteIds = nextFavorites;
-    this.saveFavorites(nextFavorites);
-
-    // Keep the visible result set accurate when Favorites only is active.
-    if (this.selectedFilters.favorite) this.applyLocalFiltersFallback();
+    const nextFavorite = !this.isFavorite(collection);
+    this.collectionService
+      .updateFavoriteCollectionService(userId, collection.collectionId, nextFavorite)
+      .subscribe({
+        next: () => {
+          const nextFavorites = new Set(this.favoriteIds);
+          if (nextFavorite) nextFavorites.add(collection.collectionId!);
+          else nextFavorites.delete(collection.collectionId!);
+          this.favoriteIds = nextFavorites;
+          collection.favorite = nextFavorite;
+          if (this.selectedFilters.favorite) this.applyLocalFiltersFallback();
+        },
+        error: (error) => {
+          this.messageService.add({
+            severity: 'error',
+            summary: error?.error?.message || 'Could not update favorite',
+            detail: 'Try again!',
+            life: 3000,
+          });
+        },
+      });
   }
 
   isCollectionSelected(collection: CollectionDto): boolean {
@@ -354,77 +363,6 @@ export class Home implements OnInit {
         },
       });
     }
-  }
-
-  // Restores valid numeric favorite IDs for the signed-in user only.
-  private loadFavorites(): void {
-    try {
-      const storedFavorites: unknown = JSON.parse(
-        localStorage.getItem(this.favoritesStorageKey) ?? '[]',
-      );
-      const currentUserId = this.getCurrentUserId();
-      const userFavorites = Array.isArray(storedFavorites)
-        ? storedFavorites.find(
-          (entry): entry is UserFavorites =>
-            this.isUserFavorites(entry) && entry.userID === currentUserId,
-        )
-        : undefined;
-
-      this.favoriteIds = new Set(userFavorites?.favoriteCollectionIds ?? []);
-    } catch {
-      this.favoriteIds = new Set<number>();
-    }
-  }
-
-  private saveFavorites(favoriteIds: Set<number>): void {
-    const currentUserId = this.getCurrentUserId();
-    if (currentUserId == null) return;
-
-    let storedFavorites: UserFavorites[] = [];
-    try {
-      const storedValue: unknown = JSON.parse(
-        localStorage.getItem(this.favoritesStorageKey) ?? '[]',
-      );
-      if (Array.isArray(storedValue)) {
-        storedFavorites = storedValue.filter((entry): entry is UserFavorites =>
-          this.isUserFavorites(entry),
-        );
-      }
-    } catch {
-      // Replace malformed storage with the current user's valid entry below.
-    }
-
-    const currentUserFavorites: UserFavorites = {
-      userID: currentUserId,
-      favoriteCollectionIds: [...favoriteIds],
-    };
-    const userIndex = storedFavorites.findIndex(
-      (entry) => entry.userID === currentUserId,
-    );
-
-    if (userIndex >= 0) {
-      storedFavorites[userIndex] = currentUserFavorites;
-    } else {
-      storedFavorites.push(currentUserFavorites);
-    }
-
-    localStorage.setItem(this.favoritesStorageKey, JSON.stringify(storedFavorites));
-  }
-
-  private getCurrentUserId(): number | null {
-    const userId = Number(this.cookieService.getCookie('userId'));
-    return Number.isInteger(userId) && userId > 0 ? userId : null;
-  }
-
-  private isUserFavorites(value: unknown): value is UserFavorites {
-    if (!value || typeof value !== 'object') return false;
-
-    const entry = value as UserFavorites;
-    return (
-      Number.isInteger(entry.userID) &&
-      Array.isArray(entry.favoriteCollectionIds) &&
-      entry.favoriteCollectionIds.every((id) => Number.isInteger(id))
-    );
   }
 
   // Method for Suspended User's to send activate request to Admin
