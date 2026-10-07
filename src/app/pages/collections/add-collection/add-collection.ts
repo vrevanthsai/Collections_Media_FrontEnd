@@ -20,10 +20,11 @@ import { AddCategory } from '../../categories/add-category/add-category';
 import { MessageService } from 'primeng/api';
 import { BehaviorSubject } from 'rxjs';
 import { CookieService } from '../../../interceptors/cookie.service';
+import { ButtonModule } from 'primeng/button';
 
 @Component({
   selector: 'app-add-collection',
-  imports: [ReactiveFormsModule, CommonModule, SelectModule, TabsModule, AddCategory],
+  imports: [ReactiveFormsModule, CommonModule, SelectModule, TabsModule, AddCategory, ButtonModule],
   templateUrl: './add-collection.html',
   styleUrl: './add-collection.scss',
 })
@@ -63,6 +64,7 @@ export class AddCollection {
 
   // get user info from cookie which is stored after user logged-In
   userId = signal<number>(parseInt(this.cookieService.getCookie('userId') || '0', 10));
+  addCollectionLoading: boolean = false;
 
   // Collection Progress-Dropdown Fixed data
   progressData = [
@@ -97,7 +99,7 @@ export class AddCollection {
       progress: this.progress,
       privacy: this.privacy,
       // Non-User-input fields with their initial values
-      imagename: [null ], // TODO- make this field optional from Frontend logic
+      imagename: [null], // TODO- make this field optional from Frontend logic
     });
 
     // receive query param from collection-detail page and set it to collection name field in add-collection form
@@ -163,7 +165,7 @@ export class AddCollection {
 
   // To recall and load latest categories list data whenever any CRUD is done in child comp/add-category and send latest list data
   parentMethod(value: boolean) {
-    if(value){
+    if (value) {
       this.loadCategories();
     }
   }
@@ -200,6 +202,7 @@ export class AddCollection {
         // we send current date as addedDate for every new collection created to the DB
         addedDate: new Date().toISOString(),
       };
+      this.addCollectionLoading = true; // Show loading spinner on the button
 
       // Call Api service handler
       this.collectionService
@@ -208,11 +211,6 @@ export class AddCollection {
         .subscribe({
           next: (res) => {
             console.log('response = ', res);
-            this.errorNotification = {
-              show: true,
-              type: 'success',
-              text: 'Collection Added Successfully! Please check latest data in Home page!',
-            };
             // Show Toast notification for successful collection creation
             this.messageService.add({
               severity: 'success',
@@ -222,29 +220,34 @@ export class AddCollection {
             });
             // reset form after successfull submission
             this.addCollectionForm.reset();
+            this.addCollectionLoading = false; // Hide loading spinner on the button
             // redirect to Home page
             this.router.navigate(['/home']);
           },
           error: (err) => {
             console.log('error = ', err);
+            this.addCollectionLoading = false; // Hide loading spinner on the button
             // navigate to same page if error occurs like to reset page
             this.router.navigate(['/collections/add-collection']);
-            this.errorNotification = {
-              show: true,
-              type: 'error',
-              text: err?.error?.message || 'Adding Collection failed, please try again!',
-            };
+            this.messageService.add({
+              severity: 'error',
+              summary:
+                err?.error?.message || 'Adding Collection failed, please try again!',
+              detail: 'Try again!',
+              life: 3000, // auto-dismiss after 3s
+            });
           },
         });
     } else if (!this.authService.isAuthenticated()) {
       // if user is unAuthorized- then logout user and send him back to /login page with a error-notification msg
       this.authService.logout();
       this.router.navigate(['/login']);
-      this.errorNotification = {
-        show: true,
-        type: 'error',
-        text: 'Session expired! Please login again!',
-      };
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Session expired! Please login again!',
+        detail: 'Try again!',
+        life: 4000, // auto-dismiss after 3s
+      });
     } else {
       this.addCollectionForm.markAllAsTouched();
       this.errorNotification = {

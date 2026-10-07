@@ -82,7 +82,7 @@
                             (change)="onFileSelected($event)"/>
                     </div>
 
-                    <button type="submit" class="btn btn-primary mb-3">Add Collection</button>
+                    <p-button type="submit" class="mb-3" label="Add Collection" [loading]="addCollectionLoading" loadingIcon="pi pi-spin pi-spinner"></p-button>
                 </form>
             </div>
         </p-tabpanel>
