@@ -18,7 +18,9 @@
                     <i class="pi pi-calendar"></i> Joined {{ u.addedDate | date: 'MMM d, y' }}
                 </p>
             </div>
-            <!-- User Profile/View Action buttons -->
+            <!-- User Profile/View Action buttons are not required for the current user -->
+            @if(currentUserId !== user()?.userId) {
+                <!-- User Profile/View Action buttons -->
             <div class="user_profile_buttons">
                 @if(friendConnectionData()?.receiverId === currentUserId && friendConnectionData()?.status ===
                 "PENDING") {
@@ -50,6 +52,7 @@
                 </p-button>
                 }
             </div>
+            }
         </div>
 
         <h2 class="uvp-section-title">Collections ({{ totalRecords() }})</h2>
