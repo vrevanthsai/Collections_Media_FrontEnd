@@ -1,4 +1,4 @@
-import { CommonModule, TitleCasePipe } from '@angular/common';
+import { CommonModule, Location, TitleCasePipe } from '@angular/common';
 import { Component, DestroyRef, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
@@ -13,6 +13,8 @@ import { CollectionDto, CollectionsService } from '../../services/collections-se
 import { CookieService } from '../../../interceptors/cookie.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ShareCollectionsDialogComponent } from '../../../components/share-collections-dialog/share-collections-dialog';
+import { CheckFriendConnectionResponse, FriendConnectionDto, FriendConnectionService, FriendResquestResponse } from '../../services/friend-connection-service';
+import { MessageService } from 'primeng/api';
 
 @Component({
   selector: 'app-collection-detail',
@@ -33,9 +35,11 @@ import { ShareCollectionsDialogComponent } from '../../../components/share-colle
 export class CollectionDetail implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly location = inject(Location);
   private readonly collectionsService = inject(CollectionsService);
   private readonly matDialog = inject(MatDialog);
   private cookieService = inject(CookieService);
+  private messageService = inject(MessageService);
 
   // Signals keep loading, error, and collection states reactive in the template.
   collection = signal<CollectionDto | null>(null);
@@ -45,7 +49,7 @@ export class CollectionDetail implements OnInit, OnDestroy {
   private objectUrl: string | null = null;
   private collectionId = 0;
   userId = parseInt(this.cookieService.getCookie('userId') || '0', 10);
-  private destroyRef = inject(DestroyRef); 
+  private destroyRef = inject(DestroyRef);
 
   // Reads and validates the collection ID supplied by the details route.
   ngOnInit(): void {
@@ -74,6 +78,10 @@ export class CollectionDetail implements OnInit, OnDestroy {
     this.revokeObjectUrl();
   }
 
+  goBack(): void {
+    this.location.back();
+  }
+
   // Opens the existing update dialog and refreshes details after success.
   updateCollection(): void {
     const collection = this.collection();
@@ -88,8 +96,8 @@ export class CollectionDetail implements OnInit, OnDestroy {
   }
 
   // send image url if present or send default img url
-  getImageUrl(imageUrl : string | null | undefined){
-    if(imageUrl === "" || imageUrl === null || imageUrl === undefined){
+  getImageUrl(imageUrl: string | null | undefined) {
+    if (imageUrl === "" || imageUrl === null || imageUrl === undefined) {
       return 'https://placehold.co/900x1200?text=No+Cover';
     } else {
       return imageUrl;
@@ -146,10 +154,10 @@ export class CollectionDetail implements OnInit, OnDestroy {
         if (!collection.imageUrl) {
           this.collection.set(collection);
           this.loading.set(false);
-          return;
+          return; // if not imageUrl then returns- so below lines will not execute and no need to fetch image
         }
 
-        if(collection.imageUrl){
+        if (collection.imageUrl) {
           collection.imageUrl = collection.imageUrl + collection.userId; // append this collection's creator userId to imageUrl
         }
 
@@ -164,11 +172,20 @@ export class CollectionDetail implements OnInit, OnDestroy {
             this.loading.set(false);
           },
         });
+
       },
-      error: () => {
+      error: (err) => {
         this.errorMessage.set('Unable to load this collection right now.');
         this.loading.set(false);
-      },
+        console.error('Unable to load this collection right now :', err);
+        this.messageService.add({
+          severity: 'error',
+          summary:
+            err?.error?.message || 'Unable to load this collection right now.',
+          detail: 'Try again!',
+          life: 3000, // auto-dismiss after 3s
+        });
+      }
     });
   }
 
@@ -183,5 +200,10 @@ export class CollectionDetail implements OnInit, OnDestroy {
   // Navigates to the add collection page with the specified category with query parameter- Collection Name, allowing the user to add a new collection in that category.
   addToMyCollection(collectionName: string): void {
     this.router.navigate(['collections/add-collection'], { queryParams: { recommendedCollectionName: collectionName } });
+  }
+
+  // Navigates to the user's view profile page based on the provided userId.
+  goToUserViewProfilePage(userId: number): void {
+    this.router.navigate(['/users-profile/', userId]);
   }
 }

@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
@@ -73,6 +73,15 @@ export class CollectionsService {
       responseType: "text" // here we get deleted string msg as response from delete-api
     });
   }
+
+  // Update Favorite Collection value Api
+  updateFavoriteCollectionService(userId: number, collectionId: number, isFavorite: boolean): Observable<string>{
+    const params = new HttpParams().set('favorite', isFavorite);
+    return this.http.patch(`${this.BASE_URL}/api/v1/user/${userId}/collection/update-favorite/${collectionId}`, null, {
+      params: params,
+      responseType: "text"
+    });
+  }
 }
 
 // TODO- Create seperate file for managing Types
@@ -91,6 +100,7 @@ export type CollectionDto = {
   addedDate: string,
   imagename?: string, // optional field
   imageUrl?: string, // optional field
+  favorite?: boolean,
 };
 
 // Home page filter payload type for filter-api calls

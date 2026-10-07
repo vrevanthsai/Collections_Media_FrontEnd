@@ -77,7 +77,7 @@ export class Login {
           // set True of isLoggedIn signal when user logged IN successfully
           this.authService.setLoggedIn(true);
           // set user name in signal variable to show in navbar after login
-          this.authService.setName(res?.data?.name);
+          this.authService.setUsername(res?.data?.username);
 
           // Show Toast notification for successful login
           this.messageService.add({

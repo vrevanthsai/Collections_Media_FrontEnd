@@ -51,6 +51,13 @@ export const PROFILE_ROUTES: Routes = [
             (m) => m.UserManagementComponent
           ),
         canActivate: [adminGuard]
+      },
+      // Admin based Tab for managing default categories, accessible only to admin users
+      {
+        path: 'default-categories',
+        loadComponent: () =>
+          import('./default-categories/default-categories.component').then(m => m.DefaultCategoriesComponent),
+        canActivate: [adminGuard]
       }
     ]
   }

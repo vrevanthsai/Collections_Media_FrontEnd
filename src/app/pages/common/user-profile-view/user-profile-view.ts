@@ -88,9 +88,12 @@ export class UserProfileView implements OnInit, OnDestroy {
           this.collections.set(collections);
           if (user.imageName) {
             this.resolveAvatar(user.imageName, this.currentUserId, user.userId);
-          }
-          // Check friend connection status between current user and viewed user
-          this.checkFriendRequestStatus();
+          }         
+          // when other userIds are same then no need to check friendConnection status because currentUser is view his own profile 
+          if(this.currentUserId !== this.user()?.userId) {
+            // Check friend connection status between current user and viewed user
+            this.checkFriendRequestStatus();
+          } 
         },
         error: () => {
           this.loading.set(false);

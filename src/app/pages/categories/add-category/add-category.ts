@@ -2,11 +2,13 @@ import { CommonModule } from '@angular/common';
 import {
   Component,
   computed,
+  DestroyRef,
   inject,
   input,
   output,
   signal,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   FormControl,
   FormGroup,
@@ -14,13 +16,14 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { Observable, of } from 'rxjs';
+import { catchError, EMPTY, map, Observable, of, tap } from 'rxjs';
 import { AuthService } from '../../auth/services/auth';
 import {
   CategoryDeleteResponse,
   CategoryRequest,
   CategoryResponse,
   CategoryService,
+  DefaultCategoryDto,
 } from '../../services/category-service';
 import { Router } from '@angular/router';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
@@ -30,7 +33,8 @@ import { ButtonModule } from 'primeng/button';
 import { MatDialog } from '@angular/material/dialog';
 import { DeleteCategory } from '../delete-category/delete-category';
 import { CookieService } from '../../../interceptors/cookie.service';
-import { ConfirmationService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
+import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
   selector: 'app-add-category',
@@ -43,6 +47,7 @@ import { ConfirmationService } from 'primeng/api';
     TableModule,
     ButtonModule,
     CommonModule,
+    TooltipModule,
   ],
   templateUrl: './add-category.html',
   styleUrl: './add-category.scss',
@@ -51,6 +56,8 @@ export class AddCategory {
   private readonly matDialog = inject(MatDialog);
   private cookieService = inject(CookieService);
   private confirmationService = inject(ConfirmationService);
+  private readonly destroyRef = inject(DestroyRef);
+  private messageService = inject(MessageService);
 
   categoryName = new FormControl<string>('', [Validators.required]);
 
@@ -62,18 +69,25 @@ export class AddCategory {
     text: '',
   };
 
-  categories: CategoryResponse[] = [];
+  categories: DefaultCategoryDto[] = [];
   // get user info from cookie which is stored after user logged-In
   userId = signal<string | null>(this.cookieService.getCookie('userId'));
   loading = signal(false);
   editingCategoryId = signal<number | null>(null);
   newCategoryName = '';
   actionTriggered = output<boolean>();
-  categoriesData = input<Observable<CategoryResponse[]> | null>(null);
+  categoriesData = input<Observable<DefaultCategoryDto[]> | null>(null);
   // this below var is connected to p-table and it takes async data when api call is done and updates it in p-table
-  categoriesDataObservable = computed<Observable<CategoryResponse[]>>(
+  categoriesDataObservable = computed<Observable<DefaultCategoryDto[]>>(
     () => this.categoriesData() ?? of(this.categories),
   );
+
+  // State for the default categories section
+  defaultCategoriesObservable = signal<Observable<DefaultCategoryDto[]>>(EMPTY);
+  defaultCategoriesLoading = signal<boolean>(true);
+  addingDefaultCategoryId = signal<number | null>(null);
+  userCategoryDefaultIds = signal<Set<number>>(new Set()); // tracks which default categories user already has
+  defaultCategories = signal<DefaultCategoryDto[]>([]);
 
   constructor(
     private authService: AuthService,
@@ -85,6 +99,37 @@ export class AddCategory {
     });
   }
 
+  ngOnInit() {
+    this.loadDefaultCategories();
+    this.checkUserDefaultCategories();
+  }
+
+  loadDefaultCategories() {
+    this.defaultCategoriesLoading.set(true);
+
+    this.categoryService.getDefaultCategories().pipe(
+      map(res => res),
+      catchError(() => {
+        return of([]);
+      })
+    ).subscribe(data => {
+      this.defaultCategories.set(data);
+      this.defaultCategoriesLoading.set(false);
+    });
+  }
+
+  checkUserDefaultCategories() {
+    // Build the set from each emitted category list so it stays in sync with the parent.
+    this.categoriesDataObservable()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(categories => {
+        const defaultIds = categories
+          .filter(category => category.defaultCategoryId != null)
+          .map(category => category.defaultCategoryId!);
+        this.userCategoryDefaultIds.set(new Set(defaultIds));
+      });
+  }
+
   // this method calls the loadCategories() method in parent comp/add-collection and reload the categories array when ever any add/update/delete opeations is done
   notifyParent(value: boolean) {
     // Emit the event with optional data
@@ -92,6 +137,8 @@ export class AddCategory {
   }
 
   addCategory() {
+    // reset Mandatory field validation error msg
+    this.errorNotification.show = false;
     // proceed further only if user is authenticated and addCategoryForm has no validation errors
     if (this.authService.isAuthenticated() && this.addCategoryForm.valid) {
       const userIdStr = this.cookieService.getCookie('userId');
@@ -104,11 +151,11 @@ export class AddCategory {
       this.categoryService.addCategoryService(categoryRequest).subscribe({
         next: (response) => {
           console.log('Category added successfully:', response);
-          this.errorNotification = {
-            show: true,
-            type: 'success',
-            text: 'Category Added Successfully! Please check the Category List below to see the newly added category.',
-          };
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Category Added Successfully! Please check the Category List below to see the newly added category.',
+            life: 4000,
+          });
           // reset form after successfull submission
           this.addCategoryForm.reset();
           // reload the categories list by calling api method from parent comp after successful addition of new category
@@ -123,22 +170,30 @@ export class AddCategory {
               err?.error?.message ||
               'Failed to add category. Please try again.',
           };
+          this.messageService.add({
+            severity: 'error',
+            summary:
+              err?.error?.message || 'Adding Category failed, please try again!',
+            detail: 'Try again!',
+            life: 3000, // auto-dismiss after 3s
+          });
         },
       });
     } else if (!this.authService.isAuthenticated()) {
       // if user is unAuthorized- then logout user and send him back to /login page with a error-notification msg
       this.authService.logout();
       this.router.navigate(['/login']);
-      this.errorNotification = {
-        show: true,
-        type: 'error',
-        text: 'Session expired! Please login again!',
-      };
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Session expired! Please login again!',
+        detail: 'Try again!',
+        life: 4000, // auto-dismiss after 3s
+      });
     } else {
       this.errorNotification = {
         show: true,
         type: 'validation errors',
-        text: 'Please Enter all mandatory form fields!',
+        text: 'Please Enter below mandatory form field to add new category!',
       };
     }
   }
@@ -183,23 +238,23 @@ export class AddCategory {
             .subscribe({
               next: (response) => {
                 console.log('Category updated successfully:', response);
-                this.errorNotification = {
-                  show: true,
-                  type: 'success',
-                  text: 'Category Updated Successfully! Please check the Category List below to see the updated category.',
-                };
+                this.messageService.add({
+                  severity: 'success',
+                  summary: 'Category Updated Successfully! Please check the Category List below to see the updated category.',
+                  life: 4000,
+                });
                 // Reload the categories list from parent comp after successful update
                 this.notifyParent(true);
               },
               error: (err) => {
                 console.error('Error updating category:', err);
-                this.errorNotification = {
-                  show: true,
-                  type: 'error',
-                  text:
-                    err?.error?.message ||
-                    'Failed to update category. Please try again.',
-                };
+                this.messageService.add({
+                  severity: 'error',
+                  summary:
+                    err?.error?.message || 'Error updating category, please try again!',
+                  detail: 'Try again!',
+                  life: 3000, // auto-dismiss after 3s
+                });
               },
             });
         }
@@ -235,20 +290,58 @@ export class AddCategory {
           if (deleted?.success) {
             // Reload the categories list after successful deletion
             this.notifyParent(true);
-            this.errorNotification = {
-              show: true,
-              type: 'success',
-              text: deleted.message,
-            };
+            this.messageService.add({
+              severity: 'success',
+              summary: deleted.message,
+              life: 4000,
+            });
           } else if (deleted?.success === false) {
-            this.errorNotification = {
-              show: true,
-              type: 'error',
-              text: deleted.message,
-            };
+            this.messageService.add({
+              severity: 'error',
+              summary: deleted.message,
+              life: 4000,
+            });
           }
         },
         error: (error) => console.log('Delete dialog error = ', error),
       });
+  }
+
+  isAlreadyAdded(defaultCategoryId: number): boolean {
+    return this.userCategoryDefaultIds().has(defaultCategoryId);
+  }
+
+  addDefaultCategory(defaultCategoryId: number) {
+    this.addingDefaultCategoryId.set(defaultCategoryId);
+
+    this.categoryService.addDefaultCategoryService(this.userId(), defaultCategoryId).subscribe({
+      next: (res) => {
+        if (res.success) {
+          // instantly mark as added, no need to refetch the whole list just for this
+          const updated = new Set(this.userCategoryDefaultIds());
+          updated.add(defaultCategoryId);
+          this.userCategoryDefaultIds.set(updated);
+          // reload the categories list by calling api method from parent comp after successful addition of new category
+          this.notifyParent(true);
+        } else {
+          this.messageService.add({
+            severity: 'error',
+            summary: res.message,
+            life: 4000,
+          });
+        }
+        this.addingDefaultCategoryId.set(null);
+      },
+      error: (err) => {
+        console.error('Error adding default category:', err);
+        this.addingDefaultCategoryId.set(null)
+        this.messageService.add({
+          severity: 'error',
+          summary: err?.error?.message ||
+            'Failed to add new default category. Please try again.',
+          life: 4000,
+        });
+      },
+    });
   }
 }

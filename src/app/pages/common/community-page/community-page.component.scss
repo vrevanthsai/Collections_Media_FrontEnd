@@ -1,0 +1,357 @@
+$bg: #14111f;
+$panel: #1c1830;
+$card-base: #201b34;
+$ink: #f4f0ea;
+$muted: #9a93ad;
+$border-subtle: rgba(244, 240, 234, 0.08);
+$accent: #ff8fab;
+
+$font-display: "Fraunces", serif;
+$font-ui: "Sora", sans-serif;
+
+.community-page {
+  min-height: 100vh;
+  background: $bg;
+  color: $ink;
+  font-family: $font-ui;
+}
+
+.shelf-hero {
+  background: linear-gradient(180deg, $panel 0%, $bg 100%);
+  border-bottom: 1px solid $border-subtle;
+}
+
+.shelf-hero__title {
+  font-family: $font-display;
+  font-weight: 600;
+  font-size: 2.1rem;
+  margin: 0 0 0.5rem;
+  letter-spacing: -0.01em;
+}
+
+.shelf-hero__subtitle {
+  color: $muted;
+  font-size: 0.95rem;
+  max-width: 480px;
+  margin: 0 0 0.75rem;
+}
+.shelf-hero__stat {
+  display: inline-block;
+  font-size: 0.82rem;
+  color: $accent;
+  font-weight: 600;
+  margin: 0;
+}
+
+.shelf-toolbar {
+  background: $panel;
+  border: 1px solid $border-subtle;
+  border-radius: 16px;
+  padding: 1.1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.shelf-search {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: $card-base;
+  border: 1px solid $border-subtle;
+  border-radius: 10px;
+  padding: 0.6rem 1rem;
+  max-width: 420px;
+
+  i {
+    color: $muted;
+  }
+}
+
+.shelf-search__input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: $ink;
+  font-family: $font-ui;
+  font-size: 0.92rem;
+
+  &::placeholder {
+    color: $muted;
+  }
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.chip {
+  --chip-color: #{$accent};
+  --chip-active-bg: rgba(
+    255,
+    143,
+    171,
+    0.16
+  ); // fallback if no inline value is set
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: $card-base;
+  border: 1px solid $border-subtle;
+  color: $muted;
+  font-family: $font-ui;
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease,
+    background 0.15s ease;
+
+  i {
+    color: var(--chip-color);
+    font-size: 0.75rem;
+  }
+
+  &:hover {
+    border-color: var(--chip-color);
+    color: $ink;
+  }
+
+  &--active {
+    background: var(
+      --chip-active-bg
+    ); // was: color-mix(in srgb, var(--chip-color) 16%, $card-base)
+    border-color: var(--chip-color);
+    color: $ink;
+  }
+}
+
+.clear-filters-btn {
+  align-self: flex-start;
+  background: transparent;
+  border: none;
+  color: $muted;
+  font-family: $font-ui;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+  padding: 0;
+
+  &:hover {
+    color: $accent;
+  }
+}
+
+.shelf-message {
+  padding: 2rem;
+  text-align: center;
+  color: $muted;
+  &--error {
+    color: #ff6b81;
+  }
+}
+
+.shelf-empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: $muted;
+
+  i {
+    font-size: 2.2rem;
+    display: block;
+    margin-bottom: 0.75rem;
+    opacity: 0.5;
+  }
+}
+
+.shelf-count {
+  color: $muted;
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.shelf-card {
+  --spine-color: #{$accent};
+  position: relative;
+  display: flex;
+  background: $card-base;
+  border: 1px solid $border-subtle;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  height: 100%;
+  transition:
+    transform 0.15s ease,
+    border-color 0.15s ease;
+
+  &:hover {
+    transform: translateY(-3px);
+    border-color: var(--spine-color);
+    .shelf-card__spine {
+      opacity: 1;
+    }
+  }
+}
+
+.shelf-card__spine {
+  width: 6px;
+  flex-shrink: 0;
+  background: var(--spine-color);
+  opacity: 0.75;
+  transition: opacity 0.15s ease;
+}
+.shelf-card__body {
+  flex: 1;
+  padding: 0.95rem 1.05rem 1.05rem;
+  min-width: 0;
+}
+.shelf-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.6rem;
+}
+
+.shelf-card__category-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+}
+
+.shelf-card__rating-stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-family: $font-display;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: $ink;
+
+  i {
+    color: #ffc93d;
+    font-size: 0.7rem;
+  }
+}
+
+.shelf-card__title {
+  font-family: $font-display;
+  font-weight: 600;
+  font-size: 1.15rem;
+  margin: 0 0 0.15rem;
+  color: $ink;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.shelf-card__category-name {
+  display: block;
+  font-size: 0.72rem;
+  color: $muted;
+  margin-bottom: 0.65rem;
+}
+
+.shelf-card__byline {
+  display: block;
+  font-size: 0.78rem;
+  color: $muted;
+  text-decoration: none;
+  cursor: pointer;
+  margin-bottom: 0.8rem;
+
+  &:hover {
+    color: $accent;
+  }
+}
+
+.shelf-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.shelf-card__date {
+  font-size: 0.7rem;
+  color: $muted;
+  flex-shrink: 0;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  border-radius: 1rem;
+
+  &--completed {
+    background: rgba(46, 230, 166, 0.16);
+    color: #2ee6a6;
+  }
+  &--progress {
+    background: rgba(87, 194, 232, 0.16);
+    color: #57c2e8;
+  }
+  &--dropped {
+    background: rgba(255, 107, 129, 0.16);
+    color: #ff6b81;
+  }
+  &--onhold {
+    background: rgba(232, 163, 61, 0.16);
+    color: #e8a33d;
+  }
+  &--planned {
+    background: rgba(154, 147, 173, 0.16);
+    color: $muted;
+  }
+}
+
+::ng-deep .community-paginator {
+  background: transparent;
+  margin-top: 1.5rem;
+  justify-content: center;
+
+  .p-paginator-page,
+  .p-paginator-next,
+  .p-paginator-prev,
+  .p-paginator-first,
+  .p-paginator-last {
+    color: $muted;
+    border-radius: 8px;
+    &:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: $ink;
+    }
+  }
+
+  .p-paginator-page.p-highlight {
+    background: $accent;
+    color: #221926;
+  }
+}
+
+@media (max-width: 576px) {
+  .shelf-hero__title {
+    font-size: 1.6rem;
+  }
+  .shelf-toolbar {
+    padding: 1rem;
+  }
+}

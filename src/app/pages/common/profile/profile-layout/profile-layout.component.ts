@@ -188,6 +188,7 @@ export class ProfileLayoutComponent implements OnInit {
               icon: 'pi pi-users',
               path: 'user-management',
             },
+            { label: 'Default Categories', icon: 'pi pi-tags', path: 'default-categories' }
           ] // if Admin then access it or not
         : []),
     ];

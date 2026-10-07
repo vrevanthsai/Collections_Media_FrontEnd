@@ -11,6 +11,7 @@ import {
 import { CookieService } from '../../../../interceptors/cookie.service';
 import { MessageService } from 'primeng/api';
 import { DialogModule } from 'primeng/dialog';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-user-management',
@@ -47,6 +48,16 @@ export class UserManagementComponent {
   deleteUserName: string = '';
   deleteErrorMessage: string = '';
   deleteUserLoading: boolean = false;
+
+  constructor(private route: ActivatedRoute) {
+    // receive query param from notification page and set it to search field for easy search of suspended user in table who requested admin to activate their account
+    this.route.queryParams.subscribe((params) => {
+      const suspendedUserName = params['suspendedUserName'];
+      if (suspendedUserName) {
+        this.searchTerm = suspendedUserName;
+      }
+    });
+  }
 
   ngOnInit(): void {
     this.loadAllUsers();

@@ -1,9 +1,9 @@
 <section class="detail-shell">
   <div class="container py-4 py-lg-5">
-    <a routerLink="/home" class="back-link">
+    <button type="button" class="back-link" (click)="goBack()" aria-label="Go back to the previous page">
       <i class="pi pi-arrow-left"></i>
-      Back to collections
-    </a>
+      Back
+    </button>
 
     <!-- Show one clear state while data is loading, missing, or ready. -->
     @if (loading()) {
@@ -104,6 +104,10 @@
               <button type="button" class="btn btn-primary" (click)="addToMyCollection(item.name)">
                 <i class="pi pi-plus"></i>
                 Add to My Collection
+              </button>
+              <!-- Add Friend Request button -->
+              <button pButton type="button" class="btn btn-outline-dark" style="margin-left: 5px;" (click)="goToUserViewProfilePage(item.userId)">
+                View Profile
               </button>
             }         
 

@@ -1,0 +1,218 @@
+.page-container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.panel {
+  background: var(--surface-card, #1e1e1e);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.panel-header {
+  margin-bottom: 1.25rem;
+
+  h2 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin: 0 0 0.25rem;
+  }
+
+  .subtitle {
+    font-size: 0.875rem;
+    color: var(--text-color-secondary, #9ca3af);
+    margin: 0;
+  }
+}
+
+/* ---------- Section 1: Default categories ---------- */
+.default-chip-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.75rem;
+}
+
+.default-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.65rem 0.9rem;
+  border-radius: 10px;
+  border: 1px solid var(--surface-border, #333);
+  background: var(--surface-ground, #2a2a2a);
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+
+  &:hover {
+    border-color: var(--primary-color, #3b82f6);
+  }
+
+  &.added {
+    border-color: #22c55e;
+    background: rgba(34, 197, 94, 0.08);
+  }
+
+  .chip-name {
+    font-size: 0.9rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .chip-status {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.8rem;
+    color: #22c55e;
+    white-space: nowrap;
+  }
+
+  .chip-add-btn {
+    width: 2rem;
+    height: 2rem;
+    flex-shrink: 0;
+  }
+}
+
+.empty-text {
+  color: var(--text-color-secondary, #9ca3af);
+  font-size: 0.9rem;
+  text-align: center;
+  padding: 1rem 0;
+}
+
+/* ---------- Section 2: Add custom category ---------- */
+.add-category-form {
+  .form-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .form-field {
+    flex: 1 1 260px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+
+    label {
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+  }
+
+  .add-btn {
+    flex-shrink: 0;
+    height: 2.6rem;
+    margin-top: 1.55rem; // aligns with input baseline
+  }
+
+  .alert-error {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #f87171;
+    padding: 0.6rem 0.9rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+  }
+
+  .field-error {
+    color: #f87171;
+    font-size: 0.8rem;
+  }
+}
+
+/* ---------- Section 3: Category table ---------- */
+.table-wrapper {
+  overflow-x: auto;
+  border-radius: 8px;
+}
+
+.col-index {
+  width: 3rem;
+}
+.col-type {
+  width: 7rem;
+}
+.col-action {
+  width: 9rem;
+}
+
+.category-name {
+  font-weight: 500;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.badge-custom {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+}
+
+.badge-default {
+  background: rgba(148, 163, 184, 0.15);
+  color: #94a3b8;
+}
+
+.action-btn-group {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.results-state {
+  display: flex;
+  justify-content: center;
+  padding: 2rem 0;
+}
+
+/* ---------- Responsive breakpoints ---------- */
+@media (max-width: 640px) {
+  .page-container {
+    padding: 1rem 0.75rem 2rem;
+    gap: 1rem;
+  }
+
+  .panel {
+    padding: 1rem;
+    border-radius: 10px;
+  }
+
+  .default-chip-grid {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  }
+
+  .add-category-form .form-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .add-category-form .add-btn {
+    margin-top: 0;
+    width: 100%;
+  }
+
+  .col-type {
+    display: none;
+  } // hide on very small screens, or keep and let table scroll
+}

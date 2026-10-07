@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, inject, signal, computed, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
+import { NavigationExtras, Router, RouterModule } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PaginatorModule, PaginatorState } from 'primeng/paginator';
 import { AvatarModule } from 'primeng/avatar';
@@ -163,7 +163,8 @@ export class NotificationsComponent implements OnInit, OnDestroy {
 
     const config = this.typeConfig(n.type);
     if (config.buildLink) {
-      this.router.navigate(config.buildLink(n) as any[]);
+      const link = config.buildLink(n);
+      this.router.navigate(link.commands as any[], link.extras);
     }
   }
 
@@ -246,7 +247,12 @@ interface NotificationTypeConfig {
   icon: string;
   colorClass: string;
   buildMessage: (n: NotificationItem) => string;
-  buildLink?: (n: NotificationItem) => unknown[];
+  buildLink?: (n: NotificationItem) => NotificationLink;
+}
+
+interface NotificationLink {
+  commands: unknown[];
+  extras?: NavigationExtras;
 }
 
 const NOTIFICATION_TYPE_MAP: Record<string, NotificationTypeConfig> = {
@@ -254,25 +260,39 @@ const NOTIFICATION_TYPE_MAP: Record<string, NotificationTypeConfig> = {
     icon: 'pi pi-user-plus',
     colorClass: 'notif-icon--friend',
     buildMessage: (n) => `accepted your friend request`,
-    buildLink: (n) => ['/users-profile', n.actorUserId]
+    buildLink: (n) => ({ commands: ['/users-profile', n.actorUserId] })
   },
   FRIEND_REQUEST: {
     icon: 'pi pi-user-plus',
     colorClass: 'notif-icon--friend',
     buildMessage: (n) => `sent you a friend request`,
-    buildLink: (n) => ['/users-profile', n.actorUserId]
+    buildLink: (n) => ({ commands: ['/users-profile', n.actorUserId] })
   },
   COLLECTION_LIKED: {
     icon: 'pi pi-heart-fill',
     colorClass: 'notif-icon--like',
     buildMessage: (n) => `friend liked your collection ${n.collectionName || 'Unnamed Collection'}`,
-    buildLink: (n) => ['/collections', n.collectionId]
+    buildLink: (n) => ({ commands: ['/collections', n.collectionId] })
   },
   COLLECTION_SHARED: {
     icon: 'pi pi-share-alt',
     colorClass: 'notif-icon--shared',
     buildMessage: (n) => `friend shared ${n.sharesCount ? n.sharesCount : "a"} collection with you`,
-    buildLink: (n) => ['/recommendations'] // here redirect to new Shared Collection or Recommendations page(referenceId=lastSharedId is not needed- directly redirect to all shared collections page)
+    buildLink: () => ({ commands: ['/recommendations'] }) // here redirect to new Shared Collection or Recommendations page(referenceId=lastSharedId is not needed- directly redirect to all shared collections page)
+  },
+  SUSPENDED_USER: {
+    icon: 'pi pi-ban',
+    colorClass: 'notif-icon--suspended',
+    buildMessage: (n) => `suspended user ${n.actorUsername} requests you(Admin) to activate their account!!`,
+    buildLink: (n) => ({
+      commands: ['/account/user-management'],
+      extras: { queryParams: { suspendedUserName: n.actorUsername } }
+    }) // only Admin can access this page to activate suspended user account and also send query param to highlight the suspended user row in the table
+  },
+  ACTIVATED_USER: {
+    icon: 'pi pi-check-circle',
+    colorClass: 'notif-icon--activated',
+    buildMessage: (n) => `your account has been activated by Admin ${n.actorUsername}, so please do not do any violation of rules and regulations of this platform and if you do any violation then your account will be suspended again!!`,
   }
 };
 

@@ -26,6 +26,11 @@
             Recommendations
           </a>
         </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/community" routerLinkActive="active">
+            Community
+          </a>
+        </li>
         } @else {
         <li class="nav-item">
           <a class="nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
@@ -140,7 +145,7 @@
             <p-avatar [image]="avatarUrl()" shape="circle" styleClass="profile-avatar"></p-avatar>
           </a>
           <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-            <li class="dropdown-header">{{ name() }}</li>
+            <li class="dropdown-header">@{{ username() }}</li>
             <li>
               <hr class="dropdown-divider" />
             </li>

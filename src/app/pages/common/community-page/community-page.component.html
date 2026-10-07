@@ -1,0 +1,116 @@
+<div class="community-page">
+    <div class="shelf-hero">
+        <div class="container py-4">
+            <h1 class="shelf-hero__title">The Community Shelf</h1>
+            <p class="shelf-hero__subtitle">
+                Every public collection your fellow members have chosen to put on display.
+            </p>
+            @if (!loading() && !errorMessage()) {
+            <p class="shelf-hero__stat">{{ allCollections().length }} collections currently on the shelf</p>
+            }
+        </div>
+    </div>
+
+    <div class="container py-4">
+
+        <div class="shelf-toolbar">
+            <div class="shelf-search">
+                <i class="pi pi-search"></i>
+                <input type="text" class="shelf-search__input" placeholder="Search by title..." [ngModel]="searchTerm()"
+                    (ngModelChange)="onSearchInput($event)" />
+            </div>
+
+            <div class="chip-row">
+                @for (chip of categoryOptions(); track chip.value) {
+                <button type="button" class="chip" [class.chip--active]="selectedCategoryId() === chip.value"
+                    [style.--chip-color]="categoryChipVisual(chip.value).color"
+                    [style.--chip-active-bg]="categoryChipVisual(chip.value).soft"
+                    (click)="onCategoryChange(chip.value)">
+                    <i class="pi" [ngClass]="categoryChipVisual(chip.value).icon"></i>
+                    {{ chip.label }}
+                </button>
+                }
+            </div>
+
+            <div class="chip-row">
+                @for (r of ratingOptions; track r.value) {
+                <button type="button" class="chip" [class.chip--active]="selectedRating() === r.value"
+                    (click)="onRatingChange(r.value)">
+                    @if (r.value === 'ALL') {
+                    All ratings
+                    } @else {
+                    <i class="pi pi-star-fill"></i> {{ r.value }}
+                    }
+                </button>
+                }
+            </div>
+
+            <div class="chip-row">
+                @for (p of progressOptions(); track p.value) {
+                <button type="button" class="chip" [class.chip--active]="selectedProgress() === p.value"
+                    (click)="onProgressChange(p.value)">
+                    <i class="pi" [ngClass]="p.value !== 'ALL' ? statusVisual(p.value).icon : 'pi-list'"></i>
+                    {{ p.label }}
+                </button>
+                }
+            </div>
+
+            @if (hasActiveFilters()) {
+            <button type="button" class="clear-filters-btn" (click)="clearFilters()">
+                <i class="pi pi-times"></i> Clear filters
+            </button>
+            }
+        </div>
+
+        @if (loading()) {
+        <div class="shelf-message"><i class="pi pi-spin pi-spinner"></i> Loading the shelf...</div>
+        } @else if (errorMessage()) {
+        <div class="shelf-message shelf-message--error">{{ errorMessage() }}</div>
+        } @else if (totalRecords() === 0) {
+        <div class="shelf-empty">
+            <i class="pi pi-inbox"></i>
+            <p>Nothing matches these filters yet.</p>
+        </div>
+        } @else {
+        <p class="shelf-count">{{ totalRecords() }} result{{ totalRecords() === 1 ? '' : 's' }}</p>
+
+        <div class="row g-3">
+            @for (c of pagedCollections(); track c.collectionId) {
+            <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+                <div class="shelf-card" [style.--spine-color]="categoryVisual(c).color" (click)="goToCollection(c)">
+                    <div class="shelf-card__spine"></div>
+
+                    <div class="shelf-card__body">
+                        <div class="shelf-card__top">
+                            <span class="shelf-card__category-icon" [style.color]="categoryVisual(c).color">
+                                <i class="pi" [ngClass]="categoryVisual(c).icon"></i>
+                            </span>
+                            <span class="shelf-card__rating-stamp">
+                                <span class="shelf-card__rating-num">{{ c.rating }}</span>
+                                <i class="pi pi-star-fill"></i>
+                            </span>
+                        </div>
+
+                        <h3 class="shelf-card__title">{{ c.name }}</h3>
+                        <span class="shelf-card__category-name">{{ c.categoryName }}</span>
+
+                        <a class="shelf-card__byline" (click)="goToUser($event, c)">collected by {{ c.username }}</a>
+
+                        <div class="shelf-card__footer">
+                            <span class="status-pill" [ngClass]="statusVisual(c.progress).cls">
+                                <i class="pi" [ngClass]="statusVisual(c.progress).icon"></i>
+                                {{ c.progress }}
+                            </span>
+                            <span class="shelf-card__date">{{ c.addedDate | date: 'MMM d, y' }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            }
+        </div>
+
+        <p-paginator [first]="first" [rows]="rows" [totalRecords]="totalRecords()" [rowsPerPageOptions]="[10, 20, 30]"
+            (onPageChange)="onPageChange($event)" styleClass="community-paginator"></p-paginator>
+        }
+    </div>
+</div>
