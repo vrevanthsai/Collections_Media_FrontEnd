@@ -40,7 +40,6 @@ export class CollectionDetail implements OnInit, OnDestroy {
   private readonly matDialog = inject(MatDialog);
   private cookieService = inject(CookieService);
   private messageService = inject(MessageService);
-  private friendConnectionService = inject(FriendConnectionService);
 
   // Signals keep loading, error, and collection states reactive in the template.
   collection = signal<CollectionDto | null>(null);
@@ -51,10 +50,6 @@ export class CollectionDetail implements OnInit, OnDestroy {
   private collectionId = 0;
   userId = parseInt(this.cookieService.getCookie('userId') || '0', 10);
   private destroyRef = inject(DestroyRef);
-  isFriendRequestSent = signal(false);
-  friendConnectionData = signal<FriendConnectionDto | null>(null);
-  friendButtonLabel: string = "Friend Request";
-  currentUserId = parseInt(this.cookieService.getCookie('userId') || '0', 10);
 
   // Reads and validates the collection ID supplied by the details route.
   ngOnInit(): void {
@@ -156,9 +151,6 @@ export class CollectionDetail implements OnInit, OnDestroy {
           return;
         }
 
-        // Check friend connection status using the fetched owner ID.
-        this.checkFriendRequestStatus(collection.userId);
-
         if (!collection.imageUrl) {
           this.collection.set(collection);
           this.loading.set(false);
@@ -182,10 +174,18 @@ export class CollectionDetail implements OnInit, OnDestroy {
         });
 
       },
-      error: () => {
+      error: (err) => {
         this.errorMessage.set('Unable to load this collection right now.');
         this.loading.set(false);
-      },
+        console.error('Unable to load this collection right now :', err);
+        this.messageService.add({
+          severity: 'error',
+          summary:
+            err?.error?.message || 'Unable to load this collection right now.',
+          detail: 'Try again!',
+          life: 3000, // auto-dismiss after 3s
+        });
+      }
     });
   }
 
@@ -202,60 +202,8 @@ export class CollectionDetail implements OnInit, OnDestroy {
     this.router.navigate(['collections/add-collection'], { queryParams: { recommendedCollectionName: collectionName } });
   }
 
-  checkFriendRequestStatus(otherUserId: number) {
-    this.friendConnectionService.checkFriendConnection(this.currentUserId, otherUserId).subscribe({
-      next: (res: CheckFriendConnectionResponse) => {
-        this.friendConnectionData.set(res?.data);
-        if (res?.data?.status === 'PENDING') {
-          this.isFriendRequestSent.set(true);
-          this.friendButtonLabel = "Request Sent";
-        } else if (res?.data?.status === 'ACCEPTED') {
-          this.isFriendRequestSent.set(true);
-          this.friendButtonLabel = "Friends";
-        } else {
-          // reset vars if no connection is found
-          this.isFriendRequestSent.set(false);
-          this.friendButtonLabel = "Friend Request";
-        }
-      },
-      error: (err) => {
-        console.error('Error while checking friend connection between 2 users :', err);
-        this.messageService.add({
-          severity: 'error',
-          summary:
-            err?.error?.message || 'Error while checking friend connection between 2 users',
-          detail: 'Try again!',
-          life: 3000, // auto-dismiss after 3s
-        });
-      }
-    })
-  }
-
-  // Send Friend Request Method
-  sendFriendRequest() {
-    this.friendButtonLabel = "Loading..."
-    this.friendConnectionService.sendFriendRequest(this.currentUserId, this.collection()?.userId).subscribe({ // this.collection()?.userId is otherUserId(viewing this collection)
-      next: (res: FriendResquestResponse) => {
-        this.isFriendRequestSent.set(true);
-        this.friendButtonLabel = "Request Sent";
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Success',
-          detail: res?.data || 'Friend Request Sent successfully',
-          life: 3000, // auto-dismiss after 3s
-        });
-      },
-      error: (err) => {
-        console.error('Error while sending friend request:', err);
-        this.friendButtonLabel = "Friend Request"; // reset
-        this.messageService.add({
-          severity: 'error',
-          summary:
-            err?.error?.message || 'Error while sending friend request',
-          detail: 'Try again!',
-          life: 3000, // auto-dismiss after 3s
-        });
-      }
-    })
+  // Navigates to the user's view profile page based on the provided userId.
+  goToUserViewProfilePage(userId: number): void {
+    this.router.navigate(['/users-profile/', userId]);
   }
 }
