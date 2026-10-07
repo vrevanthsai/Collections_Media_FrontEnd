@@ -21,7 +21,7 @@ export class AuthService {
   private cookieService = inject(CookieService);
   // get user info from cookie which is stored after user logged-In(or login-service-method)
   private userDetails = JSON.parse(this.cookieService.getCookie('userDetails') || '{}');
-  private name = signal<string | null>(this.userDetails.name || null);
+  private username = signal<string | null>(this.userDetails.username || null);
   themeService = inject(ThemeService);
 
   // DI for HttpClient for API integrations
@@ -72,7 +72,7 @@ export class AuthService {
               // role is array/collection data from claims of jwt of backend and first item has Role data
               // sessionStorage.setItem('role', decodedToken.role[0].authority);
               this.cookieService.setCookie('role', decodedToken.role[0].authority, 7);
-              this.name.set(response.data.name || null);
+              this.username.set(response.data.username || null);
               this.loggedIn.set(true);
               this.sessionVersion.update((version) => version + 1);
             }
@@ -81,12 +81,12 @@ export class AuthService {
     );
   }
 
-  // Getter/Setter for name signal variable
-  setName(value: string | null) {
-    this.name.set(value);
+  // Getter/Setter for username signal variable
+  setUsername(value: string | null) {
+    this.username.set(value);
   }
-  getName(): WritableSignal<string | null> {
-    return this.name;
+  getUsername(): WritableSignal<string | null> {
+    return this.username;
   }
 
   // check user logged-in or not- used in navbar component for conditional rendering of login/logout button and to show user name
@@ -113,7 +113,7 @@ export class AuthService {
     localStorage.removeItem('darkMode');
     // when logout revert theme back to dark
     this.themeService.setTheme(true);
-    this.name.set(null);
+    this.username.set(null);
     this.loggedIn.set(false);
     this.sessionVersion.update((version) => version + 1);
   }

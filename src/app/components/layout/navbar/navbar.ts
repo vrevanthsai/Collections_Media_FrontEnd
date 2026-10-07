@@ -47,7 +47,7 @@ export class Navbar {
   private userDetails = JSON.parse(
     this.cookieService.getCookie('userDetails') || '{}',
   );
-  name = signal<string | null>(this.userDetails.name || null);
+  username = signal<string | null>(this.userDetails.username || null);
   unreadCount = signal(0);
   avatarUrl = signal<string | undefined>(undefined);
   allowImageLoad = true; // flag to control image loading
@@ -211,13 +211,13 @@ export class Navbar {
   // This block runs at first-before all other lines in this component and only runs once when page loads
   ngOnInit(): void {
     this.isLoggedIn = this.authService.getLoggedIn();
-    this.name = this.authService.getName();
+    this.username = this.authService.getUsername();
 
     // Receive updated user details from ProfileService and update the user signal
     // and it will only trigger when the user details are updated in the ProfileInfoComponent
     this.profileService.sharedData$.subscribe((updatedUser) => {
       if (updatedUser) {
-        this.name.set(updatedUser.name || null);
+        this.username.set(updatedUser.username || null);
       }
     });
 
